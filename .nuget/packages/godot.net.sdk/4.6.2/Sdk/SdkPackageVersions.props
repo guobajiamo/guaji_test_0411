@@ -1,0 +1,8 @@
+<Project>
+  <PropertyGroup>
+    <PackageVersion_GodotSharp>4.6.2</PackageVersion_GodotSharp>
+    <PackageVersion_Godot_NET_Sdk>4.6.2</PackageVersion_Godot_NET_Sdk>
+    <PackageVersion_Godot_SourceGenerators>4.6.2</PackageVersion_Godot_SourceGenerators>
+    <GodotVersionConstants>GODOT4;GODOT4_6;GODOT4_6_2;GODOT4_OR_GREATER;GODOT4_0_OR_GREATER;GODOT4_1_OR_GREATER;GODOT4_2_OR_GREATER;GODOT4_3_OR_GREATER;GODOT4_4_OR_GREATER;GODOT4_5_OR_GREATER;GODOT4_6_OR_GREATER;GODOT4_6_0_OR_GREATER;GODOT4_6_1_OR_GREATER;GODOT4_6_2_OR_GREATER</GodotVersionConstants>
+  </PropertyGroup>
+</Project>

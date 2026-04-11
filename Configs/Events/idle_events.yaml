@@ -1,0 +1,11 @@
+# 挂机循环事件
+
+events:
+  - id: "evt_idle_chop"
+    name_key: "挂机砍树"
+    description_key: "自动持续砍树，获得原木和砍树经验。"
+    type: "IdleLoop"
+    prerequisites:
+      - { condition_type: "HasItem", target_id: "tool_stone_axe", required_value: 1 }
+    linked_skill_id: "skill_chopping"
+    button_list_group: "MainIdle"

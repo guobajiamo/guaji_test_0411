@@ -1,0 +1,472 @@
+《初版项目运行时调用关系及讲解》
+
+这份文档是在 `07_项目运行时调用关系及讲解.txt` 的基础上，
+改写成“首版实例化之后的真实运行链路说明”。
+
+为了方便区分，我这里不再重点说“预留”，而是尽量直接说：
+现在代码真正会怎么跑。
+
+
+================================
+一、先记住一条最短总链路
+================================
+
+当前项目启动后的最短主链路，可以先记成这一句：
+
+`project.godot`
+-> 自动加载 `GameManager` / `SignalBus`
+-> 加载 `Scenes/Main.tscn`
+-> 实例化 `Scenes/UI/MainUI.tscn`
+-> `GameManager` 读取 YAML 并初始化系统
+-> `MainUI` 动态创建整套默认 UI
+-> 玩家点击按钮
+-> 业务系统修改 `PlayerProfile`
+-> 各面板刷新显示最新结果
+
+一句话理解：
+
+- `GameManager` 是总管
+- `Registry` 是静态查表区
+- `PlayerProfile` 是玩家运行态总入口
+- `Systems` 是执行逻辑的人
+- `UI` 是显示结果和接收操作的人
+
+
+================================
+二、启动阶段：谁先创建，谁后创建
+================================
+
+1. Godot 读取 `project.godot`
+
+这里最重要的两件事是：
+- 主场景：`res://Scenes/Main.tscn`
+- 自动加载：
+  - `GameManager`
+  - `SignalBus`
+
+
+2. 自动加载节点先进入 `/root`
+
+也就是说：
+- `GameManager` 不需要你手动放进场景
+- `SignalBus` 也不需要手动放进场景
+
+
+3. `GameManager._Ready()` 开始执行
+
+当前真实顺序是：
+
+1. `CreateDefaultProfile()`
+2. `LoadStaticData()`
+3. `InitializeProfileFromDefinitions()`
+4. `InitializeSystems()`
+5. `AddGameLog("初版游戏已完成启动。")`
+
+这和骨架阶段最大的不同是：
+“配置加载”现在已经是真实逻辑，不再只是留接口。
+
+
+================================
+三、配置加载链路：YAML 现在是怎么进内存的
+================================
+
+启动时会进入：
+
+`GameManager.LoadStaticData()`
+
+这一步会调用：
+
+`YamlConfigLoader`
+
+分别去读取：
+- `Configs/Items/categories.yaml`
+- `Configs/Items/items.yaml`
+- `Configs/Skills/skills.yaml`
+- `Configs/Events/oneshot_events.yaml`
+- `Configs/Events/click_events.yaml`
+- `Configs/Events/idle_events.yaml`
+- `Configs/Factions/factions.yaml`
+- `Configs/Zones/zones.yaml`
+- `Configs/Localization/locale_zh.yaml`
+
+之后再分别交给：
+
+1. `ItemRegistry.LoadDefinitions(...)`
+2. `SkillRegistry.LoadDefinitions(...)`
+3. `EventRegistry.LoadDefinitions(...)`
+4. `FactionRegistry.LoadDefinitions(...)`
+5. `ZoneRegistry.LoadDefinitions(...)`
+6. `LocalizationManager.LoadTranslations(...)`
+
+同时会执行：
+- 物品树校验
+- 物品树导出到 `user://logs/item_tree_dump.txt`
+- 配置加载完成日志输出
+
+
+================================
+四、玩家运行态初始化链路
+================================
+
+配置载入后，会进入：
+
+`GameManager.InitializeProfileFromDefinitions()`
+
+这一步做的事情是：
+
+1. 遍历技能定义
+-> 给每个技能补齐 `PlayerSkillState`
+-> 如果技能还没有等级，就按 `InitialLevel` 初始化
+
+2. 遍历势力定义
+-> 给每个势力补齐 `PlayerFactionState`
+
+3. 遍历区域定义
+-> 给每个区域补齐 `PlayerZoneState`
+-> 如果这个区域没有解锁条件，就默认设为已解锁
+
+你可以把这一步理解成：
+
+“静态配置已经有了，现在开始按模板给玩家建一份最基础的运行时档案。”
+
+
+================================
+五、系统创建与依赖注入链路
+================================
+
+`GameManager.InitializeSystems()`
+会动态创建这些系统节点：
+
+- `IdleSystem`
+- `ClickEventSystem`
+- `SkillSystem`
+- `ShopSystem`
+- `SellSystem`
+- `FactionSystem`
+- `ZoneSystem`
+- `QuestSystem`
+- `CraftingSystem`
+- `BattleSystem`
+- `AchievementSystem`
+- `EquipmentSystem`
+- `BuffSystem`
+
+这些系统都会作为子节点挂到 `GameManager` 下面。
+
+随后进入：
+
+`GameManager.ConfigureSystems()`
+
+把共享依赖传给各系统：
+
+- `IdleSystem.Configure(PlayerProfile, EventRegistry, SkillRegistry, ItemRegistry)`
+- `ClickEventSystem.Configure(PlayerProfile, EventRegistry, SkillSystem, FactionSystem, ZoneSystem)`
+- `SkillSystem.Configure(PlayerProfile, SkillRegistry)`
+- `ShopSystem.Configure(PlayerProfile, FactionRegistry)`
+- `SellSystem.Configure(PlayerProfile, ItemRegistry)`
+- `FactionSystem.Configure(PlayerProfile, FactionRegistry)`
+- `ZoneSystem.Configure(PlayerProfile, ZoneRegistry)`
+
+这一步最重要的意义是：
+
+1. 所有系统都操作同一份 `PlayerProfile`
+2. 所有系统都查询同一份 Registry
+3. 不会出现“每个系统各自维护一套玩家数据”的问题
+
+
+================================
+六、主场景和主 UI 是怎么接进来的
+================================
+
+1. `Scenes/Main.tscn` 被加载
+
+当前结构很简单：
+- 根节点：`Main`
+- 子节点：`MainUI`
+
+
+2. `MainUI` 实际来自 `Scenes/UI/MainUI.tscn`
+
+这个场景本身非常轻：
+- 主要只是一个根 `Control`
+- 绑定了 `Scripts/UI/MainUI.cs`
+
+
+3. `MainUI._Ready()` 执行
+
+当前真实执行顺序是：
+
+1. 读取 `GameManager.Instance`
+2. `LoadLayoutSettings()`
+   -> 从 `res://Resources/UI/main_ui_layout.tres` 读取布局参数
+   -> 如果找不到，就回退默认布局并写日志
+3. `BuildLayout()`
+   -> 在运行时动态拼出整套默认 UI
+4. `RefreshAllPanels()`
+   -> 让所有面板立刻显示当前数据
+
+
+================================
+七、主界面的布局结构现在是什么
+================================
+
+`MainUI.BuildLayout()` 现在会动态创建：
+
+1. 外层边距容器
+2. 顶部标题
+3. 中间一行三列布局
+
+左列：
+- 一次性事件按钮区
+- 点击事件按钮区
+- 挂机事件按钮区
+
+中列：
+- 标签页容器
+- 当前标签页包含：
+  - 背包
+  - 技能
+  - 日志
+  - 图鉴
+  - 势力
+  - 区域
+  - 任务（占位）
+  - 战斗（占位）
+  - 成就（占位）
+
+右列：
+- 上手提示
+- 角色状态栏
+
+
+================================
+八、左侧按钮是怎么生成出来的
+================================
+
+`MainUI.RefreshAllPanels()`
+会分别调用：
+
+- `_oneshotPanel.RebuildButtons(BuildEventButtonData(ButtonListGroup.MainOneshot), OnClickEventPressed)`
+- `_clickPanel.RebuildButtons(BuildEventButtonData(ButtonListGroup.MainClick), OnClickEventPressed)`
+- `_idlePanel.RebuildButtons(BuildEventButtonData(ButtonListGroup.MainIdle), OnIdleEventPressed)`
+
+这里最关键的调用是：
+
+`BuildEventButtonData(group)`
+
+它会：
+
+1. 从 `GameManager.EventRegistry.GetEventsByGroup(group)` 拿到这一组事件
+2. 对点击/一次性事件：
+   - 通过 `ClickEventSystem.ShouldShowEvent(...)` 判断是否显示
+   - 通过 `ClickEventSystem.CanTriggerEvent(...)` 判断是否禁用
+3. 对挂机事件：
+   - 通过 `IdleSystem.IsRunningEvent(...)` 判断是不是当前正在挂
+   - 通过 `IdleSystem.CanStartIdleEvent(...)` 判断能不能启动
+   - 通过 `IdleSystem.GetProgressRatio(...)` 计算当前进度
+4. 把这些逻辑结果包装成 `EventButtonViewData`
+5. 交给 `ButtonListPanel` 去生成按钮
+
+
+================================
+九、玩家点击“普通事件按钮”时，数据怎么流
+================================
+
+以“捡起石斧”或“点击砍树”为例：
+
+1. 玩家点击按钮
+2. `EventButtonItem` 触发 `Pressed`
+3. 回调到 `MainUI.OnClickEventPressed(eventId)`
+4. `MainUI` 调用：
+   - `GameManager.ClickEventSystem.TryTriggerEvent(eventId)`
+5. `ClickEventSystem` 内部执行：
+   - 读取事件定义
+   - 判断是否已消耗
+   - 检查前置条件
+   - 检查并扣除消耗
+   - 发放旧版 rewards
+   - 执行新版 effects
+   - 必要时把事件记入 `CompletedEventIds`
+6. `MainUI` 根据成功/失败写入运行日志
+7. `MainUI.RefreshAllPanels()` 刷新界面
+
+最后真正被改动的数据可能落在：
+- 背包
+- 金币
+- 技能经验
+- 势力声望
+- 区域状态
+- 已完成事件集合
+- 已完成任务集合
+
+
+================================
+十、玩家点击“挂机砍树”时，数据怎么流
+================================
+
+1. 玩家点击挂机按钮
+2. `MainUI.OnIdleEventPressed(eventId)` 被调用
+3. 如果该事件已经在运行：
+   - `IdleSystem.StopIdleEvent()`
+   - 写“已停止挂机”日志
+4. 如果该事件还没运行：
+   - `IdleSystem.StartIdleEvent(eventId)`
+   - 成功则写“已开始挂机”日志
+   - 失败则写“挂机启动失败”日志
+5. 最后 `RefreshAllPanels()`
+
+
+================================
+十一、挂机开始后，系统如何自动结算
+================================
+
+挂机一旦启动后，会进入这条链：
+
+`IdleSystem._Process(delta)`
+-> 往 `PlayerProfile.IdleState.AccumulatedProgressSeconds` 累加时间
+-> 调用 `TickIdleProgress()`
+
+`TickIdleProgress()` 当前会做这些真实逻辑：
+
+1. 根据 `ActiveEventId` 找到当前挂机事件
+2. 找到它关联的技能 `LinkedSkillId`
+3. 找到当前技能等级对应的 `SkillLevelEntry`
+4. 如果技能要求工具标签，就找玩家当前拥有的最佳工具
+5. 根据工具速度倍率算有效间隔
+6. 根据累计时间算出完成了多少轮
+7. 根据技能产出和工具倍率计算应获得的物品数
+8. 把整数产出发到背包
+9. 把小数余量留在 `PendingOutputFraction`
+10. 按完成轮数累计技能经验
+11. 写入挂机结算日志
+
+如果中途出现：
+- 工具没了
+- 事件定义没了
+- 技能定义没了
+- 当前等级表条目没了
+
+则会：
+- 自动停止挂机
+- 写入“当前挂机条件已失效，系统已自动停止挂机”
+
+
+================================
+十二、技能升级按钮的调用链
+================================
+
+1. 玩家打开“技能”页
+2. `SkillPanel.RefreshSkills()` 读取每个技能的：
+   - 当前等级
+   - 当前经验
+   - `CanLevelUp`
+3. 若按钮可点，玩家点击“手动升级”
+4. 回调到 `MainUI.OnSkillUpgradeRequested(skillId)`
+5. `MainUI` 调用：
+   - `GameManager.SkillSystem.TryLevelUp(skillId)`
+6. `SkillSystem` 内部执行：
+   - 找到技能定义
+   - 找到当前等级条目
+   - 判断经验是否足够
+   - 扣除升级所需经验
+   - 等级 +1
+   - 刷新 `CanLevelUp`
+7. `MainUI` 写成功/失败日志
+8. 刷新所有面板
+
+
+================================
+十三、中间和右侧各面板的数据来源
+================================
+
+1. 背包页 `InventoryPanel`
+数据来源：
+- `GameManager.ItemRegistry`
+- `GameManager.PlayerProfile.Inventory`
+
+
+2. 技能页 `SkillPanel`
+数据来源：
+- `GameManager.SkillRegistry`
+- `GameManager.PlayerProfile.SkillStates`
+
+
+3. 日志页 `LogPanel`
+数据来源：
+- `GameManager.RuntimeLogs`
+
+
+4. 图鉴页 `DictionaryPanel`
+数据来源：
+- 已获得物品状态 `PlayerItemState.IsAcquired`
+- 物品定义说明文本
+
+
+5. 势力页 `FactionPanel`
+数据来源：
+- `FactionRegistry`
+- `PlayerFactionState`
+
+
+6. 区域页 `ZoneSelectPanel`
+数据来源：
+- `ZoneRegistry`
+- `PlayerZoneState`
+
+
+7. 右侧状态栏 `CharacterStatusPanel`
+数据来源：
+- 金币：`PlayerProfile.Economy`
+- 当前最佳工具：`GameManager.GetBestOwnedTool(...)`
+- 技能等级经验：`PlayerSkillState`
+- 当前挂机状态：`PlayerIdleState`
+
+
+================================
+十四、存档与读档现在处于什么状态
+================================
+
+当前调用链已经留好：
+
+保存：
+`GameManager.SaveGame()`
+-> `SaveManager.CreateFromProfile(PlayerProfile)`
+-> `SaveManager.Save(saveData)`
+
+读取：
+`GameManager.LoadGame()`
+-> `SaveManager.LoadOrCreateDefault()`
+-> 替换 `PlayerProfile`
+-> `InitializeProfileFromDefinitions()`
+-> `ConfigureSystems()`
+-> `IdleSystem.ApplyOfflineProgress(...)`
+
+但要注意：
+
+当前 `SaveManager` 仍是“接口预留版”：
+- 已有路径
+- 已有元数据更新
+- 已有日志
+- 但还没有正式 JSON 序列化
+
+
+================================
+十五、把当前项目运行关系压缩成 7 句话
+================================
+
+1. `project.godot` 决定从 `Main.tscn` 开始跑，并自动加载 `GameManager`
+2. `GameManager` 启动时会先读 YAML，再补玩家初始运行态，再创建系统
+3. `Registry` 保存静态模板，`PlayerProfile` 保存玩家当前状态
+4. `MainUI` 会在运行时根据布局资源动态创建默认界面
+5. 左侧按钮来自事件定义，按钮是否显示/可点由系统判断
+6. 点击事件和挂机事件都会通过系统去修改 `PlayerProfile`
+7. 刷新后的背包、技能、日志、状态栏会把最新结果显示出来
+
+
+================================
+十六、当前版本最真实的一句话总结
+================================
+
+当前这套项目已经不是“纯架构草图”了，而是：
+
+“一套真正可以启动、读取配置、显示默认 UI、执行点击与挂机循环、让玩家看到数据变化的首版文字挂机程序。”

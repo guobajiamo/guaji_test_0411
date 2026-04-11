@@ -1,0 +1,114 @@
+# 物品定义
+# 必填字段：id、parent_id、name_key
+# 其余字段都可以按需要逐步补充
+
+items:
+  - id: "mat_wood_log"
+    parent_id: "mat_wood"
+    name_key: "原木"
+    description_key: "最基础的木材，通过砍树获得"
+    definition_order: 100
+    base_rarity: "Common"
+    base_max_stack: 9999
+    buy_price: 0
+    sell_price: 1
+    tags: ["Material"]
+    has_durability: false
+    acquisition_hint_key: "通过砍树获得"
+    detail_description_key: "从树上砍下来的原木，可以继续加工成更多木制品。"
+
+  - id: "mat_wood_firewood"
+    parent_id: "mat_wood"
+    name_key: "柴火"
+    description_key: "可用于生火的木柴"
+    definition_order: 200
+    base_rarity: "Common"
+    base_max_stack: 999
+    sell_price: 2
+    tags: ["Material", "Fuel"]
+
+  - id: "tool_stone_axe"
+    parent_id: "tool"
+    name_key: "石斧"
+    description_key: "最基础的伐木工具"
+    definition_order: 100
+    base_rarity: "Common"
+    base_max_stack: 1
+    sell_price: 0
+    tags: ["Tool", "Weapon", "Axe"]
+    has_durability: false
+    tool_bonuses:
+      log_yield_multiplier: 1.0
+      chop_speed_multiplier: 1.0
+
+  - id: "tool_iron_axe"
+    parent_id: "tool"
+    name_key: "铁斧"
+    description_key: "更加坚固的铁制斧头，伐木效率更高"
+    definition_order: 200
+    base_rarity: "Uncommon"
+    base_max_stack: 1
+    sell_price: 50
+    tags: ["Tool", "Weapon", "Axe"]
+    tool_bonuses:
+      log_yield_multiplier: 2.0
+      chop_speed_multiplier: 1.0
+
+  - id: "tool_alloy_axe"
+    parent_id: "tool"
+    name_key: "合金斧"
+    description_key: "用特殊合金打造的高级斧头"
+    definition_order: 300
+    base_rarity: "Rare"
+    base_max_stack: 1
+    sell_price: 200
+    tags: ["Tool", "Weapon", "Axe"]
+    tool_bonuses:
+      log_yield_multiplier: 4.0
+      chop_speed_multiplier: 1.0
+
+  - id: "food_baozi"
+    parent_id: "consumable_cooking"
+    name_key: "包子"
+    description_key: "热腾腾的包子"
+    definition_order: 100
+    base_max_stack: 99
+    sell_price: 5
+    tags: ["Consumable", "Food"]
+
+  - id: "food_bingzi"
+    parent_id: "consumable_cooking"
+    name_key: "饼子"
+    description_key: "香脆的饼子"
+    definition_order: 200
+    tags: ["Consumable", "Food"]
+
+  - id: "food_mantou"
+    parent_id: "consumable_cooking"
+    name_key: "馒头"
+    description_key: "松软的馒头"
+    definition_order: 300
+    tags: ["Consumable", "Food"]
+    # 如果你后面想把“馒头”排到第一个，
+    # 最直接的做法就是把 definition_order 改小，比如改成 50。
+
+  - id: "ingredient_flour"
+    parent_id: "consumable_ingredient"
+    name_key: "面粉"
+    description_key: "研磨谷物制成的面粉"
+    definition_order: 100
+    tags: ["Material", "Food"]
+
+  - id: "ingredient_rice"
+    parent_id: "consumable_ingredient"
+    name_key: "稻米"
+    description_key: "脱壳后的稻米"
+    definition_order: 200
+    tags: ["Material", "Food"]
+
+  - id: "ingredient_oil"
+    parent_id: "consumable_ingredient"
+    name_key: "食用油"
+    description_key: "烹饪常用的基础材料"
+    definition_order: 300
+    tags: ["Material", "Food"]

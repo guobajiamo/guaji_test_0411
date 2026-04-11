@@ -1,0 +1,134 @@
+【0411 新增与改动功能汇总】
+
+一、本次完成的功能
+1. 左侧事件按钮区已从“单列纵向堆叠”改为“三列并排布局”：
+   - 一次性事件
+   - 单次点击事件
+   - 挂机事件
+   这样三类按钮在视觉上被明确分区，后续继续加内容时也更容易维护。
+
+2. 窗口已改为支持常规桌面窗口操作：
+   - 允许最小化
+   - 允许最大化
+   - 允许关闭
+   同时启用了自适应缩放逻辑，在窗口拉伸或最大化后，UI 会按设定基准分辨率进行缩放，而不是固定死在原始尺寸上。
+
+3. 左下角已新增“特殊功能”区，并加入两个特殊按钮：
+   - 保存存档
+   - 读取存档
+   这两个按钮使用了与事件按钮不同的颜色和样式，避免和普通玩法按钮混淆。
+
+4. 存档功能已从“占位接口”升级为“真实可用的 JSON 存读档”。
+   存档路径改为系统默认本地应用数据目录，方便调试版和打包版共用：
+   C:\Users\你的用户名\AppData\Local\Test00_0410\save_data.json
+
+
+二、主要代码改动说明
+1. 布局参数资源扩展
+   文件：
+   - Scripts/UI/MainUiLayoutSettings.cs
+   - Resources/UI/main_ui_layout.tres
+
+   新增了以下可调参数：
+   - 三列事件区的最小宽度
+   - 三列之间的间距
+   - 特殊按钮的最小宽高
+   - 左下角按钮组间距
+   - UI 基准分辨率（1600 x 900）
+
+   以后如果你还想继续微调布局，优先改这里，不要先去改业务逻辑。
+
+2. 主界面结构调整
+   文件：
+   - Scripts/UI/MainUI.cs
+
+   主要修改：
+   - 左侧事件按钮改为三列 HBox 排列
+   - 左下角新增“特殊功能”标题和两个存读档按钮
+   - 特殊按钮增加独立颜色样式
+   - 增加窗口自适应配置逻辑
+   - 最大化/拉伸时使用 CanvasItems + Expand 方式缩放 UI
+
+3. 共享存档路径实现
+   文件：
+   - Scripts/Core/Helpers/RuntimePathHelper.cs
+
+   主要修改：
+   - 存档路径不再使用 user://save_data.json
+   - 改为 LocalApplicationData 下的固定目录
+   - 同时保留对 Godot 虚拟路径（res://、user://）的兼容处理
+
+4. 真实存读档实现
+   文件：
+   - Scripts/Core/SaveLoad/SaveManager.cs
+
+   主要修改：
+   - 接入 System.Text.Json
+   - 将运行时数据手动转换为可保存的快照结构
+   - 支持恢复：
+     背包、物品状态、经济状态、挂机状态、技能状态、势力状态、区域状态、商店状态、已完成事件、已完成任务
+   - 这样做的原因是项目里有些运行时类带 private set，直接反序列化不稳定，所以改成“显式快照映射”更安全
+
+5. 游戏管理器对接存读档
+   文件：
+   - Scripts/Autoload/GameManager.cs
+
+   主要修改：
+   - SaveGame() 和 LoadGame() 改为返回 bool
+   - 保存/读取后会把结果写入运行日志
+   - 读取后会重新绑定系统并恢复档案到当前运行态
+
+6. 项目窗口设置
+   文件：
+   - project.godot
+
+   主要修改：
+   - 默认视口调整为 1600 x 900
+   - 允许窗口缩放
+   - 开启 stretch mode = canvas_items
+   - 开启 stretch aspect = expand
+
+
+三、测试与验证结果
+1. dotnet build 已通过
+   结果：
+   - 0 warning
+   - 0 error
+
+2. Godot 主场景 headless 启动验证已通过
+   结果：
+   - 主场景能正常启动
+   - MainUI 新布局可正常构建
+   - 没有新的 C# 编译型报错
+
+3. 保存 -> 读取 烟雾测试已通过
+   为了验证这次新增的共享存档功能，额外添加了一个调试场景：
+   - Scenes/Debug/SaveLoadSmokeTest.tscn
+   - Scripts/Debug/SaveLoadSmokeTest.gd
+
+   测试结果：
+   - save_ok = true
+   - load_ok = true
+   - 存档文件已成功生成到 AppData\Local\Test00_0410\save_data.json
+
+
+四、给你的后续使用说明
+1. 如果你想继续改 UI 尺寸，先改：
+   - Resources/UI/main_ui_layout.tres
+
+2. 如果你之后想把“保存存档/读取存档”做得更完整，可以继续加：
+   - 自动存档
+   - 多存档槽位
+   - 存档时间显示
+   - 读取前确认弹窗
+
+3. 如果你后面发现窗口最大化后某些区域仍然太挤，优先继续调这几个参数：
+   - LeftColumnMinWidth
+   - EventColumnMinWidth
+   - WindowBaseWidth
+   - WindowBaseHeight
+
+
+五、这次额外说明
+1. 在 Codex 当前沙箱环境里，向 Windows 的 AppData 目录写入文件会被限制，所以我在最终烟雾测试时使用了提权方式验证真实存档路径。
+2. 这不是项目代码 bug；在你本机正常运行 Godot 或打包程序时，使用这个 AppData 存档目录是符合预期的。

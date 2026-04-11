@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="MainUiLayoutSettings" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Scripts/UI/MainUiLayoutSettings.cs" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+OuterMargin = 14
+PanelSpacing = 10
+LeftColumnMinWidth = 720
+RightColumnMinWidth = 280
+EventColumnMinWidth = 220
+EventColumnSpacing = 10
+HeaderFontSize = 22
+SectionHeaderFontSize = 18
+BodyFontSize = 16
+EventButtonMinHeight = 54
+SpecialButtonMinHeight = 46
+SpecialButtonMinWidth = 140
+FooterButtonSpacing = 10
+WindowBaseWidth = 1600
+WindowBaseHeight = 900
+RefreshIntervalSeconds = 0.2

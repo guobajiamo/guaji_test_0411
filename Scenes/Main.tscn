@@ -1,0 +1,7 @@
+[gd_scene format=3 uid="uid://c0d1xmainscene"]
+
+[ext_resource type="PackedScene" path="res://Scenes/UI/MainUI.tscn" id="1_mainui"]
+
+[node name="Main" type="Node"]
+
+[node name="MainUI" parent="." instance=ExtResource("1_mainui")]

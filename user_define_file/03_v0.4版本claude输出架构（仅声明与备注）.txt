@@ -1,0 +1,2535 @@
+# Godot + C# 挂机游戏底层架构设计
+
+---
+
+## 一、项目文件目录结构
+
+```
+res://
+├── project.godot
+│
+├── Configs/                          # 所有 YAML 配置文件
+│   ├── Items/                        # 物品与分类定义
+│   │   ├── categories.yaml           # 全部分类节点定义
+│   │   └── items.yaml                # 全部物品定义
+│   ├── Skills/                       # 技能定义
+│   │   └── skills.yaml               # 技能等级表、读条时间、产出等
+│   ├── Events/                       # 事件定义
+│   │   ├── click_events.yaml         # 单次点击事件定义
+│   │   ├── oneshot_events.yaml       # 一次性触发事件定义
+│   │   └── idle_events.yaml          # 挂机循环事件定义
+│   ├── Factions/                     # 势力定义
+│   │   └── factions.yaml             # 各妖怪势力及NPC、商店定义
+│   ├── Zones/                        # 区域/副本定义
+│   │   └── zones.yaml                # 危险区域、通关条件等
+│   ├── Localization/                 # 多语言表
+│   │   ├── locale_zh.yaml            # 中文（默认，key=中文原文）
+│   │   └── locale_en.yaml            # 英文（后期填充）
+│   └── Migration/                    # 存档迁移脚本配置
+│       └── migration_rules.yaml      # 版本迁移规则
+│
+├── Scripts/                          # 所有 C# 脚本
+│   ├── Core/                         # 核心基础模块
+│   │   ├── Registry/                 # 注册表系统
+│   │   │   ├── ItemRegistry.cs       # 物品注册表（构建树、校验、索引）
+│   │   │   ├── SkillRegistry.cs      # 技能注册表
+│   │   │   ├── EventRegistry.cs      # 事件注册表
+│   │   │   ├── FactionRegistry.cs    # 势力注册表
+│   │   │   └── ZoneRegistry.cs       # 区域注册表
+│   │   │
+│   │   ├── Definitions/              # 静态定义类（模板层）
+│   │   │   ├── NodeDefinitionBase.cs  # 分类与物品共享的基础定义
+│   │   │   ├── CategoryDefinition.cs  # 分类节点定义
+│   │   │   ├── ItemDefinition.cs      # 物品静态定义
+│   │   │   ├── SkillDefinition.cs     # 技能静态定义
+│   │   │   ├── SkillLevelEntry.cs     # 技能单等级条目数据
+│   │   │   ├── EventDefinition.cs     # 事件静态定义
+│   │   │   ├── FactionDefinition.cs   # 势力静态定义
+│   │   │   ├── NpcDefinition.cs       # NPC静态定义
+│   │   │   ├── ShopItemEntry.cs       # 商店商品条目定义
+│   │   │   ├── ZoneDefinition.cs      # 区域/副本静态定义
+│   │   │   └── RarityDefinition.cs    # 稀有度定义
+│   │   │
+│   │   ├── Runtime/                   # 动态运行态（玩家数据层）
+│   │   │   ├── ItemStack.cs           # 物品动态实例（数量、耐久等）
+│   │   │   ├── PlayerItemState.cs     # 玩家物品状态（收藏、已获取、排序等）
+│   │   │   ├── PlayerSkillState.cs    # 玩家技能状态（等级、经验值）
+│   │   │   ├── PlayerFactionState.cs  # 玩家势力好感度状态
+│   │   │   ├── PlayerZoneState.cs     # 玩家区域探索度状态
+│   │   │   ├── PlayerInventory.cs     # 玩家背包管理器
+│   │   │   └── PlayerProfile.cs       # 玩家档案总管理器
+│   │   │
+│   │   ├── Enums/                     # 枚举定义
+│   │   │   ├── Rarity.cs              # 稀有度枚举
+│   │   │   ├── ItemTag.cs             # 物品类型标签枚举
+│   │   │   ├── EventType.cs           # 事件类型枚举
+│   │   │   └── CurrencyType.cs        # 货币/支付类型枚举
+│   │   │
+│   │   ├── Helpers/                   # 工具类
+│   │   │   ├── YamlConfigLoader.cs    # YAML读取解析器
+│   │   │   ├── TreeValidator.cs       # 树形结构校验（环检测、孤立节点等）
+│   │   │   ├── SortingHelper.cs       # 排序工具（稀疏整数、ReIndex）
+│   │   │   ├── TreePrinter.cs         # 树形打印工具（控制台+文件）
+│   │   │   ├── LocalizationManager.cs # 多语言管理器
+│   │   │   └── TransactionHelper.cs   # 事务性批量操作辅助
+│   │   │
+│   │   └── SaveLoad/                  # 存档系统
+│   │       ├── SaveManager.cs         # 存档读写管理器
+│   │       ├── SaveData.cs            # 存档数据结构
+│   │       └── MigrationRunner.cs     # 存档版本迁移执行器
+│   │
+│   ├── Systems/                       # 游戏逻辑系统
+│   │   ├── IdleSystem.cs              # 挂机循环系统（计时、结算）
+│   │   ├── ClickEventSystem.cs        # 单次点击事件处理系统
+│   │   ├── SkillSystem.cs             # 技能经验与升级系统
+│   │   ├── ShopSystem.cs              # 买入交易系统
+│   │   ├── SellSystem.cs              # 卖出系统（垃圾标记批量卖出）
+│   │   ├── FactionSystem.cs           # 势力好感度系统
+│   │   ├── ZoneSystem.cs              # 区域探索/副本通关系统
+│   │   ├── QuestSystem.cs             # 任务系统（建交主线等）
+│   │   ├── CraftingSystem.cs          # 合成/制作系统（预留）
+│   │   ├── BattleSystem.cs            # 战斗系统（仅声明，预留扩展）
+│   │   ├── AchievementSystem.cs       # 成就系统（预留）
+│   │   ├── EquipmentSystem.cs         # 装备系统（预留）
+│   │   └── BuffSystem.cs              # Buff/道具加成系统
+│   │
+│   ├── UI/                            # UI脚本
+│   │   ├── MainUI.cs                  # 主界面布局管理
+│   │   ├── ButtonListPanel.cs         # 通用按钮列表面板（可复用多组）
+│   │   ├── EventButtonItem.cs         # 事件按钮单元（含进度条）
+│   │   ├── InventoryPanel.cs          # 背包界面
+│   │   ├── ItemSlotUI.cs              # 背包物品槽UI
+│   │   ├── ItemTooltipUI.cs           # 物品悬浮提示框
+│   │   ├── CharacterStatusPanel.cs    # 右侧角色状态栏
+│   │   ├── SkillPanel.cs              # 技能面板（含升级按钮）
+│   │   ├── ShopPanel.cs               # 商店面板（折叠/展开）
+│   │   ├── DictionaryPanel.cs         # 物品字典面板
+│   │   ├── TabContainer.cs            # 标签页容器
+│   │   ├── LogPanel.cs                # 日志面板
+│   │   ├── ZoneSelectPanel.cs         # 区域选择面板
+│   │   ├── FactionPanel.cs            # 势力面板
+│   │   └── Placeholder/              # 预留空白标签页
+│   │       ├── BattlePanel.cs         # 战斗标签页（预留空白）
+│   │       ├── QuestPanel.cs          # 任务标签页（预留空白）
+│   │       └── AchievementPanel.cs    # 成就标签页（预留空白）
+│   │
+│   └── Autoload/                      # Godot AutoLoad 全局单例
+│       ├── GameManager.cs             # 游戏总管理器（启动流程编排）
+│       └── SignalBus.cs               # 全局信号总线
+│
+├── Scenes/                            # 场景文件
+│   ├── Main.tscn                      # 主场景
+│   ├── UI/                            # UI场景
+│   │   ├── MainUI.tscn
+│   │   ├── ButtonListPanel.tscn
+│   │   ├── InventoryPanel.tscn
+│   │   ├── CharacterStatusPanel.tscn
+│   │   ├── ShopPanel.tscn
+│   │   ├── LogPanel.tscn
+│   │   └── TabPages.tscn
+│   └── Components/                    # 可复用组件场景
+│       ├── EventButton.tscn
+│       ├── ItemSlot.tscn
+│       └── ProgressBarOverlay.tscn
+│
+├── Resources/                         # Godot Resource 文件（如有需要）
+│   └── Themes/
+│       └── default_theme.tres         # 默认UI主题
+│
+└── Logs/                              # 运行时输出的日志/打印文件
+    └── item_tree_dump.txt             # 物品树形结构打印输出
+```
+
+---
+
+## 二、每个 C# 脚本的详细声明设计
+
+以下对每个脚本列出：**功能概述**、**类声明**、**字段/属性声明**、**方法声明**，并逐一备注。
+
+---
+
+### 2.1 Core/Enums（枚举）
+
+#### `Rarity.cs`
+```
+功能：定义物品稀有度等级枚举
+```
+```csharp
+// 物品稀有度等级，数值越大越稀有，用于排序权重
+public enum Rarity
+{
+    Common = 0,        // 普通（白色）
+    Uncommon = 1,      // 少见（绿色）
+    Rare = 2,          // 稀有（蓝色）
+    Epic = 3,          // 史诗（紫色）
+    Legendary = 4      // 传说（橙色）
+}
+```
+
+#### `ItemTag.cs`
+```
+功能：物品类型标签枚举，用于筛选查询（可按位组合）
+```
+```csharp
+[Flags]
+public enum ItemTag
+{
+    None        = 0,
+    Material    = 1 << 0,   // 素材
+    Consumable  = 1 << 1,   // 消耗品
+    Equipment   = 1 << 2,   // 装备
+    Tool        = 1 << 3,   // 工具
+    Helmet      = 1 << 4,   // 头盔
+    Armor       = 1 << 5,   // 衣服/胸甲
+    Weapon      = 1 << 6,   // 武器
+    Fuel        = 1 << 7,   // 燃料
+    Food        = 1 << 8,   // 食物
+    QuestItem   = 1 << 9,   // 任务道具
+    Currency    = 1 << 10,  // 货币类
+    // 后续可继续追加
+}
+```
+
+#### `EventType.cs`
+```
+功能：事件类型枚举，区分三类事件
+```
+```csharp
+public enum EventType
+{
+    OneshotClick,    // 一次性触发事件（点击后消失）
+    RepeatableClick, // 可多次点击事件（如买卖、合成）
+    IdleLoop         // 挂机循环事件（如砍树、打工）
+}
+```
+
+#### `CurrencyType.cs`
+```
+功能：支付类型枚举，用于商店灵活定价
+```
+```csharp
+public enum CurrencyType
+{
+    Gold,       // 默认货币
+    Item,       // 以物易物（需指定具体物品ID和数量）
+    Mixed       // 混合支付（货币+道具）
+}
+```
+
+---
+
+### 2.2 Core/Definitions（静态定义类）
+
+#### `NodeDefinitionBase.cs`
+```
+功能：分类节点与物品节点共享的基础定义抽象类
+      统一 ID、名称、排序、父节点等公共元数据
+```
+```csharp
+public abstract class NodeDefinitionBase
+{
+    // ====== 标识 ======
+    string Id;                    // 唯一标识符，全小写+下划线，如 "mat_wood_firewood"
+    string ParentId;              // 父节点ID，根节点为 null 或 ""
+    
+    // ====== 显示信息 ======
+    string NameKey;               // 名称文本（前期为中文，后期作为多语言key）
+    string DescriptionKey;        // 描述文本（前期中文，后期多语言key）
+    
+    // ====== 排序 ======
+    int DefinitionOrder;          // 定义顺位，稀疏整数(100,200,300...)，同级内排序
+    
+    // ====== 节点类型标记 ======
+    bool IsAbstract;              // true=分类节点(Category)，不可直接持有
+                                  // false=具体物品(Item)，可持有
+    
+    // ====== 弃用/迁移 ======
+    bool Deprecated;              // 是否已弃用
+    string DeprecatedSince;       // 弃用起始版本号，如 "1.2.0"
+    string ReplacementId;         // 可选，弃用后替换为哪个新物品ID
+    
+    // ====== 可见性 ======
+    bool IsVisible;               // 是否在UI中可见（默认true）
+    
+    // ====== 扩展槽 ======
+    Dictionary<string, object> ExtensionData;  
+    // 预留的通用扩展字典，用于挂载未来的附加属性
+    // 例如后续可加入 "recipe_ids", "buff_id" 等
+    
+    // ------ 方法 ------
+    // 获取本地化后的显示名称（优先查多语言表，查不到则返回NameKey本身）
+    string GetDisplayName();
+    // 获取本地化后的描述文本
+    string GetDescription();
+}
+```
+
+#### `CategoryDefinition.cs`
+```
+功能：分类节点的具体定义，继承 NodeDefinitionBase
+      IsAbstract 固定为 true
+```
+```csharp
+public class CategoryDefinition : NodeDefinitionBase
+{
+    // Category特有字段（当前无额外字段，IsAbstract在构造中强制设为true）
+    // 构造函数中自动设置 IsAbstract = true
+    
+    // 备注：分类节点不持有稀有度、价格等物品属性
+    // 后续如需分类级别的特殊属性，在此扩展
+}
+```
+
+#### `ItemDefinition.cs`
+```
+功能：具体物品的静态模板定义，继承 NodeDefinitionBase
+      IsAbstract 固定为 false
+      包含物品特有的静态属性（价格、稀有度、标签等）
+```
+```csharp
+public class ItemDefinition : NodeDefinitionBase
+{
+    // ====== 稀有度 ======
+    Rarity BaseRarity;            // 基础稀有度，默认 Rarity.Common
+    
+    // ====== 数量上限 ======
+    int BaseMaxStack;             // 基础持有上限（如999），扩容由玩家态管理
+    
+    // ====== 价格 ======
+    int BuyPrice;                 // 商店购买价格（0表示不可购买）
+    int SellPrice;                // 玩家出售价格（恒定价格）
+    
+    // ====== 标签 ======
+    ItemTag Tags;                 // 物品类型标签（可按位组合，用于筛选）
+    
+    // ====== 品质与耐久（装备/工具用）======
+    bool HasDurability;           // 是否具有耐久度属性
+    int MaxDurability;            // 最大耐久度（HasDurability为true时有效）
+    
+    // ====== 配方信息（合成系统预留）======
+    // 配方数据存于独立配置，此处仅记录关联的配方ID列表
+    List<string> RecipeIds;       // 该物品参与的合成配方ID列表
+    
+    // ====== 获取来源提示 ======
+    string AcquisitionHintKey;    // 获取途径提示文本key（如"通过砍树获得"）
+    
+    // ====== 详细描述（字典界面）======
+    string DetailDescriptionKey;  // 物品详细信息文本key（字典面板中展示）
+    
+    // ====== 工具/装备效果（扩展接口）======
+    // 预留：工具附带的加成属性，如 "原木获取率+100%"
+    // 使用通用字典或专用结构
+    Dictionary<string, float> ToolBonuses;
+    // 示例键值: "log_yield_multiplier" -> 1.0 表示基础x100%
+    //          "chop_speed_multiplier" -> 1.0 表示基础读条速度
+    
+    // ====== 扩展组件挂载点 ======
+    // 预留接口：后续可挂载额外组件数据（如Buff效果、特殊技能触发等）
+    // 通过 ExtensionData（继承自基类）实现
+    
+    // 构造函数中自动设置 IsAbstract = false
+}
+```
+
+#### `RarityDefinition.cs`
+```
+功能：稀有度的附加属性定义（颜色、排序权重、显示名等）
+```
+```csharp
+public class RarityDefinition
+{
+    Rarity Level;                 // 稀有度级别
+    string DisplayNameKey;        // 显示名（如"普通"、"稀有"）
+    string ColorHex;              // 文字颜色十六进制，如 "#FFFFFF"
+    int SortWeight;               // 排序权重，数值越大排越前（高稀有度优先）
+}
+```
+
+#### `SkillDefinition.cs`
+```
+功能：技能的静态定义（如砍树技能），包含等级表
+```
+```csharp
+public class SkillDefinition
+{
+    string Id;                    // 技能唯一ID，如 "skill_chopping"
+    string NameKey;               // 技能名称key，如 "砍树"
+    string DescriptionKey;        // 技能描述key
+    int MaxLevel;                 // 最大等级（如20）
+    int InitialLevel;             // 初始等级（如1）
+    long MaxTotalExp;             // 经验值存储上限（如34200）
+    
+    // 等级表：每个等级对应的详细数据
+    List<SkillLevelEntry> LevelTable;
+    
+    // ====== 关联 ======
+    string RequiredToolTag;       // 使用该技能所需的工具标签（如 "axe"）
+    string PrimaryOutputItemId;   // 主要产出物品ID（如 "mat_wood_log"）
+    
+    // ====== 扩展 ======
+    Dictionary<string, object> ExtensionData;  // 预留扩展
+}
+```
+
+#### `SkillLevelEntry.cs`
+```
+功能：技能等级表中单条等级的数据
+```
+```csharp
+public class SkillLevelEntry
+{
+    int Level;                    // 当前等级
+    long ExpToNextLevel;          // 升到下一级所需经验值（满级时为0或-1）
+    float OutputPerAction;        // 每次结算的基础产出量（如5.0个原木）
+    float ActionInterval;         // 每次读条/结算的时间间隔（秒，如6.0）
+    // 备注：实际产出 = OutputPerAction * 工具加成倍率
+    // 备注：实际间隔 = ActionInterval * 读条速度加成系数
+}
+```
+
+#### `EventDefinition.cs`
+```
+功能：游戏事件（按钮）的静态定义
+```
+```csharp
+public class EventDefinition
+{
+    string Id;                    // 事件唯一ID，如 "evt_pickup_stone_axe"
+    string NameKey;               // 事件按钮显示名key
+    string DescriptionKey;        // 事件描述key
+    EventType Type;               // 事件类型（一次性/可重复/挂机）
+    
+    // ====== 前置条件 ======
+    List<EventCondition> Prerequisites;
+    // 前置条件列表：满足所有条件后按钮才出现/可点击
+    // EventCondition 是一个结构体，见下方说明
+    
+    // ====== 消耗 ======
+    List<ItemCostEntry> Costs;    // 点击时消耗的物品列表（ID+数量）
+    
+    // ====== 奖励/效果 ======
+    List<ItemRewardEntry> Rewards;// 点击后获得的物品列表（ID+数量）
+    string GrantSkillExpId;       // 可选：点击后给予经验的技能ID
+    float GrantSkillExpAmount;    // 可选：给予的经验值数量
+    
+    // ====== 挂机专用 ======
+    string LinkedSkillId;         // 关联的技能ID（挂机事件用，如 "skill_chopping"）
+    
+    // ====== 关联 ======
+    string FactionId;             // 可选：所属势力ID
+    string ZoneId;                // 可选：所属区域ID
+    string ButtonListGroup;       // 所属按钮列表分组（用于UI分组显示）
+    
+    // ====== 弃用 ======
+    bool Deprecated;
+    
+    // ====== 扩展 ======
+    Dictionary<string, object> ExtensionData;
+}
+
+// 事件前置条件结构
+public class EventCondition
+{
+    string ConditionType;         // 条件类型："has_item", "skill_level", "faction_rep", "event_completed"
+    string TargetId;              // 目标ID（物品ID/技能ID/势力ID/事件ID）
+    int RequiredValue;            // 要求的数值（数量/等级/好感度）
+    // 备注：可扩展为更复杂的条件表达式
+}
+
+// 物品消耗条目
+public class ItemCostEntry
+{
+    string ItemId;                // 物品ID
+    int Amount;                   // 消耗数量
+}
+
+// 物品奖励条目
+public class ItemRewardEntry
+{
+    string ItemId;                // 物品ID
+    int Amount;                   // 获得数量
+    // 可选：概率掉落等后续扩展
+    float DropChance;             // 掉落概率（1.0=必定获得）
+}
+```
+
+#### `FactionDefinition.cs`
+```
+功能：妖怪势力的静态定义
+```
+```csharp
+public class FactionDefinition
+{
+    string Id;                    // 势力ID，如 "faction_scarlet_devil"
+    string NameKey;               // 势力名称key，如 "红魔馆"
+    string DescriptionKey;        // 势力描述key
+    int MaxReputation;            // 好感度上限（如100）
+    int PeaceThreshold;           // 建交所需好感度（如100）
+    
+    // ====== 关联NPC ======
+    List<string> NpcIds;          // 该势力下的NPC定义ID列表
+    
+    // ====== 关联事件 ======
+    List<string> FactionEventIds; // 该势力专属事件ID列表
+    
+    // ====== 扩展 ======
+    Dictionary<string, object> ExtensionData;
+}
+```
+
+#### `NpcDefinition.cs`
+```
+功能：NPC的静态定义（商人等）
+```
+```csharp
+public class NpcDefinition
+{
+    string Id;                    // NPC唯一ID，如 "npc_sakuya"
+    string NameKey;               // NPC名称key
+    string FactionId;             // 所属势力ID
+    
+    // ====== 商店 ======
+    bool HasShop;                 // 是否拥有商店
+    List<ShopItemEntry> ShopItems;// 售卖的商品列表
+    
+    // ====== 解锁条件 ======
+    int RequiredReputation;       // 需要的好感度才能交互
+    
+    // ====== 扩展 ======
+    Dictionary<string, object> ExtensionData;
+}
+```
+
+#### `ShopItemEntry.cs`
+```
+功能：商店单条商品的定义
+```
+```csharp
+public class ShopItemEntry
+{
+    string ItemId;                // 售卖的物品ID
+    int Stock;                    // 库存数量（-1表示无限）
+    
+    // ====== 灵活定价 ======
+    CurrencyType PaymentType;    // 支付类型：货币/以物易物/混合
+    int GoldCost;                 // 货币价格（PaymentType含Gold时有效）
+    List<ItemCostEntry> BarterCosts; // 以物易物所需道具列表
+    
+    // ====== 解锁条件 ======
+    int RequiredReputation;       // 购买该商品所需的好感度
+}
+```
+
+#### `ZoneDefinition.cs`
+```
+功能：危险区域/副本的静态定义
+```
+```csharp
+public class ZoneDefinition
+{
+    string Id;                    // 区域ID，如 "zone_misty_lake"
+    string NameKey;               // 区域名称key
+    string DescriptionKey;        // 区域描述key
+    
+    int MaxClearCount;            // 通关所需次数（如10次，每次+10%探索度）
+    string UnlocksZoneId;         // 通关后解锁的下一个区域ID
+    string UnlocksFactionId;      // 通关后解锁的势力ID（可选）
+    
+    // ====== 前置条件 ======
+    List<EventCondition> UnlockConditions;  // 进入该区域的前置条件
+    
+    // ====== 战斗预留 ======
+    // List<EnemyWaveDefinition> EnemyWaves;  // 敌人波次定义（预留，暂不实现）
+    
+    // ====== 扩展 ======
+    Dictionary<string, object> ExtensionData;
+}
+```
+
+---
+
+### 2.3 Core/Runtime（动态运行态）
+
+#### `ItemStack.cs`
+```
+功能：物品的动态实例数据，记录玩家持有某件物品的运行态
+      一个 ItemStack 对应一种物品在玩家背包中的状态
+```
+```csharp
+public class ItemStack
+{
+    // ====== 关联模板 ======
+    string ItemId;                // 对应的 ItemDefinition ID
+    
+    // ====== 动态数量 ======
+    int CurrentAmount;            // 当前持有数量
+    // 备注：最大数量 = ItemDefinition.BaseMaxStack + PlayerInventory.BonusCapacity(ItemId)
+    
+    // ====== 耐久（装备/工具）======
+    int CurrentDurability;        // 当前耐久度（无耐久的物品为-1）
+    
+    // ====== 动态稀有度（如有升级系统）======
+    Rarity CurrentRarity;         // 当前稀有度（默认继承模板的BaseRarity）
+    
+    // ====== 标记 ======
+    bool MarkedAsTrash;           // 是否被标记为垃圾（批量卖出用）
+    
+    // ====== 扩展 ======
+    Dictionary<string, object> DynamicData;  // 预留动态扩展数据
+    
+    // ------ 方法 ------
+    
+    // 获取当前最大持有上限（基础上限 + 扩容）
+    int GetMaxStack(PlayerInventory inventory);
+    
+    // 尝试增加数量，返回实际增加的数量（不超过上限）
+    int TryAdd(int amount, PlayerInventory inventory);
+    
+    // 尝试减少数量，返回是否成功（数量不足则失败）
+    bool TryRemove(int amount);
+    
+    // 检查是否可以消耗指定数量
+    bool CanAfford(int amount);
+}
+```
+
+#### `PlayerItemState.cs`
+```
+功能：玩家对某物品的个人状态（收藏、已获取、UI排序等）
+      与 ItemStack 一一对应或独立存在
+```
+```csharp
+public class PlayerItemState
+{
+    string ItemId;                // 对应物品ID
+    bool IsAcquired;              // 是否曾经获取过该物品（用于字典解锁）
+    bool IsFavorite;              // 是否收藏（置顶显示）
+    int PlayerDisplayOrder;       // 玩家自定义的UI展示顺位（-1表示未自定义，继承定义顺位）
+    
+    // 备注：IsAcquired 也可通过"是否存在对应的ItemStack"来隐式判断
+    //       但显式字段可以在物品数量归零后仍保留"已发现"状态
+}
+```
+
+#### `PlayerSkillState.cs`
+```
+功能：玩家某项技能的动态状态（等级、经验值）
+```
+```csharp
+public class PlayerSkillState
+{
+    string SkillId;               // 对应技能ID
+    int CurrentLevel;             // 当前等级
+    long CurrentExp;              // 当前累积经验值
+    // 备注：经验值会持续累积，不因升级而清零
+    //       是否可升级判断：CurrentExp >= 当前等级所需累计经验
+    
+    // ------ 方法 ------
+    
+    // 检查是否可以升级（可能一次升多级）
+    int GetAvailableLevelUps(SkillDefinition definition);
+    
+    // 执行升级（手动调用，可升多级）
+    void ApplyLevelUp(int levels);
+    
+    // 增加经验值
+    void AddExp(long amount, SkillDefinition definition);
+    
+    // 获取当前等级对应的等级条目数据
+    SkillLevelEntry GetCurrentLevelEntry(SkillDefinition definition);
+}
+```
+
+#### `PlayerFactionState.cs`
+```
+功能：玩家对某势力的好感度状态
+```
+```csharp
+public class PlayerFactionState
+{
+    string FactionId;             // 势力ID
+    int CurrentReputation;        // 当前好感度
+    bool IsPeaceful;              // 是否已建交
+    
+    // ------ 方法 ------
+    void AddReputation(int amount, FactionDefinition definition);
+    bool CheckPeaceCondition(FactionDefinition definition);
+}
+```
+
+#### `PlayerZoneState.cs`
+```
+功能：玩家对某区域的探索状态
+```
+```csharp
+public class PlayerZoneState
+{
+    string ZoneId;                // 区域ID
+    int ClearCount;               // 已通关次数
+    bool IsUnlocked;              // 是否已解锁
+    
+    // ------ 方法 ------
+    float GetExplorationPercent(ZoneDefinition definition);  // 探索度百分比
+    bool IsFullyCleared(ZoneDefinition definition);          // 是否完全通关
+}
+```
+
+#### `PlayerInventory.cs`
+```
+功能：玩家背包管理器，管理所有 ItemStack 与 PlayerItemState
+      提供物品增删查改、事务性批量操作
+```
+```csharp
+public class PlayerInventory
+{
+    // ====== 数据容器 ======
+    Dictionary<string, ItemStack> Stacks;           // 物品ID -> ItemStack
+    Dictionary<string, PlayerItemState> ItemStates;  // 物品ID -> 玩家物品状态
+    
+    // ====== 扩容系统 ======
+    Dictionary<string, int> BonusCapacities;        // 物品ID -> 额外扩容上限
+    int GlobalBonusCapacity;                         // 全局背包扩容值
+    
+    // ------ 查询方法 ------
+    
+    // 根据物品ID获取当前持有数量
+    int GetAmount(string itemId);
+    
+    // 获取某物品的最大持有上限（基础+扩容）
+    int GetMaxStack(string itemId, ItemDefinition definition);
+    
+    // 检查是否曾获得过某物品
+    bool HasEverAcquired(string itemId);
+    
+    // 获取所有已获得物品的ID列表
+    List<string> GetAcquiredItemIds();
+    
+    // 按排序规则获取物品展示列表（考虑收藏置顶、稀有度、顺位）
+    List<string> GetSortedDisplayList(ItemRegistry registry);
+    
+    // ------ 操作方法 ------
+    
+    // 添加物品（自动创建ItemStack和PlayerItemState如不存在）
+    int AddItem(string itemId, int amount, ItemRegistry registry);
+    
+    // 移除物品
+    bool RemoveItem(string itemId, int amount);
+    
+    // 切换收藏状态
+    void ToggleFavorite(string itemId);
+    
+    // 标记/取消垃圾标记
+    void ToggleTrashMark(string itemId);
+    
+    // 批量卖出所有垃圾标记物品，返回总售价
+    int SellAllTrash(ItemRegistry registry);
+    
+    // 设置玩家自定义排序
+    void SetPlayerDisplayOrder(string itemId, int order);
+    
+    // ------ 事务性批量操作 ------
+    
+    // 执行事务性批量操作（合成/交易），全部成功或全部回滚
+    // costs: 消耗物品列表, rewards: 获得物品列表
+    // 返回是否执行成功
+    bool ExecuteTransaction(
+        List<ItemCostEntry> costs,
+        List<ItemRewardEntry> rewards,
+        ItemRegistry registry
+    );
+    
+    // 预检查事务是否可执行（不实际执行）
+    bool CanExecuteTransaction(List<ItemCostEntry> costs);
+    
+    // ------ 扩容方法 ------
+    void AddBonusCapacity(string itemId, int amount);   // 特定物品扩容
+    void AddGlobalBonusCapacity(int amount);             // 全局扩容
+}
+```
+
+#### `PlayerProfile.cs`
+```
+功能：玩家档案总管理器，持有所有玩家运行态数据
+      作为存档系统的核心数据容器
+```
+```csharp
+public class PlayerProfile
+{
+    // ====== 基础信息 ======
+    string SaveVersion;               // 存档版本号，如 "0.1.0"
+    DateTime LastSaveTime;            // 上次保存时间
+    
+    // ====== 子系统数据 ======
+    PlayerInventory Inventory;        // 背包
+    Dictionary<string, PlayerSkillState> Skills;      // 技能ID -> 技能状态
+    Dictionary<string, PlayerFactionState> Factions;   // 势力ID -> 好感度状态
+    Dictionary<string, PlayerZoneState> Zones;         // 区域ID -> 探索状态
+    
+    // ====== 事件完成记录 ======
+    HashSet<string> CompletedOneshotEvents;  // 已完成的一次性事件ID集合
+    
+    // ====== 当前挂机状态 ======
+    string ActiveIdleEventId;         // 当前正在挂机的事件ID（null表示无）
+    double IdleAccumulatedTime;       // 当前挂机已累积的未结算时间（秒）
+    
+    // ====== 预留 ======
+    // 战斗相关状态（预留）
+    // Dictionary<string, object> BattleState;
+    
+    // 成就状态（预留）
+    // HashSet<string> UnlockedAchievements;
+    
+    // 任务进度（预留）
+    // Dictionary<string, QuestProgress> QuestStates;
+    
+    // ------ 方法 ------
+    // 创建新存档（初始化所有子系统为默认状态）
+    static PlayerProfile CreateNew();
+}
+```
+
+---
+
+### 2.4 Core/Registry（注册表）
+
+#### `ItemRegistry.cs`
+```
+功能：物品与分类的注册表
+      启动时加载所有YAML配置，构建树形结构，校验合法性，建立索引
+      提供按ID查询、按路径查询、树形打印等功能
+```
+```csharp
+public class ItemRegistry
+{
+    // ====== 数据存储 ======
+    Dictionary<string, CategoryDefinition> Categories;   // 分类ID -> 分类定义
+    Dictionary<string, ItemDefinition> Items;            // 物品ID -> 物品定义
+    Dictionary<string, NodeDefinitionBase> AllNodes;      // 所有节点（分类+物品）ID -> 定义
+    
+    // ====== 树形索引 ======
+    Dictionary<string, List<string>> ChildrenMap;         // 父ID -> 子节点ID列表
+    List<string> RootNodeIds;                             // 根节点ID列表（无父节点的）
+    
+    // ====== 稀有度定义 ======
+    Dictionary<Rarity, RarityDefinition> RarityDefinitions;
+    
+    // ------ 初始化方法 ------
+    
+    // 从YAML配置文件加载所有定义
+    void LoadFromYaml(string categoriesPath, string itemsPath);
+    
+    // 注册单个分类（内部调用）
+    void RegisterCategory(CategoryDefinition category);
+    
+    // 注册单个物品（内部调用）
+    void RegisterItem(ItemDefinition item);
+    
+    // 构建树形索引（在所有注册完成后调用）
+    void BuildTree();
+    
+    // 确保分类路径存在（自动创建缺失的分类节点）
+    // 如 EnsureCategoryPath("consumable/cooking_food") 
+    void EnsureCategoryPath(string path);
+    
+    // ------ 查询方法 ------
+    
+    // 按ID查找物品定义
+    ItemDefinition GetItem(string itemId);
+    
+    // 按ID查找分类定义
+    CategoryDefinition GetCategory(string categoryId);
+    
+    // 按ID查找任意节点
+    NodeDefinitionBase GetNode(string nodeId);
+    
+    // 获取某节点的所有子节点ID
+    List<string> GetChildren(string parentId);
+    
+    // 获取某节点的完整祖先路径（从根到自身）
+    List<string> GetAncestorPath(string nodeId);
+    
+    // 获取某分类下所有物品（递归，含子分类中的物品）
+    List<ItemDefinition> GetAllItemsUnderCategory(string categoryId);
+    
+    // 按标签筛选物品
+    List<ItemDefinition> GetItemsByTag(ItemTag tag);
+    
+    // 获取排序后的子节点列表（按稀有度权重 -> 定义顺位 -> ID字母序）
+    List<string> GetSortedChildren(string parentId);
+    
+    // ------ 校验方法 ------
+    
+    // 全量合法性校验，返回校验报告
+    ValidationReport ValidateAll();
+    // 校验内容包括：
+    //   - 重复ID检测
+    //   - 循环依赖检测（无环校验）
+    //   - 缺失父节点检测
+    //   - 孤立节点检测（无父且非根的节点）
+    //   - 同级顺位冲突检测（Warning级别，按ID字母序兜底）
+    //   - 弃用物品引用检测
+    
+    // ------ 排序方法 ------
+    
+    // 对指定父节点下的子节点重新编排顺位（ReIndex）
+    void ReIndex(string parentId, int startOrder = 100, int step = 100);
+    
+    // 将某节点移动到同级兄弟中的指定位置
+    void MoveNodeOrder(string nodeId, int newOrder);
+    
+    // 将某节点移动到同级中某兄弟之前
+    void MoveNodeBefore(string nodeId, string beforeNodeId);
+    
+    // ------ 打印方法 ------
+    
+    // 在控制台日志中打印完整物品树形结构
+    void PrintTreeToLog();
+    
+    // 将物品树形结构输出到文件（带层级缩进）
+    void PrintTreeToFile(string filePath);
+    
+    // 获取树形结构的格式化字符串
+    string GetTreeString();
+}
+
+// 校验报告类
+public class ValidationReport
+{
+    List<string> Errors;          // 致命错误列表
+    List<string> Warnings;        // 警告列表（如顺位冲突）
+    List<string> Info;            // 信息列表
+    bool HasErrors;               // 是否存在致命错误
+    
+    void PrintToLog();            // 打印到控制台
+    void PrintToFile(string path);// 输出到文件
+}
+```
+
+#### `SkillRegistry.cs`
+```
+功能：技能注册表，加载并管理所有技能定义
+```
+```csharp
+public class SkillRegistry
+{
+    Dictionary<string, SkillDefinition> Skills;  // 技能ID -> 技能定义
+    
+    void LoadFromYaml(string path);
+    SkillDefinition GetSkill(string skillId);
+    List<SkillDefinition> GetAllSkills();
+    
+    // 根据技能ID和等级获取对应的等级条目
+    SkillLevelEntry GetLevelEntry(string skillId, int level);
+}
+```
+
+#### `EventRegistry.cs`
+```
+功能：事件注册表，加载并管理所有事件定义
+```
+```csharp
+public class EventRegistry
+{
+    Dictionary<string, EventDefinition> Events;  // 事件ID -> 事件定义
+    
+    // 按类型分组的索引
+    Dictionary<EventType, List<string>> EventsByType;
+    // 按势力分组的索引
+    Dictionary<string, List<string>> EventsByFaction;
+    // 按区域分组的索引
+    Dictionary<string, List<string>> EventsByZone;
+    // 按按钮列表分组的索引
+    Dictionary<string, List<string>> EventsByButtonGroup;
+    
+    void LoadFromYaml(string clickPath, string oneshotPath, string idlePath);
+    EventDefinition GetEvent(string eventId);
+    
+    // 获取指定按钮组中的事件列表
+    List<EventDefinition> GetEventsByGroup(string groupId);
+    
+    // 检查某事件的前置条件是否满足
+    bool CheckPrerequisites(string eventId, PlayerProfile profile);
+}
+```
+
+#### `FactionRegistry.cs`
+```
+功能：势力注册表
+```
+```csharp
+public class FactionRegistry
+{
+    Dictionary<string, FactionDefinition> Factions;
+    Dictionary<string, NpcDefinition> Npcs;
+    
+    void LoadFromYaml(string path);
+    FactionDefinition GetFaction(string factionId);
+    NpcDefinition GetNpc(string npcId);
+    List<NpcDefinition> GetNpcsByFaction(string factionId);
+}
+```
+
+#### `ZoneRegistry.cs`
+```
+功能：区域注册表
+```
+```csharp
+public class ZoneRegistry
+{
+    Dictionary<string, ZoneDefinition> Zones;
+    
+    void LoadFromYaml(string path);
+    ZoneDefinition GetZone(string zoneId);
+    
+    // 获取解锁顺序链
+    List<string> GetZoneProgressionChain();
+}
+```
+
+---
+
+### 2.5 Core/Helpers（工具类）
+
+#### `YamlConfigLoader.cs`
+```
+功能：读取和解析YAML配置文件的通用工具
+      依赖 YamlDotNet 库（需通过NuGet引入）
+```
+```csharp
+public static class YamlConfigLoader
+{
+    // 从文件路径加载并反序列化为指定类型
+    static T Load<T>(string filePath);
+    
+    // 从文件路径加载为字典列表（通用解析）
+    static List<Dictionary<string, object>> LoadAsList(string filePath);
+    
+    // 加载分类定义列表
+    static List<CategoryDefinition> LoadCategories(string filePath);
+    
+    // 加载物品定义列表
+    static List<ItemDefinition> LoadItems(string filePath);
+    
+    // 加载技能定义列表
+    static List<SkillDefinition> LoadSkills(string filePath);
+    
+    // 加载事件定义列表
+    static List<EventDefinition> LoadEvents(string filePath);
+}
+```
+
+#### `TreeValidator.cs`
+```
+功能：树形结构合法性校验工具
+```
+```csharp
+public static class TreeValidator
+{
+    // 检测是否存在循环依赖（返回参与循环的节点ID列表）
+    static List<string> DetectCycles(Dictionary<string, string> childToParentMap);
+    
+    // 检测重复ID
+    static List<string> DetectDuplicateIds(IEnumerable<string> ids);
+    
+    // 检测缺失父节点的节点
+    static List<string> DetectMissingParents(
+        Dictionary<string, string> childToParentMap,
+        HashSet<string> allNodeIds
+    );
+    
+    // 检测孤立节点（既非根节点，也不在任何父节点的子列表中）
+    static List<string> DetectOrphanNodes(
+        Dictionary<string, List<string>> childrenMap,
+        List<string> rootIds,
+        HashSet<string> allNodeIds
+    );
+    
+    // 检测同级顺位冲突
+    static List<(string nodeA, string nodeB, int order)> DetectOrderConflicts(
+        Dictionary<string, List<string>> childrenMap,
+        Dictionary<string, int> nodeOrders
+    );
+    
+    // 执行完整校验并生成报告
+    static ValidationReport FullValidation(ItemRegistry registry);
+}
+```
+
+#### `SortingHelper.cs`
+```
+功能：排序相关的工具方法
+```
+```csharp
+public static class SortingHelper
+{
+    // 默认步长
+    const int DEFAULT_STEP = 100;
+    
+    // 为节点列表生成稀疏整数顺位
+    static Dictionary<string, int> GenerateSparseOrders(
+        List<string> nodeIds,
+        int start = 100,
+        int step = 100
+    );
+    
+    // 批量重排（ReIndex）：将指定列表的顺位重新编为等间距
+    static void ReIndex(
+        List<NodeDefinitionBase> nodes,
+        int start = 100,
+        int step = 100
+    );
+    
+    // 多级排序比较器：收藏优先 > 稀有度降序 > 顺位升序 > ID字母序
+    static int CompareForDisplay(
+        string idA,
+        string idB,
+        ItemRegistry registry,
+        PlayerInventory inventory
+    );
+    
+    // 将节点插入到指定位置前，返回新的顺位值
+    static int CalculateInsertOrder(int beforeOrder, int afterOrder);
+}
+```
+
+#### `TreePrinter.cs`
+```
+功能：将物品树形结构格式化输出
+```
+```csharp
+public static class TreePrinter
+{
+    // 生成树形结构的格式化字符串（带缩进和层级标识）
+    static string FormatTree(ItemRegistry registry, SortMode sortMode = SortMode.DefinitionOrder);
+    
+    // 打印到Godot控制台（GD.Print）
+    static void PrintToConsole(ItemRegistry registry);
+    
+    // 输出到文件（按层级缩进，分类和物品分行）
+    static void PrintToFile(ItemRegistry registry, string filePath);
+    
+    // 排序模式枚举
+    enum SortMode
+    {
+        DefinitionOrder,    // 按定义顺位排序
+        PlayerOrder,        // 按玩家自定义顺位排序
+        Alphabetical        // 按ID字母序
+    }
+}
+```
+
+#### `LocalizationManager.cs`
+```
+功能：多语言管理器
+      前期直接返回key本身（中文）；后期加载多语言表后返回翻译
+```
+```csharp
+public class LocalizationManager
+{
+    // 当前语言代码（如 "zh", "en", "ja"）
+    string CurrentLocale;
+    
+    // 多语言数据表：locale -> (key -> translated_text)
+    Dictionary<string, Dictionary<string, string>> LocaleData;
+    
+    // 是否已加载多语言表
+    bool IsLocalizationLoaded;
+    
+    // ------ 方法 ------
+    
+    // 加载指定语言的多语言表
+    void LoadLocale(string locale, string filePath);
+    
+    // 设置当前语言
+    void SetLocale(string locale);
+    
+    // 获取翻译文本（如找不到key则返回key本身——前期所有中文key直接显示）
+    string Tr(string key);
+    
+    // 检查某个key是否存在翻译
+    bool HasTranslation(string key);
+    
+    // 获取所有已加载的语言列表
+    List<string> GetAvailableLocales();
+}
+```
+
+#### `TransactionHelper.cs`
+```
+功能：事务性批量操作辅助工具
+      确保合成/交易操作的原子性（全成功或全回滚）
+```
+```csharp
+public static class TransactionHelper
+{
+    // 执行事务：先检查所有消耗是否满足，满足则扣除并给予奖励
+    // 返回事务结果
+    static TransactionResult Execute(
+        PlayerInventory inventory,
+        List<ItemCostEntry> costs,
+        List<ItemRewardEntry> rewards,
+        ItemRegistry registry
+    );
+    
+    // 仅预检查（不执行），返回是否可以执行及不足的物品列表
+    static TransactionPrecheck Precheck(
+        PlayerInventory inventory,
+        List<ItemCostEntry> costs
+    );
+}
+
+public class TransactionResult
+{
+    bool Success;                    // 是否成功
+    string FailReason;               // 失败原因
+    List<(string itemId, int delta)> Changes;  // 实际变动列表
+}
+
+public class TransactionPrecheck
+{
+    bool CanExecute;                 // 是否可执行
+    List<(string itemId, int required, int owned)> Shortages;  // 不足的物品清单
+}
+```
+
+---
+
+### 2.6 Core/SaveLoad（存档系统）
+
+#### `SaveData.cs`
+```
+功能：存档数据结构，包含版本号和全部玩家数据
+```
+```csharp
+public class SaveData
+{
+    string SaveVersion;               // 存档版本号（与游戏版本对应）
+    DateTime SaveTimestamp;           // 存档时间戳
+    PlayerProfile Profile;            // 玩家完整档案数据
+    
+    // 预留元数据
+    Dictionary<string, object> Metadata;
+}
+```
+
+#### `SaveManager.cs`
+```
+功能：存档读写管理器
+```
+```csharp
+public class SaveManager
+{
+    string SaveFilePath;              // 存档文件路径
+    
+    // 保存玩家数据到文件
+    void Save(PlayerProfile profile, string version);
+    
+    // 从文件加载存档（含版本迁移）
+    SaveData Load();
+    
+    // 检查存档是否存在
+    bool SaveExists();
+    
+    // 删除存档
+    void DeleteSave();
+    
+    // 获取存档版本号（不完整加载）
+    string PeekSaveVersion();
+}
+```
+
+#### `MigrationRunner.cs`
+```
+功能：存档版本迁移执行器
+      根据版本号差异依次执行迁移函数
+```
+```csharp
+public class MigrationRunner
+{
+    // 已注册的迁移函数：版本号 -> 迁移方法
+    SortedDictionary<string, Action<SaveData>> MigrationSteps;
+    
+    // 注册迁移步骤
+    void RegisterMigration(string fromVersion, Action<SaveData> migrationAction);
+    
+    // 执行迁移：从存档版本升级到当前版本
+    SaveData Migrate(SaveData oldSave, string currentVersion);
+    
+    // 处理弃用物品的迁移逻辑
+    // 扫描存档中的物品，将deprecated物品替换为replacement_id指定的新物品
+    void MigrateDeprecatedItems(SaveData save, ItemRegistry registry);
+}
+```
+
+---
+
+### 2.7 Systems（游戏逻辑系统）
+
+#### `IdleSystem.cs`
+```
+功能：挂机循环系统
+      管理挂机事件的计时、结算、产出
+      作为 Godot Node 挂载到场景树中，利用 _Process 进行计时
+```
+```csharp
+// 继承 Godot Node，可挂载到场景树
+public partial class IdleSystem : Node
+{
+    // ====== 状态 ======
+    bool IsIdling;                    // 是否正在挂机
+    string CurrentIdleEventId;        // 当前挂机事件ID
+    double AccumulatedTime;           // 累积未结算时间（秒）
+    double CurrentActionInterval;     // 当前读条间隔（已算加成）
+    
+    // ====== 引用 ======
+    // 需在 _Ready 中获取或注入
+    // PlayerProfile, ItemRegistry, SkillRegistry, EventRegistry
+    
+    // ------ 核心方法 ------
+    
+    // 开始挂机（传入事件ID）
+    void StartIdle(string eventId);
+    
+    // 停止挂机
+    void StopIdle();
+    
+    // Godot _Process 回调：每帧累加时间并检查是否达到结算间隔
+    override void _Process(double delta);
+    
+    // 执行一次结算（产出物品、增加经验值）
+    void ExecuteAction();
+    
+    // 计算当前实际产出量（基础产出 * 工具加成 * 其他加成）
+    float CalculateActualOutput(SkillLevelEntry entry, PlayerInventory inventory);
+    
+    // 计算当前实际读条时间（基础间隔 * 速度加成系数）
+    float CalculateActualInterval(SkillLevelEntry entry, PlayerInventory inventory);
+    
+    // 获取当前装备的工具提供的加成数值
+    // 接口预留：后续可接入装备系统
+    float GetToolBonus(string bonusKey);
+    
+    // 获取来自Buff/道具的额外加成
+    // 接口预留：后续可接入Buff系统
+    float GetBuffBonus(string bonusKey);
+    
+    // ------ 信号 ------
+    // [Signal] 结算完成信号（通知UI更新）
+    delegate void IdleActionCompleted(string eventId, string itemId, int amount, long expGained);
+    // [Signal] 挂机状态变更信号
+    delegate void IdleStateChanged(bool isIdling, string eventId);
+}
+```
+
+#### `ClickEventSystem.cs`
+```
+功能：单次点击事件处理系统
+      处理一次性事件和可重复点击事件
+```
+```csharp
+public partial class ClickEventSystem : Node
+{
+    // ------ 方法 ------
+    
+    // 执行点击事件
+    // 返回是否执行成功
+    bool ExecuteEvent(string eventId, PlayerProfile profile, ItemRegistry itemRegistry, EventRegistry eventRegistry);
+    
+    // 检查事件是否可执行（前置条件+物品消耗检查）
+    bool CanExecuteEvent(string eventId, PlayerProfile profile, EventRegistry eventRegistry);
+    
+    // 检查事件按钮是否应该显示（前置条件是否满足）
+    bool ShouldShowEvent(string eventId, PlayerProfile profile, EventRegistry eventRegistry);
+    
+    // 标记一次性事件为已完成
+    void MarkOneshotComplete(string eventId, PlayerProfile profile);
+    
+    // ------ 信号 ------
+    // [Signal] 事件执行完成
+    delegate void EventExecuted(string eventId, bool success);
+    // [Signal] 一次性事件完成（按钮消失）
+    delegate void OneshotEventCompleted(string eventId);
+}
+```
+
+#### `SkillSystem.cs`
+```
+功能：技能经验值管理与升级系统
+```
+```csharp
+public partial class SkillSystem : Node
+{
+    // ------ 方法 ------
+    
+    // 为指定技能增加经验值
+    void AddSkillExp(string skillId, long amount, PlayerProfile profile, SkillRegistry registry);
+    
+    // 检查指定技能是否可以升级
+    bool CanLevelUp(string skillId, PlayerProfile profile, SkillRegistry registry);
+    
+    // 获取可升级的级数
+    int GetAvailableLevelUps(string skillId, PlayerProfile profile, SkillRegistry registry);
+    
+    // 执行升级（手动触发，可连升多级）
+    void LevelUp(string skillId, PlayerProfile profile, SkillRegistry registry);
+    
+    // 获取当前等级的技能数据
+    SkillLevelEntry GetCurrentLevelData(string skillId, PlayerProfile profile, SkillRegistry registry);
+    
+    // ------ 信号 ------
+    // [Signal] 经验值变化
+    delegate void SkillExpChanged(string skillId, long currentExp, long requiredExp);
+    // [Signal] 技能升级
+    delegate void SkillLeveledUp(string skillId, int newLevel);
+    // [Signal] 可升级通知
+    delegate void SkillCanLevelUp(string skillId);
+}
+```
+
+#### `ShopSystem.cs`
+```
+功能：买入交易系统
+      支持货币购买和以物易物
+```
+```csharp
+public partial class ShopSystem : Node
+{
+    // ------ 方法 ------
+    
+    // 获取某NPC的可购买商品列表（考虑好感度解锁）
+    List<ShopItemEntry> GetAvailableShopItems(
+        string npcId,
+        PlayerProfile profile,
+        FactionRegistry factionRegistry
+    );
+    
+    // 检查是否可以购买某商品
+    bool CanBuy(ShopItemEntry entry, PlayerProfile profile, ItemRegistry itemRegistry);
+    
+    // 执行购买（事务性：扣除货币/道具，添加物品）
+    bool Buy(
+        ShopItemEntry entry,
+        PlayerProfile profile,
+        ItemRegistry itemRegistry
+    );
+    
+    // ------ 信号 ------
+    delegate void ItemPurchased(string itemId, int amount);
+    delegate void PurchaseFailed(string itemId, string reason);
+}
+```
+
+#### `SellSystem.cs`
+```
+功能：玩家售卖系统（恒定价格，不与NPC关联）
+```
+```csharp
+public partial class SellSystem : Node
+{
+    // 卖出指定物品的指定数量
+    int Sell(string itemId, int amount, PlayerProfile profile, ItemRegistry registry);
+    
+    // 批量卖出所有垃圾标记物品
+    int SellAllTrash(PlayerProfile profile, ItemRegistry registry);
+    
+    // ------ 信号 ------
+    delegate void ItemsSold(List<(string itemId, int amount, int goldEarned)> soldItems);
+}
+```
+
+#### `FactionSystem.cs`
+```
+功能：势力好感度管理系统
+```
+```csharp
+public partial class FactionSystem : Node
+{
+    // 增加好感度
+    void AddReputation(string factionId, int amount, PlayerProfile profile, FactionRegistry registry);
+    
+    // 检查是否满足建交条件
+    bool CanEstablishPeace(string factionId, PlayerProfile profile, FactionRegistry registry);
+    
+    // 执行建交
+    void EstablishPeace(string factionId, PlayerProfile profile, FactionRegistry registry);
+    
+    // 获取当前好感度
+    int GetReputation(string factionId, PlayerProfile profile);
+    
+    // ------ 信号 ------
+    delegate void ReputationChanged(string factionId, int newValue);
+    delegate void PeaceEstablished(string factionId);
+}
+```
+
+#### `ZoneSystem.cs`
+```
+功能：区域探索/副本通关系统
+```
+```csharp
+public partial class ZoneSystem : Node
+{
+    // 完成一次副本通关
+    void CompleteClear(string zoneId, PlayerProfile profile, ZoneRegistry registry);
+    
+    // 检查区域是否已解锁
+    bool IsZoneUnlocked(string zoneId, PlayerProfile profile);
+    
+    // 获取探索百分比
+    float GetExplorationPercent(string zoneId, PlayerProfile profile, ZoneRegistry registry);
+    
+    // 检查并解锁新区域
+    void CheckAndUnlockNextZone(string zoneId, PlayerProfile profile, ZoneRegistry registry);
+    
+    // ------ 信号 ------
+    delegate void ZoneCleared(string zoneId, int clearCount, float explorationPercent);
+    delegate void ZoneUnlocked(string zoneId);
+}
+```
+
+#### `QuestSystem.cs`
+```
+功能：任务系统（主线建交任务+支线任务）
+      预留框架，基础实现
+```
+```csharp
+public partial class QuestSystem : Node
+{
+    // 预留声明：
+    // 检查主线进度（所有势力建交进度）
+    // float GetMainQuestProgress(PlayerProfile profile, FactionRegistry registry);
+    
+    // 检查是否所有势力均已建交（游戏通关条件）
+    // bool IsMainQuestComplete(PlayerProfile profile, FactionRegistry registry);
+    
+    // 预留：支线任务相关
+    // void AcceptQuest(string questId);
+    // void CompleteQuest(string questId);
+    // bool CheckQuestConditions(string questId);
+}
+```
+
+#### `CraftingSystem.cs`
+```
+功能：合成/制作系统（预留，可选实现）
+```
+```csharp
+public partial class CraftingSystem : Node
+{
+    // 预留声明：
+    
+    // 检查是否可以合成
+    // bool CanCraft(string recipeId, PlayerProfile profile, ItemRegistry registry);
+    
+    // 执行合成（事务性操作）
+    // bool Craft(string recipeId, PlayerProfile profile, ItemRegistry registry);
+    
+    // 获取可用配方列表
+    // List<RecipeDefinition> GetAvailableRecipes(PlayerProfile profile);
+}
+```
+
+#### `BattleSystem.cs`
+```
+功能：战斗系统（仅声明框架，暂不实现）
+      预留完整的扩展接口
+```
+```csharp
+public partial class BattleSystem : Node
+{
+    // ========================================
+    // 战斗系统 - 预留框架
+    // 说明：本类仅声明接口和预留结构，
+    //       待后续设计战斗数值体系后再实现
+    // ========================================
+    
+    // ====== 战斗状态 ======
+    // bool IsInBattle;           // 是否处于战斗中
+    // string CurrentZoneId;      // 当前战斗区域
+    // int CurrentWave;           // 当前波次
+    
+    // ====== 角色战斗属性 ======
+    // 预留结构：BattleStats
+    // - int HP, MaxHP
+    // - int Stamina, MaxStamina
+    // - int MP, MaxMP           // 魔力
+    // - int SP, MaxSP           // 灵力
+    // - int Attack
+    // - int Defense
+    // - float CritRate
+    // - float CritDamage
+    // 备注：这些属性的来源 = 基础值 + 装备加成 + Buff加成 + 技能加成
+    
+    // ====== 预留方法 ======
+    
+    // 开始战斗
+    // void StartBattle(string zoneId, PlayerProfile profile);
+    
+    // 执行一回合
+    // BattleTurnResult ExecuteTurn();
+    
+    // 结束战斗（胜利/失败）
+    // void EndBattle(bool victory);
+    
+    // 计算伤害
+    // int CalculateDamage(BattleStats attacker, BattleStats defender);
+    
+    // 获取玩家当前战斗属性（基础 + 装备 + Buff）
+    // BattleStats GetPlayerBattleStats(PlayerProfile profile);
+    
+    // ====== 预留信号 ======
+    // delegate void BattleStarted(string zoneId);
+    // delegate void BattleTurnCompleted(BattleTurnResult result);
+    // delegate void BattleEnded(bool victory, List<ItemRewardEntry> rewards);
+    
+    // ====== 预留子类 ======
+    // BattleStats - 战斗属性数据结构
+    // BattleTurnResult - 回合结果
+    // EnemyDefinition - 敌人定义
+    // EnemyWaveDefinition - 敌人波次定义
+}
+```
+
+#### `AchievementSystem.cs`
+```
+功能：成就系统（预留框架）
+```
+```csharp
+public partial class AchievementSystem : Node
+{
+    // 预留声明：
+    // void CheckAchievement(string achievementId, PlayerProfile profile);
+    // void UnlockAchievement(string achievementId, PlayerProfile profile);
+    // List<AchievementDefinition> GetAllAchievements();
+    // List<AchievementDefinition> GetUnlockedAchievements(PlayerProfile profile);
+}
+```
+
+#### `EquipmentSystem.cs`
+```
+功能：装备系统（预留框架）
+      管理玩家的装备栏位、装备效果
+```
+```csharp
+public partial class EquipmentSystem : Node
+{
+    // 预留声明：
+    
+    // 装备栏位定义（头盔、衣服、武器、工具等）
+    // Dictionary<string, string> EquippedItems;  // 栏位名 -> 物品ID
+    
+    // 装备物品到指定栏位
+    // bool Equip(string slotName, string itemId, PlayerProfile profile);
+    
+    // 卸下装备
+    // void Unequip(string slotName, PlayerProfile profile);
+    
+    // 获取所有装备提供的属性加成总和
+    // Dictionary<string, float> GetTotalEquipmentBonuses(PlayerProfile profile, ItemRegistry registry);
+    
+    // 获取当前装备的工具（用于挂机系统查询工具加成）
+    // ItemDefinition GetEquippedTool(string toolType, PlayerProfile profile, ItemRegistry registry);
+}
+```
+
+#### `BuffSystem.cs`
+```
+功能：Buff/道具加成系统
+      管理临时或永久的效果加成
+```
+```csharp
+public partial class BuffSystem : Node
+{
+    // 预留声明：
+    
+    // 当前激活的Buff列表
+    // List<ActiveBuff> ActiveBuffs;
+    
+    // 添加Buff
+    // void AddBuff(string buffId, float duration, PlayerProfile profile);
+    
+    // 移除Buff
+    // void RemoveBuff(string buffId);
+    
+    // 获取指定属性的Buff加成总和
+    // float GetBuffBonus(string bonusKey);
+    
+    // _Process中更新Buff持续时间
+    // override void _Process(double delta);
+    
+    // 信号
+    // delegate void BuffApplied(string buffId);
+    // delegate void BuffExpired(string buffId);
+}
+```
+
+---
+
+### 2.8 Autoload（全局单例）
+
+#### `GameManager.cs`
+```
+功能：游戏总管理器，编排启动流程
+      作为 Godot AutoLoad 节点注册
+      负责初始化所有注册表、加载配置、加载存档、校验数据
+```
+```csharp
+public partial class GameManager : Node
+{
+    // ====== 注册表实例 ======
+    ItemRegistry ItemRegistry;
+    SkillRegistry SkillRegistry;
+    EventRegistry EventRegistry;
+    FactionRegistry FactionRegistry;
+    ZoneRegistry ZoneRegistry;
+    
+    // ====== 管理器实例 ======
+    LocalizationManager Localization;
+    SaveManager SaveManager;
+    MigrationRunner MigrationRunner;
+    
+    // ====== 玩家数据 ======
+    PlayerProfile CurrentProfile;
+    
+    // ====== 游戏版本 ======
+    const string GAME_VERSION = "0.1.0";
+    
+    // ------ 生命周期 ------
+    
+    // Godot _Ready：游戏启动初始化流程
+    override void _Ready();
+    // 执行顺序：
+    //   1. 初始化多语言管理器
+    //   2. 加载所有YAML配置到注册表
+    //   3. 构建树形结构
+    //   4. 执行合法性校验
+    //   5. 输出校验报告（打印/文件）
+    //   6. 打印物品树形结构
+    //   7. 加载存档（如存在）
+    //   8. 执行存档版本迁移（如需要）
+    //   9. 如无存档则创建新玩家档案
+    
+    // ------ 便捷访问方法 ------
+    // 供其他系统和UI快速获取注册表和玩家数据
+    
+    static GameManager Instance;  // 单例引用
+    
+    // 获取物品定义
+    ItemDefinition GetItemDef(string itemId);
+    
+    // 获取技能定义
+    SkillDefinition GetSkillDef(string skillId);
+    
+    // 保存游戏
+    void SaveGame();
+    
+    // 加载游戏
+    void LoadGame();
+}
+```
+
+#### `SignalBus.cs`
+```
+功能：全局信号总线
+      集中管理跨系统的信号通信
+      使用 Godot 的信号系统或 C# 事件
+```
+```csharp
+public partial class SignalBus : Node
+{
+    static SignalBus Instance;
+    
+    // ====== 物品相关信号 ======
+    // [Signal] 物品数量变化
+    delegate void ItemAmountChanged(string itemId, int oldAmount, int newAmount);
+    // [Signal] 物品首次获取
+    delegate void ItemFirstAcquired(string itemId);
+    // [Signal] 物品收藏状态变化
+    delegate void ItemFavoriteChanged(string itemId, bool isFavorite);
+    
+    // ====== 技能相关信号 ======
+    // [Signal] 技能经验变化
+    delegate void SkillExpChanged(string skillId, long currentExp);
+    // [Signal] 技能升级
+    delegate void SkillLevelUp(string skillId, int newLevel);
+    
+    // ====== 事件相关信号 ======
+    // [Signal] 事件执行
+    delegate void EventTriggered(string eventId);
+    // [Signal] 挂机状态变更
+    delegate void IdleStateChanged(bool isIdling, string eventId);
+    
+    // ====== 势力相关信号 ======
+    // [Signal] 好感度变化
+    delegate void ReputationChanged(string factionId, int newValue);
+    // [Signal] 建交完成
+    delegate void PeaceEstablished(string factionId);
+    
+    // ====== 区域相关信号 ======
+    // [Signal] 区域解锁
+    delegate void ZoneUnlocked(string zoneId);
+    
+    // ====== UI相关信号 ======
+    // [Signal] 日志消息
+    delegate void LogMessage(string message, string category);
+    // [Signal] 请求刷新UI
+    delegate void UIRefreshRequested(string panelName);
+    
+    // 备注：所有子系统通过 SignalBus 发出信号，UI层监听并更新
+    //       这样可以解耦逻辑系统和UI系统
+}
+```
+
+---
+
+### 2.9 UI（界面脚本）
+
+#### `MainUI.cs`
+```
+功能：主界面布局管理
+      管理左侧内容区域和右侧状态栏的整体布局
+      管理标签页切换
+```
+```csharp
+public partial class MainUI : Control
+{
+    // ====== 子面板引用 ======
+    // 通过 [Export] 或 GetNode 获取
+    
+    // 标签页容器（背包、属性、战斗、任务、字典、成就）
+    TabContainer MainTabContainer;
+    
+    // 右侧角色状态栏（始终显示）
+    CharacterStatusPanel StatusPanel;
+    
+    // 日志面板（底部或独立区域）
+    LogPanel LogPanel;
+    
+    // ------ 方法 ------
+    override void _Ready();       // 初始化UI布局
+    void SwitchToTab(int index);  // 切换标签页
+    void RefreshAllPanels();      // 刷新所有面板
+}
+```
+
+#### `ButtonListPanel.cs`
+```
+功能：通用按钮列表面板（可复用多组）
+      用于显示不同类型的事件按钮列表
+      支持分组显示（单次点击/一次性/挂机按钮分列）
+```
+```csharp
+public partial class ButtonListPanel : Control
+{
+    // ====== 配置 ======
+    string ButtonGroupId;             // 按钮列表分组ID
+    EventType FilterType;             // 过滤的事件类型
+    
+    // ====== 子节点容器 ======
+    VBoxContainer ButtonContainer;    // 按钮列表容器
+    
+    // ------ 方法 ------
+    
+    // 刷新按钮列表（根据当前玩家状态筛选可见按钮）
+    void RefreshButtons(PlayerProfile profile, EventRegistry eventRegistry);
+    
+    // 添加事件按钮
+    void AddEventButton(EventDefinition eventDef);
+    
+    // 移除事件按钮
+    void RemoveEventButton(string eventId);
+    
+    // 处理按钮点击
+    void OnEventButtonPressed(string eventId);
+}
+```
+
+#### `EventButtonItem.cs`
+```
+功能：单个事件按钮UI单元
+      支持显示进度条（挂机事件）、禁用状态（条件不满足）
+```
+```csharp
+public partial class EventButtonItem : Control
+{
+    // ====== 绑定数据 ======
+    string EventId;                   // 绑定的事件ID
+    
+    // ====== UI元素引用 ======
+    Button ActionButton;              // 按钮本体
+    Label NameLabel;                  // 按钮文字
+    ProgressBar IdleProgressBar;      // 挂机进度条（仅挂机事件显示）
+    
+    // ------ 方法 ------
+    
+    // 设置按钮数据
+    void Setup(EventDefinition eventDef);
+    
+    // 更新按钮状态（可用/禁用/挂机中）
+    void UpdateState(bool canExecute, bool isIdling);
+    
+    // 更新进度条进度（0.0 ~ 1.0）
+    void UpdateProgress(float progress);
+    
+    // 按钮点击回调
+    void OnPressed();
+}
+```
+
+#### `InventoryPanel.cs`
+```
+功能：背包界面
+      显示玩家已获取的物品列表，支持排序、筛选、收藏、垃圾标记
+```
+```csharp
+public partial class InventoryPanel : Control
+{
+    // ====== UI元素引用 ======
+    GridContainer ItemGrid;           // 物品槽网格容器
+    ItemTooltipUI Tooltip;            // 悬浮提示框
+    Button SellTrashButton;           // 批量卖出垃圾按钮
+    
+    // ====== 筛选/排序状态 ======
+    ItemTag CurrentFilter;            // 当前筛选标签
+    // SortMode CurrentSort;           // 当前排序模式
+    
+    // ------ 方法 ------
+    void RefreshInventory(PlayerProfile profile, ItemRegistry registry);
+    void SetFilter(ItemTag tag);
+    void OnSellTrashPressed();
+    void OnItemSlotClicked(string itemId);        // 物品槽点击
+    void OnItemSlotHovered(string itemId);        // 悬浮显示详情
+}
+```
+
+#### `ItemSlotUI.cs`
+```
+功能：背包中单个物品槽的UI
+```
+```csharp
+public partial class ItemSlotUI : Control
+{
+    string ItemId;                    // 绑定的物品ID
+    Label NameLabel;                  // 物品名称
+    Label AmountLabel;                // 数量显示
+    Label RarityLabel;                // 稀有度标识（颜色文字）
+    TextureRect FavoriteIcon;         // 收藏图标
+    TextureRect TrashIcon;            // 垃圾标记图标
+    
+    void Setup(string itemId, ItemDefinition def, ItemStack stack, PlayerItemState state);
+    void UpdateDisplay();
+}
+```
+
+#### `ItemTooltipUI.cs`
+```
+功能：物品悬浮提示框
+```
+```csharp
+public partial class ItemTooltipUI : Control
+{
+    Label ItemName;
+    Label ItemDescription;
+    Label ItemRarity;
+    Label ItemPrice;
+    Label ItemDetail;
+    
+    void Show(ItemDefinition def, ItemStack stack);
+    void Hide();
+}
+```
+
+#### `CharacterStatusPanel.cs`
+```
+功能：右侧角色状态栏（始终显示）
+      显示技能等级、经验条、当前挂机状态等
+```
+```csharp
+public partial class CharacterStatusPanel : Control
+{
+    // ====== UI元素 ======
+    VBoxContainer SkillListContainer; // 技能列表容器
+    Label IdleStatusLabel;            // 当前挂机状态文字
+    
+    // ------ 方法 ------
+    void RefreshSkills(PlayerProfile profile, SkillRegistry registry);
+    void UpdateIdleStatus(bool isIdling, string eventName);
+    
+    // 预留：战斗属性显示
+    // void RefreshBattleStats(PlayerProfile profile);
+}
+```
+
+#### `SkillPanel.cs`
+```
+功能：技能面板（含升级按钮、经验条）
+```
+```csharp
+public partial class SkillPanel : Control
+{
+    // 每个技能的UI行
+    // - 技能名称
+    // - 当前等级
+    // - 经验条（ProgressBar）
+    // - 升级按钮（条件满足时亮起）
+    
+    VBoxContainer SkillRowContainer;
+    
+    void RefreshSkills(PlayerProfile profile, SkillRegistry registry);
+    void OnLevelUpPressed(string skillId);
+}
+```
+
+#### `ShopPanel.cs`
+```
+功能：商店面板
+      默认折叠，点击NPC后展开商品列表
+      鼠标悬浮显示商品详情
+```
+```csharp
+public partial class ShopPanel : Control
+{
+    string CurrentNpcId;              // 当前打开的NPC商店
+    bool IsExpanded;                  // 是否展开
+    VBoxContainer ShopItemContainer;
+    
+    void OpenShop(string npcId, FactionRegistry factionRegistry, PlayerProfile profile);
+    void CloseShop();                 // 折叠商店
+    void RefreshShopItems();
+    void OnBuyPressed(string itemId);
+}
+```
+
+#### `DictionaryPanel.cs`
+```
+功能：物品字典面板
+      显示已发现物品的详细信息
+```
+```csharp
+public partial class DictionaryPanel : Control
+{
+    VBoxContainer EntryListContainer;
+    
+    void RefreshDictionary(PlayerProfile profile, ItemRegistry registry);
+    void ShowItemDetail(string itemId);
+}
+```
+
+#### `TabContainer.cs`（如果Godot内置的TabContainer不够用）
+```
+功能：自定义标签页容器
+      管理 背包/属性/战斗/任务/字典/成就 等标签页
+```
+```csharp
+public partial class TabContainer : Control
+{
+    // 各标签页面板引用
+    InventoryPanel InventoryTab;
+    SkillPanel AttributeTab;
+    Control BattleTab;        // 预留空白
+    Control QuestTab;         // 预留空白
+    DictionaryPanel DictTab;
+    Control AchievementTab;   // 预留空白
+    
+    void SwitchTab(int index);
+}
+```
+
+#### `LogPanel.cs`
+```
+功能：日志面板
+      开发期显示调试打印；后期显示游戏内日志
+```
+```csharp
+public partial class LogPanel : Control
+{
+    RichTextLabel LogText;            // 富文本显示区域
+    int MaxLogLines;                  // 最大日志行数（防止内存溢出）
+    
+    // 添加日志条目
+    void AddLog(string message, string category = "info");
+    
+    // 清空日志
+    void ClearLog();
+    
+    // 是否显示调试日志（开发期true，发布后false）
+    bool ShowDebugLogs;
+}
+```
+
+#### `ZoneSelectPanel.cs`
+```
+功能：区域选择面板
+      显示可选的危险区域列表，含探索度
+```
+```csharp
+public partial class ZoneSelectPanel : Control
+{
+    VBoxContainer ZoneListContainer;
+    
+    void RefreshZones(PlayerProfile profile, ZoneRegistry registry);
+    void OnZoneSelected(string zoneId);
+}
+```
+
+#### `FactionPanel.cs`
+```
+功能：势力面板
+      显示各势力好感度、NPC列表、是否已建交
+```
+```csharp
+public partial class FactionPanel : Control
+{
+    VBoxContainer FactionListContainer;
+    
+    void RefreshFactions(PlayerProfile profile, FactionRegistry registry);
+    void OnFactionSelected(string factionId);
+    void OnNpcClicked(string npcId);  // 点击NPC打开商店
+}
+```
+
+#### Placeholder 面板
+```
+BattlePanel.cs / QuestPanel.cs / AchievementPanel.cs
+功能：预留空白标签页，仅显示"开发中"提示文字
+```
+```csharp
+public partial class BattlePanel : Control
+{
+    // 仅显示占位文字 "战斗系统开发中..."
+    override void _Ready(); // 设置Label文字
+}
+// QuestPanel, AchievementPanel 同理
+```
+
+---
+
+## 三、YAML 配置文件格式说明
+
+### `categories.yaml`
+```yaml
+# 物品分类定义
+# id: 全小写下划线，唯一标识
+# parent_id: 父分类ID，根分类留空
+# name_key: 名称（前期中文，后期作为多语言key）
+# description_key: 描述
+# definition_order: 定义顺位（同级内排序，步长100）
+# is_visible: 是否在UI中可见
+
+categories:
+  - id: "gathering_material"
+    parent_id: ""
+    name_key: "采集素材"
+    description_key: "通过采集获得的基础素材"
+    definition_order: 100
+    is_visible: true
+
+  - id: "mat_wood"
+    parent_id: "gathering_material"
+    name_key: "木材"
+    description_key: "各类木质素材"
+    definition_order: 100
+    is_visible: true
+
+  - id: "consumable"
+    parent_id: ""
+    name_key: "消耗品"
+    description_key: "使用后消耗的物品"
+    definition_order: 200
+    is_visible: true
+
+  - id: "consumable_cooking"
+    parent_id: "consumable"
+    name_key: "烹饪食品"
+    description_key: "通过烹饪制作的食物"
+    definition_order: 100
+    is_visible: true
+
+  - id: "consumable_ingredient"
+    parent_id: "consumable"
+    name_key: "食材"
+    description_key: "用于烹饪的原材料"
+    definition_order: 200
+    is_visible: true
+
+  - id: "tool"
+    parent_id: ""
+    name_key: "工具"
+    description_key: "用于各类采集和操作的工具"
+    definition_order: 300
+    is_visible: true
+```
+
+### `items.yaml`
+```yaml
+# 物品定义
+# 必填字段: id, parent_id, name_key
+# 可选字段均有默认值
+
+items:
+  - id: "mat_wood_log"
+    parent_id: "mat_wood"
+    name_key: "原木"
+    description_key: "最基础的木材，通过砍树获得"
+    definition_order: 100
+    base_rarity: "Common"
+    base_max_stack: 9999
+    buy_price: 0
+    sell_price: 1
+    tags: ["Material"]
+    has_durability: false
+    acquisition_hint_key: "通过砍树获得"
+    detail_description_key: "从树上砍下的原木，可以进一步加工为各种木制品。"
+
+  - id: "mat_wood_firewood"
+    parent_id: "mat_wood"
+    name_key: "柴火"
+    description_key: "可用于生火的木柴"
+    definition_order: 200
+    base_rarity: "Common"
+    base_max_stack: 999
+    sell_price: 2
+    tags: ["Material", "Fuel"]
+
+  - id: "tool_stone_axe"
+    parent_id: "tool"
+    name_key: "石斧"
+    description_key: "最基础的伐木工具"
+    definition_order: 100
+    base_rarity: "Common"
+    base_max_stack: 1
+    sell_price: 0
+    tags: ["Tool", "Weapon"]
+    has_durability: false
+    tool_bonuses:
+      log_yield_multiplier: 1.0     # 原木获取率 x100%
+      chop_speed_multiplier: 1.0    # 读条速度系数 x100%
+
+  - id: "tool_iron_axe"
+    parent_id: "tool"
+    name_key: "铁斧"
+    description_key: "坚固的铁制斧头，伐木效率更高"
+    definition_order: 200
+    base_rarity: "Uncommon"
+    base_max_stack: 1
+    sell_price: 50
+    tags: ["Tool", "Weapon"]
+    tool_bonuses:
+      log_yield_multiplier: 2.0     # 原木获取率 x200%
+      chop_speed_multiplier: 1.0
+
+  - id: "tool_alloy_axe"
+    parent_id: "tool"
+    name_key: "合金斧"
+    description_key: "用特殊合金打造的斧头"
+    definition_order: 300
+    base_rarity: "Rare"
+    base_max_stack: 1
+    sell_price: 200
+    tags: ["Tool", "Weapon"]
+    tool_bonuses:
+      log_yield_multiplier: 4.0     # 原木获取率 x400%
+      chop_speed_multiplier: 1.0
+
+  - id: "food_baozi"
+    parent_id: "consumable_cooking"
+    name_key: "包子"
+    description_key: "热腾腾的包子"
+    definition_order: 100
+    base_max_stack: 99
+    sell_price: 5
+    tags: ["Consumable", "Food"]
+
+  - id: "food_bingzi"
+    parent_id: "consumable_cooking"
+    name_key: "饼子"
+    description_key: "香脆的饼子"
+    definition_order: 200
+    tags: ["Consumable", "Food"]
+
+  - id: "food_mantou"
+    parent_id: "consumable_cooking"
+    name_key: "馒头"
+    description_key: "松软的馒头"
+    definition_order: 300
+    tags: ["Consumable", "Food"]
+    # 若要将馒头排到第一位，将 definition_order 改为 50 即可
+    # 或调用 registry.MoveNodeBefore("food_mantou", "food_baozi")
+
+  - id: "ingredient_flour"
+    parent_id: "consumable_ingredient"
+    name_key: "面粉"
+    description_key: "研磨谷物制成的面粉"
+    definition_order: 100
+    tags: ["Material", "Food"]
+
+  - id: "ingredient_rice"
+    parent_id: "consumable_ingredient"
+    name_key: "稻米"
+    description_key: "脱壳后的稻米"
+    definition_order: 200
+    tags: ["Material", "Food"]
+
+  - id: "ingredient_oil"
+    parent_id: "consumable_ingredient"
+    name_key: "食用油"
+    description_key: "烹饪必需的食用油"
+    definition_order: 300
+    tags: ["Material", "Food"]
+```
+
+### `skills.yaml`
+```yaml
+skills:
+  - id: "skill_chopping"
+    name_key: "砍树"
+    description_key: "砍伐树木的技能，等级越高效率越高"
+    max_level: 20
+    initial_level: 1
+    max_total_exp: 34200
+    required_tool_tag: "axe"
+    primary_output_item_id: "mat_wood_log"
+    level_table:
+      - { level: 1,  exp_to_next: 180,  output: 5.000,  interval: 6.000 }
+      - { level: 2,  exp_to_next: 360,  output: 7.368,  interval: 5.789 }
+      - { level: 3,  exp_to_next: 540,  output: 9.737,  interval: 5.579 }
+      - { level: 4,  exp_to_next: 720,  output: 12.105, interval: 5.368 }
+      - { level: 5,  exp_to_next: 900,  output: 14.474, interval: 5.158 }
+      - { level: 6,  exp_to_next: 1080, output: 16.842, interval: 4.947 }
+      - { level: 7,  exp_to_next: 1260, output: 19.211, interval: 4.737 }
+      - { level: 8,  exp_to_next: 1440, output: 21.579, interval: 4.526 }
+      - { level: 9,  exp_to_next: 1620, output: 23.947, interval: 4.316 }
+      - { level: 10, exp_to_next: 1800, output: 26.316, interval: 4.105 }
+      - { level: 11, exp_to_next: 1980, output: 28.684, interval: 3.895 }
+      - { level: 12, exp_to_next: 2160, output: 31.053, interval: 3.684 }
+      - { level: 13, exp_to_next: 2340, output: 33.421, interval: 3.474 }
+      - { level: 14, exp_to_next: 2520, output: 35.789, interval: 3.263 }
+      - { level: 15, exp_to_next: 2700, output: 38.158, interval: 3.053 }
+      - { level: 16, exp_to_next: 2880, output: 40.526, interval: 2.842 }
+      - { level: 17, exp_to_next: 3060, output: 42.895, interval: 2.632 }
+      - { level: 18, exp_to_next: 3240, output: 45.263, interval: 2.421 }
+      - { level: 19, exp_to_next: 3420, output: 47.632, interval: 2.211 }
+      - { level: 20, exp_to_next: 0,    output: 50.000, interval: 2.000 }
+```
+
+### `click_events.yaml` / `oneshot_events.yaml` / `idle_events.yaml`
+```yaml
+# oneshot_events.yaml - 一次性触发事件
+events:
+  - id: "evt_pickup_stone_axe"
+    name_key: "捡起石斧"
+    description_key: "在路边发现了一把粗糙的石斧，捡起它吧！"
+    type: "OneshotClick"
+    prerequisites: []                # 无前置条件，开局可见
+    costs: []                        # 无消耗
+    rewards:
+      - { item_id: "tool_stone_axe", amount: 1, drop_chance: 1.0 }
+    button_list_group: "main_oneshot"
+
+# click_events.yaml - 可重复点击事件
+events:
+  - id: "evt_click_chop"
+    name_key: "点击砍树"
+    description_key: "手动砍一棵树，获得1个原木"
+    type: "RepeatableClick"
+    prerequisites:
+      - { condition_type: "has_item", target_id: "tool_stone_axe", required_value: 1 }
+    costs: []
+    rewards:
+      - { item_id: "mat_wood_log", amount: 1, drop_chance: 1.0 }
+    button_list_group: "main_click"
+
+# idle_events.yaml - 挂机循环事件
+events:
+  - id: "evt_idle_chop"
+    name_key: "挂机砍树"
+    description_key: "自动持续砍树，获得原木和砍树经验"
+    type: "IdleLoop"
+    prerequisites:
+      - { condition_type: "has_item", target_id: "tool_stone_axe", required_value: 1 }
+    linked_skill_id: "skill_chopping"
+    button_list_group: "main_idle"
+```
+
+### `factions.yaml`
+```yaml
+factions:
+  - id: "faction_scarlet_devil"
+    name_key: "红魔馆"
+    description_key: "坐落在雾之湖畔的西洋式洋馆，吸血鬼蕾米莉亚的居所。"
+    max_reputation: 100
+    peace_threshold: 100
+    npc_ids: ["npc_sakuya", "npc_patchouli"]
+    faction_event_ids: ["evt_sdm_work", "evt_sdm_trade"]
+
+  - id: "faction_youkai_mountain"
+    name_key: "妖怪山"
+    description_key: "天狗和河童居住的高山。"
+    max_reputation: 100
+    peace_threshold: 100
+    npc_ids: ["npc_nitori"]
+    faction_event_ids: []
+
+  - id: "faction_eientei"
+    name_key: "永远亭"
+    description_key: "隐藏在迷途竹林深处的月之民居所。"
+    max_reputation: 100
+    peace_threshold: 100
+    npc_ids: ["npc_eirin"]
+    faction_event_ids: []
+
+  - id: "faction_myourenji"
+    name_key: "命莲寺"
+    description_key: "由圣白莲主持的佛教寺院。"
+    max_reputation: 100
+    peace_threshold: 100
+    npc_ids: []
+    faction_event_ids: []
+
+npcs:
+  - id: "npc_sakuya"
+    name_key: "十六夜咲夜"
+    faction_id: "faction_scarlet_devil"
+    has_shop: true
+    required_reputation: 20
+    shop_items:
+      - item_id: "tool_iron_axe"
+        stock: 1
+        payment_type: "Gold"
+        gold_cost: 500
+        required_reputation: 30
+      - item_id: "food_baozi"
+        stock: -1
+        payment_type: "Gold"
+        gold_cost: 10
+        required_reputation: 20
+
+  - id: "npc_patchouli"
+    name_key: "帕秋莉·诺蕾姬"
+    faction_id: "faction_scarlet_devil"
+    has_shop: false
+    required_reputation: 50
+
+  - id: "npc_nitori"
+    name_key: "河城荷取"
+    faction_id: "faction_youkai_mountain"
+    has_shop: true
+    required_reputation: 10
+    shop_items:
+      - item_id: "tool_alloy_axe"
+        stock: 1
+        payment_type: "Mixed"
+        gold_cost: 1000
+        barter_costs:
+          - { item_id: "mat_wood_log", amount: 100 }
+        required_reputation: 60
+
+  - id: "npc_eirin"
+    name_key: "八意永琳"
+    faction_id: "faction_eientei"
+    has_shop: true
+    required_reputation: 30
+    shop_items: []
+```
+
+### `zones.yaml`
+```yaml
+zones:
+  - id: "zone_forest_of_magic"
+    name_key: "魔法之森"
+    description_key: "充满危险蘑菇和妖精的森林。"
+    max_clear_count: 10
+    unlocks_zone_id: "zone_misty_lake"
+    unlocks_faction_id: ""
+    unlock_conditions: []   # 初始区域，无前置条件
+
+  - id: "zone_misty_lake"
+    name_key: "雾之湖"
+    description_key: "通往红魔馆的必经之路。"
+    max_clear_count: 10
+    unlocks_zone_id: "zone_youkai_trail"
+    unlocks_faction_id: "faction_scarlet_devil"
+    unlock_conditions:
+      - { condition_type: "zone_cleared", target_id: "zone_forest_of_magic", required_value: 10 }
+
+  - id: "zone_youkai_trail"
+    name_key: "妖怪小道"
+    description_key: "通往妖怪山的蜿蜒小路。"
+    max_clear_count: 10
+    unlocks_zone_id: ""
+    unlocks_faction_id: "faction_youkai_mountain"
+    unlock_conditions:
+      - { condition_type: "zone_cleared", target_id: "zone_misty_lake", required_value: 10 }
+```
+
+### `locale_zh.yaml`（多语言表基础格式）
+```yaml
+# 多语言表 - 中文
+# 格式: key -> 翻译文本
+# 前期 key 本身就是中文，所以即使不配置此表，
+# 显示的也是中文（LocalizationManager 在找不到 key 时返回 key 本身）
+# 后期填充此表以支持多语言切换
+
+locale: "zh"
+translations:
+  "采集素材": "采集素材"
+  "木材": "木材"
+  "原木": "原木"
+  "最基础的木材，通过砍树获得": "最基础的木材，通过砍树获得"
+  "砍树": "砍树"
+  "捡起石斧": "捡起石斧"
+  "红魔馆": "红魔馆"
+  # ... 其他词条
+```
+
+### `locale_en.yaml`（英文，后期填充）
+```yaml
+locale: "en"
+translations:
+  "采集素材": "Gathering Materials"
+  "木材": "Wood"
+  "原木": "Log"
+  "最基础的木材，通过砍树获得": "Basic wood obtained by chopping trees"
+  "砍树": "Chopping"
+  "捡起石斧": "Pick Up Stone Axe"
+  "红魔馆": "Scarlet Devil Mansion"
+  # ... 
+```
+
+### `migration_rules.yaml`
+```yaml
+# 存档迁移规则配置
+# 每个版本升级记录需要执行的数据变更
+
+migrations:
+  - from_version: "0.1.0"
+    to_version: "0.2.0"
+    actions:
+      - type: "rename_item"
+        old_id: "old_item_id"
+        new_id: "new_item_id"
+      - type: "remove_item"
+        item_id: "removed_item_id"
+        replacement_id: "replacement_item_id"  # 可选
+      - type: "add_default_state"
+        description: "为新增的系统添加默认玩家状态"
+```
+
+---
+
+## 四、架构关键设计要点总结
+
+| 设计原则 | 实现方式 |
+|---------|---------|
+| **稳定唯一ID** | 全小写下划线，不以名称为主键 |
+| **配置驱动** | 所有物品/分类/技能/事件通过 YAML 声明，启动时自动注册 |
+| **模板-实例分离** | Definition（静态模板）与 Stack/State（玩家动态数据）彻底分离 |
+| **树形无环** | TreeValidator 提供环检测、重复ID、缺失父节点、孤立节点、顺位冲突校验 |
+| **排序双层** | definition_order（定义顺位）+ player_display_order（玩家自定义排序） |
+| **多级排序** | 收藏置顶 → 稀有度降序 → 定义/玩家顺位 → ID字母序兜底 |
+| **事务性操作** | TransactionHelper 保证合成/交易的原子性 |
+| **存档兼容** | save_version + MigrationRunner 链式升级 + deprecated 物品迁移 |
+| **多语言预留** | LocalizationManager 前期返回key本身（中文），后期加载翻译表 |
+| **信号解耦** | SignalBus 全局信号总线，逻辑系统与UI通过信号通信 |
+| **扩展预留** | ExtensionData 字典 + 战斗/成就/装备系统仅声明框架 |
+| **Godot特性** | 系统类继承 Node 挂载场景树；AutoLoad 全局单例；利用 `_Process` 驱动挂机计时；信号系统解耦 |

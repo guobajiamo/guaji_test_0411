@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://c0d1xtabs"]
+
+[ext_resource type="Script" path="res://Scripts/UI/TabContainer.cs" id="1_script"]
+
+[node name="TabPages" type="TabContainer"]
+offset_right = 500.0
+offset_bottom = 360.0
+script = ExtResource("1_script")

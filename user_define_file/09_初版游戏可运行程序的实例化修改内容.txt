@@ -1,0 +1,335 @@
+《初版游戏可运行程序的实例化修改内容》
+
+本文件记录的是：
+在“已有骨架项目”的基础上，我为了把它推进到“Godot 中可运行的初版文字挂机游戏”所做的主要修改。
+
+
+================================
+一、本次实例化后的实际成果
+================================
+
+这次不是只补注释或补声明，而是把项目从“架构骨架”推进到了“首版可交互流程”：
+
+1. 启动后会真实读取 `Configs/` 下的 YAML 配置
+2. 会把物品、技能、事件、势力、区域、多语言真正载入注册表
+3. 玩家进入游戏后，能看到一版默认 UI
+4. 玩家可以按默认流程进行：
+   - 先点击“捡起石斧”
+   - 再点击“点击砍树”拿原木
+   - 或点击“挂机砍树”自动产出原木和技能经验
+   - 去“技能”页进行手动升级
+5. 背包、技能、日志、图鉴、势力、区域、状态栏都会跟着刷新
+
+
+================================
+二、本次新增文件
+================================
+
+1. `Scripts/UI/MainUiLayoutSettings.cs`
+作用：
+- 新增一个“UI 布局设置资源类”
+- 让你以后优先通过参数调布局，而不是直接去改业务代码
+
+2. `Scripts/UI/EventButtonViewData.cs`
+作用：
+- 新增一个“事件按钮显示数据类”
+- 把“事件逻辑数据”和“UI 显示数据”拆开，后面会更好维护
+
+3. `Resources/UI/main_ui_layout.tres`
+作用：
+- 新增一个默认 UI 布局资源
+- 当前主界面会从这里读取边距、列宽、字体、按钮高度、刷新间隔等参数
+
+4. `test_00_0410.csproj`
+作用：
+- 新增 Godot C# 项目的工程文件
+- 用来让 Godot 和 `dotnet` 真正编译整个脚本程序集
+- 这次启动调试中发现，如果缺少它，Godot 会出现“脚本类找不到 / 自动加载无法实例化”的问题
+
+
+================================
+三、本次重点修改的代码文件
+================================
+
+以下只写“本次实例化最核心的修改”，不是简单罗列全部文件名。
+
+
+------------------------------
+A. 配置读取与启动链路
+------------------------------
+
+1. `Scripts/Core/Helpers/YamlConfigLoader.cs`
+本次修改内容：
+- 不再只是占位接口，而是补成了一个轻量 YAML 读取器
+- 支持当前项目已经用到的结构：
+  - `key: value`
+  - 缩进嵌套
+  - 列表 `- item`
+  - 行内列表 `[ ... ]`
+  - 行内字典 `{ ... }`
+- 新增了真实读取方法：
+  - `LoadCategories`
+  - `LoadItems`
+  - `LoadSkills`
+  - `LoadEvents`
+  - `LoadFactions`
+  - `LoadZones`
+  - `LoadLocalization`
+- 修复了两个关键解析问题：
+  - 列表中的首个 `key: value` 项不会被重复推进索引
+  - 中文翻译表里带引号的 key 会正确去掉引号
+
+2. `Scripts/Autoload/GameManager.cs`
+本次修改内容：
+- `_Ready()` 启动顺序改成了：
+  - `CreateDefaultProfile()`
+  - `LoadStaticData()`
+  - `InitializeProfileFromDefinitions()`
+  - `InitializeSystems()`
+  - 写入启动日志
+- `LoadStaticData()` 现在会真实读取：
+  - 分类
+  - 物品
+  - 技能
+  - 一次性事件 / 点击事件 / 挂机事件
+  - 势力与 NPC
+  - 区域
+  - 中文本地化表
+- 载入后会把内容交给各个 Registry
+- 会执行校验并输出日志
+- 会把物品树导出到运行时路径 `user://logs/item_tree_dump.txt`
+- 新增了多处便于 UI 调用的辅助方法：
+  - `TranslateText`
+  - `AddGameLog`
+  - `GetBestOwnedTool`
+  - `GetItemDisplayName`
+  - `GetEventDisplayName`
+- `InitializeProfileFromDefinitions()` 会按静态定义补齐：
+  - 技能运行态
+  - 势力运行态
+  - 区域运行态
+
+
+------------------------------
+B. 挂机、技能、点击事件真正接通
+------------------------------
+
+3. `Scripts/Systems/IdleSystem.cs`
+本次修改内容：
+- `Configure(...)` 现在会接收：
+  - `PlayerProfile`
+  - `EventRegistry`
+  - `SkillRegistry`
+  - `ItemRegistry`
+- `StartIdleEvent(string)` 改成返回 `bool`
+- 新增：
+  - `CanStartIdleEvent`
+  - `IsRunningEvent`
+  - `GetProgressRatio`
+- `TickIdleProgress()` 已经不再是空壳，而是会真实执行：
+  - 找到挂机事件
+  - 找到对应技能
+  - 找到当前技能等级表条目
+  - 找到玩家当前拥有的最佳工具
+  - 应用工具速度倍率与产出倍率
+  - 给背包发物品
+  - 给技能加经验
+  - 写入挂机结算日志
+- 如果挂机条件失效，会自动停止挂机并输出日志
+
+4. `Scripts/Core/Runtime/PlayerIdleState.cs`
+本次修改内容：
+- 新增 `PendingOutputFraction`
+- 用来保留“挂机产出中的小数部分”
+- 避免像 7.368 这种技能产出长期挂机时被粗暴截断
+
+5. `Scripts/Core/Runtime/PlayerSkillState.cs`
+本次修改内容：
+- `StoredExp` 从 `int` 改成 `double`
+- `TotalEarnedExp` 从 `int` 改成 `double`
+- 目的是保留挂机经验结算的小数精度
+
+6. `Scripts/Systems/SkillSystem.cs`
+本次修改内容：
+- `AddExp` 改为接收 `double`
+- 支持技能经验更精细地累加
+- 升级后仍然会刷新 `CanLevelUp`
+- 继续保留手动升级流程
+
+7. `Scripts/Systems/ClickEventSystem.cs`
+本次修改内容：
+- 新增 `ShouldShowEvent(eventId)`，给 UI 判断“该不该显示按钮”
+- 新增 `CanTriggerEvent(eventId)`，给 UI 判断“按钮现在能不能点”
+- 把消耗检查提取成可复用逻辑
+- 本次 review 追加修正：
+  - 旧版 `Rewards` 现在会正确处理 `DropChance`
+
+8. `Scripts/Core/Registry/EventRegistry.cs`
+本次修改内容：
+- 新增 `GetEventsByGroup(ButtonListGroup group)`
+- 让主 UI 可以按“主界面一次性 / 点击 / 挂机”三个分组去取按钮
+
+
+------------------------------
+C. 默认 UI 实例化
+------------------------------
+
+9. `Scripts/UI/MainUI.cs`
+本次修改内容：
+- 从原来的骨架脚本，改成真正会在运行时拼装主界面
+- 启动时会读取 `Resources/UI/main_ui_layout.tres`
+- 当前布局分成三列：
+  - 左侧：一次性事件、点击事件、挂机事件
+  - 中间：背包 / 技能 / 日志 / 图鉴 / 势力 / 区域 / 任务 / 战斗 / 成就
+  - 右侧：上手提示 + 角色状态
+- 会定时刷新各面板内容
+- 绑定了按钮点击逻辑：
+  - 点击事件执行
+  - 挂机开始 / 停止
+  - 技能手动升级
+- 本次 review 追加修正：
+  - 找不到布局资源时会自动回退脚本默认布局
+  - 不再使用“子节点数量大于 0”来判断界面是否已经搭建完成
+
+10. `Scripts/UI/ButtonListPanel.cs`
+本次修改内容：
+- 现在会动态生成标题与按钮列表
+- 当没有可显示按钮时，会显示“当前没有可用按钮”
+
+11. `Scripts/UI/EventButtonItem.cs`
+本次修改内容：
+- 现在可以绑定 `EventButtonViewData`
+- 会在按钮文本中显示挂机进度百分比
+
+12. `Scripts/UI/InventoryPanel.cs`
+本次修改内容：
+- 现在会读取玩家背包与物品定义
+- 只显示玩家已获得或当前持有的物品
+- 会显示说明文本和售价提示
+
+13. `Scripts/UI/SkillPanel.cs`
+本次修改内容：
+- 现在会显示技能等级、经验、说明和升级按钮
+- 升级按钮会根据 `CanLevelUp` 自动亮灭
+
+14. `Scripts/UI/LogPanel.cs`
+本次修改内容：
+- 现在会用 `TextEdit` 显示运行日志
+
+15. `Scripts/UI/CharacterStatusPanel.cs`
+本次修改内容：
+- 现在会显示：
+  - 金币
+  - 当前工具
+  - 砍树等级
+  - 砍树经验
+  - 当前挂机事件
+  - 当前读条进度
+
+16. `Scripts/UI/DictionaryPanel.cs`
+本次修改内容：
+- 现在会显示玩家已经获得过的物品图鉴内容
+
+17. `Scripts/UI/FactionPanel.cs`
+本次修改内容：
+- 现在会显示势力声望和是否已和平建交
+
+18. `Scripts/UI/ZoneSelectPanel.cs`
+本次修改内容：
+- 现在会显示区域是否解锁、探索度、通关次数
+
+
+------------------------------
+D. 本次 review 追加修正的基础系统
+------------------------------
+
+19. `Scripts/Systems/FactionSystem.cs`
+本次修改内容：
+- 势力声望现在会按静态配置做上下限裁切
+- 当声望达到和平阈值时，会同步更新 `HasPeaceAgreement`
+- `CanAccessNpc` 不再只检查 NPC 是否存在，也会检查声望门槛
+
+20. `Scripts/Systems/ShopSystem.cs`
+本次修改内容：
+- 购买前会检查：
+  - NPC 是否真的有商店
+  - 该商品是否属于这个 NPC
+  - 玩家声望是否达到 NPC 门槛
+  - 玩家声望是否达到商品门槛
+- 让 `required_reputation` 配置字段真正生效
+
+21. `test_00_0410.csproj`
+本次修改内容：
+- 这是本次启动调试新补上的关键工程文件
+- 指定了：
+  - `Godot.NET.Sdk/4.6.2`
+  - `net8.0`
+  - 动态加载
+  - 项目程序集名 `test_00_0410`
+- 有了它以后，项目才能被 `dotnet build` 和 Godot 正常编译成 `test_00_0410.dll`
+
+
+================================
+四、本次对 YAML / TSCN 的实际改动说明
+================================
+
+1. YAML 文件
+- 这一轮没有大幅重写已有 YAML 内容
+- 主要是“让现有 YAML 真正被代码读取并生效”
+- 当前首版可运行流程主要使用了这些配置：
+  - `Configs/Items/categories.yaml`
+  - `Configs/Items/items.yaml`
+  - `Configs/Skills/skills.yaml`
+  - `Configs/Events/oneshot_events.yaml`
+  - `Configs/Events/click_events.yaml`
+  - `Configs/Events/idle_events.yaml`
+  - `Configs/Factions/factions.yaml`
+  - `Configs/Zones/zones.yaml`
+  - `Configs/Localization/locale_zh.yaml`
+
+2. TSCN 文件
+- 这一轮没有去深改 `MainUI.tscn` 内部节点树
+- 保持了 `Scenes/UI/MainUI.tscn` 是一个很轻的根场景
+- 实际的复杂 UI 结构是在 `MainUI.cs` 里动态搭建的
+- 这样做的好处是：
+  - 更快把首版功能接通
+  - 以后可以继续保留“一个简单主场景 + 一个布局资源”的方式调 UI
+
+
+================================
+五、当前首版默认可玩的流程
+================================
+
+进入游戏后，建议按这个顺序测试：
+
+1. 点左侧“一次性事件”中的“捡起石斧”
+2. 点左侧“点击事件”中的“点击砍树”
+3. 观察：
+   - 背包里是否出现原木
+   - 日志里是否出现记录
+4. 点左侧“挂机事件”中的“挂机砍树”
+5. 等待几秒，观察：
+   - 背包原木增加
+   - 角色状态栏的读条变化
+   - 技能页经验增加
+6. 到“技能”页尝试手动升级
+
+
+================================
+六、这次没有完成到“正式成品”的部分
+================================
+
+以下内容目前仍是预留或简化版，不属于这次首版实例化的完整实现：
+
+1. `SaveManager` 还是预留接口，尚未做真实 JSON 序列化
+2. 商店、战斗、任务、成就 UI 还主要是占位页
+3. 自定义图片素材、图标素材目前没有强依赖
+4. 主题资源 `Resources/Themes/default_theme.tres` 目前未深度定制
+5. 目前构建时仍会出现 `IdleSystem.cs` 的一些可继续优化型警告已经清理；如果后续再出现新的 nullable 警告，优先按“补运行时空值保护”的方式处理
+
+
+================================
+七、最重要的一句话总结
+================================
+
+本次实例化的核心不是“把所有系统都做完”，而是把这套项目从“只有架构骨架”推进到了“已经有一条能启动、能显示、能互动、能挂机、能看到数据变化的首版可运行链路”。

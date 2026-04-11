@@ -1,0 +1,26 @@
+zones:
+  - id: "zone_forest_of_magic"
+    name_key: "魔法之森"
+    description_key: "充满危险蘑菇和妖精的森林。"
+    max_clear_count: 10
+    unlocks_zone_id: "zone_misty_lake"
+    unlocks_faction_id: ""
+    unlock_conditions: []
+
+  - id: "zone_misty_lake"
+    name_key: "雾之湖"
+    description_key: "通往红魔馆的必经之路。"
+    max_clear_count: 10
+    unlocks_zone_id: "zone_youkai_trail"
+    unlocks_faction_id: "faction_scarlet_devil"
+    unlock_conditions:
+      - { condition_type: "ZoneCleared", target_id: "zone_forest_of_magic", required_value: 10 }
+
+  - id: "zone_youkai_trail"
+    name_key: "妖怪小道"
+    description_key: "通往妖怪山的蜿蜒小路。"
+    max_clear_count: 10
+    unlocks_zone_id: ""
+    unlocks_faction_id: "faction_youkai_mountain"
+    unlock_conditions:
+      - { condition_type: "ZoneCleared", target_id: "zone_misty_lake", required_value: 10 }

@@ -1,0 +1,13 @@
+# 一次性触发事件
+# 开局先给玩家一个“捡起石斧”的按钮，便于后面测试整条流程。
+
+events:
+  - id: "evt_pickup_stone_axe"
+    name_key: "捡起石斧"
+    description_key: "你在路边发现了一把粗糙的石斧，捡起来吧。"
+    type: "OneshotClick"
+    prerequisites: []
+    costs: []
+    effects:
+      - { effect_type: "GrantItem", target_id: "tool_stone_axe", int_value: 1 }
+    button_list_group: "MainOneshot"

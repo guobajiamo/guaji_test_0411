@@ -1,0 +1,538 @@
+《项目运行时调用关系及讲解》
+
+这份文档的目标：
+不是只说“哪个文件属于哪个目录”，而是讲清楚：
+1. 游戏启动时，谁先创建
+2. 创建后，谁会持有谁
+3. 玩家点击按钮后，数据会怎么流动
+4. 目前哪些链路已经接通，哪些还只是预留接口
+
+为了方便回顾，我会用两个标记：
+- `[当前已接通]`：现在代码里已经真实存在的调用关系
+- `[已留接口，后续再接]`：结构已经放好，但暂时还是骨架
+
+
+================================
+一、先看一条最短总链路
+================================
+
+程序启动时的总链路可以先记成这一句：
+
+`project.godot`
+-> 自动加载 `GameManager` / `SignalBus`
+-> 加载主场景 `Scenes/Main.tscn`
+-> 主场景实例化 `Scenes/UI/MainUI.tscn`
+-> `GameManager` 创建各系统节点
+-> 系统节点共同操作 `PlayerProfile`
+
+也就是说：
+- `GameManager` 更像“全局总管”
+- `PlayerProfile` 更像“玩家当前整份数据”
+- `Registry` 更像“静态配置字典”
+- `System` 更像“业务执行者”
+- `UI` 更像“显示层和交互层”
+
+
+================================
+二、启动阶段：谁先运行，谁后运行
+================================
+
+1. Godot 读取 `project.godot`  [当前已接通]
+
+这里会确认两件最重要的事情：
+- 主场景是 `res://Scenes/Main.tscn`
+- 自动加载脚本有：
+  - `GameManager`
+  - `SignalBus`
+
+可以把自动加载理解成：
+“游戏一启动，这两个脚本就会先进入全局节点树，不需要你手动拖到场景里。”
+
+
+2. 自动加载节点先创建  [当前已接通]
+
+按 `project.godot` 里的顺序，Godot 会把：
+- `GameManager`
+- `SignalBus`
+放进 `/root`
+
+此时的作用：
+- `GameManager`：以后谁需要全局数据、系统、存档，都可以找它
+- `SignalBus`：以后谁要发全局信号、订阅全局事件，都可以找它
+
+
+3. `GameManager._Ready()` 开始执行  [当前已接通]
+
+`GameManager` 在 `_Ready()` 里现在会做 3 件事：
+
+第一步：`CreateDefaultProfile()`
+- 创建一份新的 `PlayerProfile`
+- 这份对象是“玩家所有运行时数据的总入口”
+
+第二步：`InitializeSystems()`
+- 动态创建系统节点：
+  - `IdleSystem`
+  - `ClickEventSystem`
+  - `SkillSystem`
+  - `ShopSystem`
+  - `SellSystem`
+  - `FactionSystem`
+  - `ZoneSystem`
+  - `QuestSystem`
+  - `CraftingSystem`
+  - `BattleSystem`
+  - `AchievementSystem`
+  - `EquipmentSystem`
+  - `BuffSystem`
+
+第三步：`LoadStaticData()`
+- 这里本来应该把 `Configs/` 下的 YAML 配置读进注册表
+- 但当前还是占位方法
+
+要特别注意：
+现在的启动顺序里，系统已经创建并配置好了，但是配置数据还没有真正被加载。
+所以当前项目虽然骨架完整，但“内容表真正进注册表”这一步还没有接通。
+
+
+4. `InitializeSystems()` 里的更细调用  [当前已接通]
+
+`InitializeSystems()` 内部会通过 `AddSystemNode<T>()`：
+- new 一个系统对象
+- 给它取名字
+- `AddChild(node)` 挂到 `GameManager` 节点下面
+
+这意味着：
+运行时节点树里，`GameManager` 不只是一个单纯的脚本节点，它还是这些业务系统节点的父节点。
+
+
+5. `ConfigureSystems()` 把依赖关系接上  [当前已接通]
+
+创建完系统后，`GameManager` 会把共享对象传给各系统：
+
+- `IdleSystem.Configure(PlayerProfile, EventRegistry, SkillRegistry)`
+- `ClickEventSystem.Configure(PlayerProfile, EventRegistry, SkillSystem, FactionSystem, ZoneSystem)`
+- `SkillSystem.Configure(PlayerProfile, SkillRegistry)`
+- `ShopSystem.Configure(PlayerProfile, FactionRegistry)`
+- `SellSystem.Configure(PlayerProfile, ItemRegistry)`
+- `FactionSystem.Configure(PlayerProfile, FactionRegistry)`
+- `ZoneSystem.Configure(PlayerProfile, ZoneRegistry)`
+
+这一层非常重要，因为它说明了：
+
+1. 业务系统之间不是各自 new 一份玩家数据
+2. 它们都操作同一个 `PlayerProfile`
+3. 它们读的是同一套注册表对象
+
+这就是“单一数据源”的基础。
+
+
+================================
+三、主场景与 UI 是怎么进来的
+================================
+
+1. 主场景 `Scenes/Main.tscn` 被加载  [当前已接通]
+
+当前 `Main.tscn` 很简单：
+- 根节点：`Main`
+- 子节点：`MainUI`（实例化自 `Scenes/UI/MainUI.tscn`）
+
+所以你可以理解为：
+真正负责显示界面的，是 `MainUI.tscn` 这套 UI 场景，而不是 `GameManager`。
+
+
+2. `MainUI.tscn` 绑定 `MainUI.cs`  [当前已接通]
+
+`MainUI.cs` 当前职责还是骨架：
+- `_Ready()`：后续会绑定各面板和全局信号
+- `RefreshAllPanels()`：后续统一刷新界面
+
+也就是说：
+现在 UI 场景已经有入口，但还没有正式和业务系统绑定起来。
+
+
+3. 其他 UI 场景的定位  [当前已接通，主要是骨架]
+
+目前这些场景和脚本已经存在，但大多还属于“结构先占位”：
+
+- `ButtonListPanel.tscn` + `ButtonListPanel.cs`
+  作用：承载事件按钮列表
+
+- `InventoryPanel.tscn` + `InventoryPanel.cs`
+  作用：背包面板
+
+- `CharacterStatusPanel.tscn` + `CharacterStatusPanel.cs`
+  作用：角色状态栏
+
+- `ShopPanel.tscn` + `ShopPanel.cs`
+  作用：商店面板
+
+- `LogPanel.tscn` + `LogPanel.cs`
+  作用：日志面板
+
+- `TabPages.tscn` + `TabContainer.cs`
+  作用：多个标签页容器
+
+- `EventButton.tscn` + `EventButtonItem.cs`
+  作用：单个事件按钮组件
+
+- `ItemSlot.tscn` + `ItemSlotUI.cs`
+  作用：单个物品槽组件
+
+- `ProgressBarOverlay.tscn`
+  作用：挂机进度条组件
+
+
+================================
+四、数据分层：数据到底存在哪
+================================
+
+这套项目最关键的运行时分层，是下面这 4 层：
+
+第 1 层：`Configs/*.yaml`
+- 这里是“静态内容”
+- 例如：原木价格、石斧标签、技能等级表、事件前置条件
+
+第 2 层：`Definitions`
+- 这里是“配置在内存里的类结构”
+- 例如 `ItemDefinition`、`SkillDefinition`、`EventDefinition`
+
+第 3 层：`Registry`
+- 这里是“查表中心”
+- 负责按 ID 找定义
+- 例如 `ItemRegistry.GetItem("tool_stone_axe")`
+
+第 4 层：`PlayerProfile`
+- 这里是“玩家当前状态”
+- 例如：
+  - 背包里有多少原木
+  - 当前金币多少
+  - 当前砍树等级多少
+  - 当前挂机的是哪个事件
+  - 哪个商店库存已卖空
+
+一句话记忆：
+`yaml` 决定“这个世界应该是什么样”，`PlayerProfile` 决定“这个玩家现在是什么状态”。
+
+
+================================
+五、玩家数据在运行时怎么流动
+================================
+
+下面按功能讲最重要的几条数据流。
+
+
+1. 点击事件流  [部分已接通]
+
+理想调用链：
+`事件按钮 UI`
+-> 调 `ClickEventSystem.TryTriggerEvent(eventId)`
+-> 从 `EventRegistry` 找 `EventDefinition`
+-> 检查前置条件
+-> 扣消耗
+-> 发奖励 / 执行 effect
+-> 把结果写回 `PlayerProfile`
+
+当前代码里已经真实存在的部分：
+
+`ClickEventSystem.TryTriggerEvent(eventId)` 做了这些事：
+- 根据 `eventId` 去 `EventRegistry` 里找事件定义
+- 判断是否是已消耗的一次性事件
+- 遍历 `Prerequisites` 检查前置条件
+- 遍历 `Costs` 扣物品
+- 先处理旧版 `Rewards`
+- 再处理新版 `Effects`
+
+当前支持的前置条件判断：
+- `HasItem`
+- `HasGold`
+- `SkillLevel`
+- `FactionReputation`
+- `ZoneCleared`
+- `EventCompleted`
+- `QuestCompleted`
+
+当前支持的 effect：
+- 发物品
+- 扣物品
+- 发金币
+- 扣金币
+- 加技能经验
+- 加势力声望
+- 解锁区域
+- 标记事件完成
+- 标记任务完成
+- 预留开始战斗
+
+真正被修改的数据主要落在：
+- `PlayerProfile.Inventory`
+- `PlayerProfile.Economy`
+- `PlayerProfile.SkillStates`
+- `PlayerProfile.FactionStates`
+- `PlayerProfile.ZoneStates`
+- `PlayerProfile.CompletedEventIds`
+- `PlayerProfile.CompletedQuestIds`
+
+补充说明：
+这一轮我额外补了“一次性事件防重复触发”，也就是：
+即使 UI 没来得及把按钮隐藏，系统层也会拦住再次触发。
+
+
+2. 挂机事件流  [架构已接通，结算细节未接通]
+
+理想调用链：
+`挂机按钮 UI`
+-> `IdleSystem.StartIdleEvent(eventId)`
+-> 往 `PlayerProfile.IdleState` 写当前挂机状态
+-> 每帧 `_Process(delta)` 累加时间
+-> 满足一次读条后结算产物和经验
+
+当前代码里已经存在：
+
+`IdleSystem.StartIdleEvent(eventId)`
+- 把 `PlayerProfile.IdleState.ActiveEventId` 设为当前挂机事件
+- 把 `IsRunning` 设为 `true`
+- 重置累计进度时间
+- 记录最后更新时间戳
+
+`IdleSystem._Process(delta)`
+- 如果没有挂机，就直接返回
+- 如果正在挂机，就往 `IdleState.AccumulatedProgressSeconds` 累加时间
+- 然后调用 `TickIdleProgress()`
+
+`IdleSystem.ApplyOfflineProgress(nowUnixSeconds)`
+- 读档后用来补算离线时长
+- 会根据 `LastProgressUnixSeconds` 算离线经过了多少秒
+- 再按上限 `OfflineSettlementCapSeconds` 裁切
+- 最后把补算时间加回 `AccumulatedProgressSeconds`
+
+当前还没完成的地方：
+- `TickIdleProgress()` 还没有真正去读技能表、工具倍率、背包上限并发放原木与经验
+
+但架构上已经明确了一个很重要的原则：
+挂机状态只存一份，就在 `PlayerProfile.IdleState` 里。
+
+
+3. 技能经验流  [当前已接通]
+
+调用链通常会是：
+`事件系统 / 挂机系统`
+-> `SkillSystem.AddExp(skillId, exp)`
+-> 修改 `PlayerProfile.SkillStates`
+
+当前 `SkillSystem` 已经做的事：
+- `AddExp()`：增加经验、增加总获得经验、刷新 `CanLevelUp`
+- `TryLevelUp()`：检查等级表、扣经验、升一级、刷新 `CanLevelUp`
+
+也就是说：
+以后 UI 里的“升级按钮亮不亮”，已经可以直接看 `PlayerSkillState.CanLevelUp`。
+
+
+4. 商店购买流  [当前基础链路已接通]
+
+理想调用链：
+`商店 UI`
+-> `ShopSystem.TryBuyFromNpc(npcId, shopItem)`
+-> 检查 NPC 是否存在
+-> 检查库存
+-> 扣金币或扣材料
+-> 发放购买的物品
+-> 更新商店库存
+
+这一轮之后，`ShopSystem.TryBuyFromNpc()` 已经能完成基础购买：
+
+第一步：
+检查 `FactionRegistry` 里是否有这个 NPC
+
+第二步：
+从 `PlayerProfile.GetOrCreateShopState(npcId)` 里拿到这个商店的运行态库存
+
+第三步：
+调用 `PlayerShopState.TryConsumeStock()` 预扣库存
+
+第四步：
+`TryPay(shopItem)`
+- 如果是金币商品：扣 `PlayerProfile.Economy.Gold`
+- 如果是以物易物：用 `TransactionHelper` 一次性扣掉所有材料
+
+第五步：
+如果支付成功，就 `Inventory.AddItem(shopItem.ItemId, 1)`
+
+第六步：
+如果支付失败，会把预扣的有限库存补回去
+
+这条链已经能表达“玩家钱包”和“限量商店库存”两件事了。
+
+
+5. 垃圾一键卖出流  [当前基础链路已接通]
+
+理想调用链：
+`背包 UI 点击一键卖出`
+-> `SellSystem.SellMarkedItems()`
+-> 找出所有 `IsJunkMarked == true` 的物品
+-> 读取每个物品定义里的 `SellPrice`
+-> 扣除背包数量
+-> 把总价加到金币钱包
+
+当前 `SellSystem` 已经可以完成这条链：
+- 从 `PlayerInventory.ItemStates` 找到被标记垃圾的物品
+- 用 `ItemRegistry.GetItem(itemId)?.SellPrice` 查售价
+- 调用 `PlayerInventory.TryRemoveItem()` 真正扣数量
+- 调用 `PlayerEconomyState.AddGold()` 加金币
+- 卖完后把该物品的垃圾标记清掉
+
+
+6. 势力与区域状态流  [当前基础链路已接通]
+
+势力：
+- `FactionSystem.AddReputation(factionId, amount)`
+-> 修改 `PlayerProfile.FactionStates[factionId].Reputation`
+
+区域：
+- `ZoneSystem.AddClearCount(zoneId, amount)`
+-> 修改 `PlayerProfile.ZoneStates[zoneId].ClearCount`
+-> 同步计算 `ExplorationPercent`
+
+区域解锁：
+- `ZoneSystem.UnlockZone(zoneId)`
+-> 把 `PlayerZoneState.IsUnlocked = true`
+
+另外，点击事件的 effect 现在也可以直接调用：
+- `AddFactionReputation`
+- `UnlockZone`
+
+这意味着“事件 -> 势力/区域变化”这条链已经具备了。
+
+
+================================
+六、存档与读档链路
+================================
+
+1. 存档流程  [接口已接通，真实序列化未接通]
+
+当前调用链：
+`GameManager.SaveGame()`
+-> `SaveManager.CreateFromProfile(PlayerProfile)`
+-> 生成 `SaveData`
+-> `SaveManager.Save(saveData)`
+
+`SaveData` 现在分成两部分：
+- `Metadata`
+  - `SaveVersion`
+  - `SavedAtUnixSeconds`
+- `Profile`
+  - 玩家全部运行态
+
+当前 `Save()` 做了什么：
+- 写入当前版本号
+- 写入当前保存时间
+- 确保 `user://save_data.json` 的父目录存在
+- 打印日志
+
+当前还没做什么：
+- 还没有真的把 `SaveData` 序列化到文件
+
+
+2. 读档流程  [接口已接通，真实反序列化未接通]
+
+当前调用链：
+`GameManager.LoadGame()`
+-> `SaveManager.LoadOrCreateDefault()`
+-> 返回一个 `SaveData`
+-> `PlayerProfile = saveData.Profile`
+-> `ConfigureSystems()`
+-> `IdleSystem.ApplyOfflineProgress(...)`
+
+这里很关键的一步是：
+读档后不是继续用旧的 `PlayerProfile`，而是把系统重新指向新读出来的 `PlayerProfile`。
+
+这就是为什么 `ConfigureSystems()` 在读档后要再调用一次。
+
+
+3. 存档迁移流程  [架构已接通]
+
+`MigrationRunner.RunMigrations(saveData)` 现在的逻辑是：
+- 从 `saveData.Metadata.SaveVersion` 解析当前存档版本
+- 拿当前代码版本 `SemanticVersion.Current`
+- 如果旧，就按 `FromVersion -> ToVersion` 一步步迁
+
+这比“直接用字符串排序版本号”更安全，也更容易维护。
+
+
+================================
+七、配置加载链路（当前最重要的未接通点）
+================================
+
+按理说，启动时应该有这样一条链：
+
+`GameManager.LoadStaticData()`
+-> `YamlConfigLoader` 读取 `Configs/*.yaml`
+-> 反序列化成 `Definitions`
+-> 各 `Registry.LoadDefinitions(...)`
+-> `ItemRegistry` 做树构建与校验
+-> UI / 系统就可以正式查表
+
+但是当前真实状态是：
+
+1. `GameManager.LoadStaticData()` 还是占位
+2. `YamlConfigLoader.LoadList<T>()` 还是返回空列表
+3. 所以现在运行时，注册表虽然对象已经创建出来了，但里面还没有真实配置数据
+
+这件事非常重要，因为它决定了：
+当前项目更像“完成了底层骨架整理”，还不是“已经能跑完整内容流程”的版本。
+
+
+================================
+八、SignalBus 在调用链中的位置
+================================
+
+`SignalBus` 当前已经存在，但还没正式接通到系统和 UI。
+
+它未来应该承担的角色是：
+
+系统层改完数据
+-> 发一个全局信号
+-> UI 面板接收到信号
+-> 刷新对应界面
+
+例如未来可能会有：
+- 背包变化 -> 刷新背包面板
+- 技能变化 -> 刷新技能面板
+- 势力变化 -> 刷新势力面板
+- 区域变化 -> 刷新区域面板
+- 日志变化 -> 刷新日志面板
+
+当前为什么还没接：
+- 因为 UI 还处于骨架阶段
+- 业务系统也还没开始正式发这些信号
+
+所以现在 `SignalBus` 的状态是：
+`[已留接口，后续再接]`
+
+
+================================
+九、把整个项目理解成 6 句人话
+================================
+
+如果你以后想快速回忆这套架构，可以记下面 6 句：
+
+1. `project.godot` 决定游戏从哪里开始跑
+2. `GameManager` 是总管，负责把系统和玩家数据组织起来
+3. `Configs + Definitions + Registry` 共同组成静态内容查表体系
+4. `PlayerProfile` 是玩家当前全部运行态的唯一总入口
+5. `Systems` 负责真正修改玩家数据
+6. `Scenes + UI + SignalBus` 负责把数据表现成界面并响应玩家操作
+
+
+================================
+十、当前版本最真实的一句话总结
+================================
+
+如果只用一句话总结现在这个项目的运行状态，可以这样说：
+
+“项目已经把最重要的底层分层、运行态边界、事件/经济/存档/挂机骨架整理清楚了，但配置加载、真实存档序列化、挂机结算和 UI 绑定这几条最后的接线还没有完成。”
+
+这也是为什么这份 `07` 文档会同时写：
+- 哪些链路已经真实接通
+- 哪些链路只是已经把接口和方向定清楚
+
+后面继续做第一版可运行内容时，就可以直接沿着这些“未接通点”往下补。

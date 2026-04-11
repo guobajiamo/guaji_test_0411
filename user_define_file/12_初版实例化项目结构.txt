@@ -1,0 +1,448 @@
+《初版实例化项目结构（带作用说明）》
+
+这份文档是在 `06_最新项目结构.txt` 的基础上，
+补充“首版实例化程序”完成之后的最新工程状态。
+
+阅读建议：
+1. 先看“第一部分：现在这个项目已经能做什么”
+2. 再看“第二部分：目录分工”
+3. 最后看“第三部分：核心项目树”
+
+
+================================
+一、现在这个项目已经能做什么
+================================
+
+和之前“以骨架为主”的版本不同，
+当前项目已经不是单纯的声明集合，而是已经具备首版可运行链路：
+
+1. 可真实读取 YAML 配置
+2. 可把物品、技能、事件、势力、区域加载进注册表
+3. 可显示一版默认主界面
+4. 可进行“捡起石斧 -> 点击砍树 / 挂机砍树 -> 技能升级”的最小可玩流程
+5. 可显示背包、技能、日志、图鉴、势力、区域、状态栏
+
+
+================================
+二、目录分工（先建立整体印象）
+================================
+
+根目录：
+- `project.godot`
+  作用：Godot 项目总入口，定义主场景与自动加载脚本
+
+- `Configs/`
+  作用：全部静态内容配置
+
+- `Scripts/`
+  作用：全部 C# 脚本，是业务逻辑主体
+
+- `Scenes/`
+  作用：Godot 场景文件
+
+- `Resources/`
+  作用：主题资源、UI 布局资源等
+
+- `Logs/`
+  作用：仓库内保留的开发期输出目录样本
+  注意：当前真实运行时输出更推荐写入 `user://logs`
+
+- `user_define_file/`
+  作用：需求文档、架构说明、review 文档、本次实例化输出文档
+
+- `.godot/`
+  作用：Godot 自动生成缓存目录
+  说明：通常不手工维护
+
+
+================================
+三、核心项目树（按目录解释）
+================================
+
+L:.
+
+├─ `project.godot`
+  作用：
+  - 项目配置入口
+  - 指定主场景 `Scenes/Main.tscn`
+  - 指定自动加载脚本 `GameManager`、`SignalBus`
+
+├─ `test_00_0410.csproj`
+  作用：
+  - Godot C# 工程文件
+  - 用来把项目里的全部 `.cs` 脚本编译成程序集
+  - 这也是项目能正常加载 `GameManager.cs`、`MainUI.cs` 等 C# 脚本的前提
+
+├─ `icon.svg`
+  作用：项目图标源文件。
+
+├─ `icon.svg.import`
+  作用：图标导入记录。
+
+├─ `.godot/`
+  作用：编辑器缓存与导入缓存目录。
+  说明：自动生成，不作为业务逻辑的一部分理解即可。
+
+├─ `Logs/`
+  作用：仓库中保留的开发期日志目录。
+
+├─ `user_define_file/`
+  作用：文档目录。
+
+│  ├─ `02_v0.4版本最新提示词汇总版.txt`
+  作用：完整需求汇总。
+
+│  ├─ `03_v0.4版本claude输出架构（仅声明与备注）.txt`
+  作用：初始骨架说明文档。
+
+│  ├─ `04_review及相关提示.txt`
+  作用：review 要求说明。
+
+│  ├─ `05_重构解决的问题.txt`
+  作用：上一轮 review 的修复总结。
+
+│  ├─ `06_最新项目结构.txt`
+  作用：骨架阶段项目结构说明。
+
+│  ├─ `07_项目运行时调用关系及讲解.txt`
+  作用：骨架阶段运行关系说明。
+
+│  ├─ `08_初版游戏实例化提示词.txt`
+  作用：本次“首版可运行程序实例化”任务要求。
+
+│  ├─ `09_初版游戏可运行程序的实例化修改内容.txt`
+  作用：记录这次实例化都改了什么。
+
+│  ├─ `10_UI调整规则说明.txt`
+  作用：告诉你以后如何安全调整 UI。
+
+│  ├─ `11_初版游戏review结果输出.txt`
+  作用：本次实例化后针对代码的 review 结果。
+
+│  ├─ `12_初版实例化项目结构.txt`
+  作用：当前这份“实例化后项目结构说明”。
+
+│  └─ `13_初版项目运行时调用关系及讲解.txt`
+  作用：实例化后运行关系说明。
+
+
+├─ `Configs/`
+  作用：静态配置目录。
+
+│  ├─ `Items/`
+  作用：物品与分类配置目录。
+│  ├─ `categories.yaml`
+  作用：定义物品分类树，例如“采集素材 -> 木材”。
+│  └─ `items.yaml`
+  作用：定义具体物品，例如原木、石斧、铁斧、包子等。
+
+│  ├─ `Skills/`
+  作用：技能配置目录。
+│  └─ `skills.yaml`
+  作用：定义技能等级表，目前首版核心技能是“砍树”。
+
+│  ├─ `Events/`
+  作用：事件配置目录。
+│  ├─ `oneshot_events.yaml`
+  作用：一次性事件，例如“捡起石斧”。
+│  ├─ `click_events.yaml`
+  作用：重复点击事件，例如“点击砍树”。
+│  └─ `idle_events.yaml`
+  作用：挂机循环事件，例如“挂机砍树”。
+
+│  ├─ `Factions/`
+  作用：势力与 NPC 配置目录。
+│  └─ `factions.yaml`
+  作用：定义势力、NPC、商品、声望门槛等。
+
+│  ├─ `Zones/`
+  作用：区域配置目录。
+│  └─ `zones.yaml`
+  作用：定义区域解锁链、探索、通关次数等。
+
+│  ├─ `Localization/`
+  作用：多语言配置目录。
+│  ├─ `locale_zh.yaml`
+  作用：中文文本表。
+│  └─ `locale_en.yaml`
+  作用：英文文本表预留。
+
+│  └─ `Migration/`
+  作用：存档迁移配置目录。
+│  └─ `migration_rules.yaml`
+  作用：迁移规则预留配置。
+
+
+├─ `Scripts/`
+  作用：全部 C# 代码目录。
+
+│  ├─ `Autoload/`
+  作用：全局自动加载脚本目录。
+│  ├─ `GameManager.cs`
+  作用：
+  - 游戏总管理器
+  - 现在已经会真实读取 YAML
+  - 会初始化玩家运行态
+  - 会创建并配置各系统
+  - 会记录运行日志
+│  └─ `SignalBus.cs`
+  作用：全局信号总线预留。
+
+│  ├─ `Core/`
+  作用：核心基础模块目录。
+
+│  │  ├─ `Definitions/`
+  作用：静态定义类，对应 `Configs/` 里的内容模板。
+│  │  ├─ `NodeDefinitionBase.cs`
+  作用：分类与物品通用基础定义。
+│  │  ├─ `CategoryDefinition.cs`
+  作用：物品分类定义。
+│  │  ├─ `ItemDefinition.cs`
+  作用：具体物品定义，包含价格、标签、工具加成等。
+│  │  ├─ `RarityDefinition.cs`
+  作用：稀有度显示定义预留。
+│  │  ├─ `SkillLevelEntry.cs`
+  作用：技能单级条目定义。
+│  │  ├─ `SkillDefinition.cs`
+  作用：技能定义。
+│  │  ├─ `EventDefinition.cs`
+  作用：事件定义，包含前置、消耗、奖励、效果、分组等。
+│  │  ├─ `FactionDefinition.cs`
+  作用：势力定义。
+│  │  ├─ `NpcDefinition.cs`
+  作用：NPC 定义。
+│  │  ├─ `ShopItemEntry.cs`
+  作用：商店商品条目定义。
+│  │  ├─ `ZoneDefinition.cs`
+  作用：区域定义。
+│  │  └─ `ToolBonusDefinition.cs`
+  作用：工具倍率定义。
+
+│  │  ├─ `Runtime/`
+  作用：玩家运行态目录。
+│  │  ├─ `ItemStack.cs`
+  作用：物品数量实例。
+│  │  ├─ `PlayerItemState.cs`
+  作用：玩家对单个物品的附加状态。
+│  │  ├─ `PlayerSkillState.cs`
+  作用：技能运行态，现在支持 `double` 精度经验。
+│  │  ├─ `PlayerFactionState.cs`
+  作用：势力关系运行态。
+│  │  ├─ `PlayerZoneState.cs`
+  作用：区域运行态。
+│  │  ├─ `PlayerInventory.cs`
+  作用：玩家背包管理器。
+│  │  ├─ `PlayerProfile.cs`
+  作用：玩家整份运行时数据的总入口。
+│  │  ├─ `PlayerEconomyState.cs`
+  作用：玩家金币钱包。
+│  │  ├─ `PlayerIdleState.cs`
+  作用：挂机运行态，现在包含离线结算时间与小数产出余量。
+│  │  └─ `PlayerShopState.cs`
+  作用：玩家视角下的商店库存运行态。
+
+│  │  ├─ `Enums/`
+  作用：强类型枚举目录。
+│  │  ├─ `Rarity.cs`
+  作用：稀有度枚举。
+│  │  ├─ `ItemTag.cs`
+  作用：物品标签枚举。
+│  │  ├─ `EventType.cs`
+  作用：事件类型枚举。
+│  │  ├─ `CurrencyType.cs`
+  作用：支付类型枚举。
+│  │  ├─ `ConditionType.cs`
+  作用：条件类型枚举。
+│  │  ├─ `ButtonListGroup.cs`
+  作用：按钮分组枚举。
+│  │  └─ `EventEffectType.cs`
+  作用：事件效果枚举。
+
+│  │  ├─ `Registry/`
+  作用：注册表目录。
+│  │  ├─ `ItemRegistry.cs`
+  作用：物品/分类注册表，负责树构建、校验、导出。
+│  │  ├─ `SkillRegistry.cs`
+  作用：技能注册表。
+│  │  ├─ `EventRegistry.cs`
+  作用：事件注册表，现在支持按按钮分组取事件。
+│  │  ├─ `FactionRegistry.cs`
+  作用：势力与 NPC 注册表。
+│  │  └─ `ZoneRegistry.cs`
+  作用：区域注册表。
+
+│  │  ├─ `Helpers/`
+  作用：辅助工具目录。
+│  │  ├─ `TreeValidator.cs`
+  作用：树结构校验器。
+│  │  ├─ `SortingHelper.cs`
+  作用：显示排序辅助器。
+│  │  ├─ `TreePrinter.cs`
+  作用：物品树打印与导出工具。
+│  │  ├─ `LocalizationManager.cs`
+  作用：多语言管理器。
+│  │  ├─ `TransactionHelper.cs`
+  作用：事务式物品增减工具。
+│  │  ├─ `RuntimePathHelper.cs`
+  作用：统一管理 `user://` 运行时可写路径。
+│  │  └─ `YamlConfigLoader.cs`
+  作用：首版真正读取 YAML 的核心辅助类。
+
+│  │  └─ `SaveLoad/`
+  作用：存读档目录。
+│  │  ├─ `SaveData.cs`
+  作用：存档根结构。
+│  │  ├─ `SaveManager.cs`
+  作用：存读档管理器，目前仍是接口预留版。
+│  │  ├─ `MigrationRunner.cs`
+  作用：迁移执行器。
+│  │  ├─ `SemanticVersion.cs`
+  作用：语义化版本结构。
+│  │  └─ `SaveMetadata.cs`
+  作用：存档元数据。
+
+│  ├─ `Systems/`
+  作用：业务系统目录。
+│  ├─ `IdleSystem.cs`
+  作用：挂机系统，现已可真实结算资源与经验。
+│  ├─ `ClickEventSystem.cs`
+  作用：点击事件系统，现已可配合 UI 做按钮显示/禁用判断。
+│  ├─ `SkillSystem.cs`
+  作用：技能系统，负责经验与升级。
+│  ├─ `ShopSystem.cs`
+  作用：商店系统，现已检查商店与商品的声望门槛。
+│  ├─ `SellSystem.cs`
+  作用：卖出系统。
+│  ├─ `FactionSystem.cs`
+  作用：势力系统，现已处理声望上限与和平状态。
+│  ├─ `ZoneSystem.cs`
+  作用：区域系统。
+│  ├─ `QuestSystem.cs`
+  作用：任务系统预留。
+│  ├─ `CraftingSystem.cs`
+  作用：合成系统预留。
+│  ├─ `BattleSystem.cs`
+  作用：战斗系统预留。
+│  ├─ `AchievementSystem.cs`
+  作用：成就系统预留。
+│  ├─ `EquipmentSystem.cs`
+  作用：装备系统预留。
+│  └─ `BuffSystem.cs`
+  作用：Buff 系统预留。
+
+│  ├─ `UI/`
+  作用：界面逻辑脚本目录。
+│  ├─ `MainUI.cs`
+  作用：
+  - 主界面脚本
+  - 当前会在运行时动态拼出完整默认 UI
+  - 会读取布局资源并定时刷新各面板
+│  ├─ `MainUiLayoutSettings.cs`
+  作用：主界面布局设置资源类。
+│  ├─ `EventButtonViewData.cs`
+  作用：事件按钮显示数据类。
+│  ├─ `ButtonListPanel.cs`
+  作用：左侧按钮列表面板。
+│  ├─ `EventButtonItem.cs`
+  作用：单个事件按钮。
+│  ├─ `InventoryPanel.cs`
+  作用：背包面板。
+│  ├─ `ItemSlotUI.cs`
+  作用：单个物品槽。
+│  ├─ `ItemTooltipUI.cs`
+  作用：物品提示框预留。
+│  ├─ `CharacterStatusPanel.cs`
+  作用：右侧角色状态栏。
+│  ├─ `SkillPanel.cs`
+  作用：技能页。
+│  ├─ `ShopPanel.cs`
+  作用：商店面板预留。
+│  ├─ `DictionaryPanel.cs`
+  作用：图鉴面板。
+│  ├─ `TabContainer.cs`
+  作用：自定义标签页容器。
+│  ├─ `LogPanel.cs`
+  作用：日志面板。
+│  ├─ `ZoneSelectPanel.cs`
+  作用：区域面板。
+│  ├─ `FactionPanel.cs`
+  作用：势力面板。
+│  └─ `Placeholder/`
+  作用：尚未正式实现的占位标签页脚本。
+│  ├─ `BattlePanel.cs`
+  作用：战斗页占位。
+│  ├─ `QuestPanel.cs`
+  作用：任务页占位。
+│  └─ `AchievementPanel.cs`
+  作用：成就页占位。
+
+
+├─ `Scenes/`
+  作用：场景目录。
+
+│  ├─ `Main.tscn`
+  作用：主场景，实例化 `MainUI.tscn`。
+
+│  ├─ `UI/`
+  作用：UI 场景目录。
+│  ├─ `MainUI.tscn`
+  作用：主界面根场景，绑定 `MainUI.cs`。
+  说明：当前复杂布局主要由代码动态创建。
+│  ├─ `ButtonListPanel.tscn`
+  作用：按钮列表容器场景。
+│  ├─ `InventoryPanel.tscn`
+  作用：背包面板场景。
+│  ├─ `CharacterStatusPanel.tscn`
+  作用：状态栏场景。
+│  ├─ `ShopPanel.tscn`
+  作用：商店面板场景。
+│  ├─ `LogPanel.tscn`
+  作用：日志面板场景。
+│  └─ `TabPages.tscn`
+  作用：标签页容器场景。
+
+│  └─ `Components/`
+  作用：可复用 UI 组件目录。
+│  ├─ `EventButton.tscn`
+  作用：事件按钮组件。
+│  ├─ `ItemSlot.tscn`
+  作用：物品槽组件。
+│  └─ `ProgressBarOverlay.tscn`
+  作用：进度条组件预留。
+
+
+├─ `Resources/`
+  作用：资源目录。
+
+│  ├─ `Themes/`
+  作用：主题资源目录。
+│  └─ `default_theme.tres`
+  作用：默认主题资源。
+
+│  └─ `UI/`
+  作用：UI 资源目录。
+│  └─ `main_ui_layout.tres`
+  作用：主界面布局参数资源，是当前最推荐的 UI 调整入口。
+
+
+================================
+四、和骨架阶段相比，最关键的新变化
+================================
+
+1. `YamlConfigLoader.cs` 已从占位接口升级成真实读取器
+2. `GameManager.cs` 已从“预留加载逻辑”升级成“真实启动总管”
+3. `IdleSystem.cs` 已从骨架升级成“真正可挂机结算”
+4. `MainUI.cs` 已从骨架升级成“真正动态创建主界面”
+5. 新增 `MainUiLayoutSettings.cs + main_ui_layout.tres` 作为 UI 参数化入口
+
+
+================================
+五、最值得记住的分层原则
+================================
+
+1. `Configs/` 决定“世界模板”
+2. `Definitions` 是静态模板类
+3. `Registry` 负责查模板
+4. `PlayerProfile` 负责记玩家当前状态
+5. `Systems` 负责真正修改玩家数据
+6. `Scenes + UI + Resources/UI` 负责显示和布局

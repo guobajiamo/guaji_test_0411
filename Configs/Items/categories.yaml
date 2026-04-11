@@ -1,0 +1,50 @@
+# 物品分类定义
+# id: 全小写下划线，唯一标识
+# parent_id: 父分类ID，根分类留空
+# name_key: 名称（前期直接写中文，后期可作为多语言 key）
+# description_key: 描述文本
+# definition_order: 同级内的默认排序，建议按 100、200、300 递增
+# is_visible: 这个分类是否默认显示在 UI 中
+
+categories:
+  - id: "gathering_material"
+    parent_id: ""
+    name_key: "采集素材"
+    description_key: "通过采集获得的基础素材"
+    definition_order: 100
+    is_visible: true
+
+  - id: "mat_wood"
+    parent_id: "gathering_material"
+    name_key: "木材"
+    description_key: "各类木质素材"
+    definition_order: 100
+    is_visible: true
+
+  - id: "consumable"
+    parent_id: ""
+    name_key: "消耗品"
+    description_key: "使用后会被消耗的物品"
+    definition_order: 200
+    is_visible: true
+
+  - id: "consumable_cooking"
+    parent_id: "consumable"
+    name_key: "烹饪食品"
+    description_key: "通过烹饪制作出的成品食物"
+    definition_order: 100
+    is_visible: true
+
+  - id: "consumable_ingredient"
+    parent_id: "consumable"
+    name_key: "食材"
+    description_key: "用于烹饪的基础原料"
+    definition_order: 200
+    is_visible: true
+
+  - id: "tool"
+    parent_id: ""
+    name_key: "工具"
+    description_key: "用于采集与互动的工具"
+    definition_order: 300
+    is_visible: true

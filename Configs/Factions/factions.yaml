@@ -1,0 +1,77 @@
+factions:
+  - id: "faction_scarlet_devil"
+    name_key: "红魔馆"
+    description_key: "坐落在雾之湖畔的洋馆，蕾米莉亚的居所。"
+    max_reputation: 100
+    peace_threshold: 100
+    npc_ids: ["npc_sakuya", "npc_patchouli"]
+    faction_event_ids: ["evt_sdm_work", "evt_sdm_trade"]
+
+  - id: "faction_youkai_mountain"
+    name_key: "妖怪山"
+    description_key: "天狗和河童居住的高山。"
+    max_reputation: 100
+    peace_threshold: 100
+    npc_ids: ["npc_nitori"]
+    faction_event_ids: []
+
+  - id: "faction_eientei"
+    name_key: "永远亭"
+    description_key: "隐藏在迷途竹林深处的月之民居所。"
+    max_reputation: 100
+    peace_threshold: 100
+    npc_ids: ["npc_eirin"]
+    faction_event_ids: []
+
+  - id: "faction_myourenji"
+    name_key: "命莲寺"
+    description_key: "由圣白莲主持的寺院。"
+    max_reputation: 100
+    peace_threshold: 100
+    npc_ids: []
+    faction_event_ids: []
+
+npcs:
+  - id: "npc_sakuya"
+    name_key: "十六夜咲夜"
+    faction_id: "faction_scarlet_devil"
+    has_shop: true
+    required_reputation: 20
+    shop_items:
+      - item_id: "tool_iron_axe"
+        stock: 1
+        payment_type: "Gold"
+        gold_cost: 500
+        required_reputation: 30
+      - item_id: "food_baozi"
+        stock: -1
+        payment_type: "Gold"
+        gold_cost: 10
+        required_reputation: 20
+
+  - id: "npc_patchouli"
+    name_key: "帕秋莉·诺蕾姬"
+    faction_id: "faction_scarlet_devil"
+    has_shop: false
+    required_reputation: 50
+
+  - id: "npc_nitori"
+    name_key: "河城荷取"
+    faction_id: "faction_youkai_mountain"
+    has_shop: true
+    required_reputation: 10
+    shop_items:
+      - item_id: "tool_alloy_axe"
+        stock: 1
+        payment_type: "Mixed"
+        gold_cost: 1000
+        barter_costs:
+          - { item_id: "mat_wood_log", amount: 100 }
+        required_reputation: 60
+
+  - id: "npc_eirin"
+    name_key: "八意永琳"
+    faction_id: "faction_eientei"
+    has_shop: true
+    required_reputation: 30
+    shop_items: []

@@ -1,0 +1,16 @@
+# 存档迁移规则
+# 这个文件的意义是：以后改了物品 ID、删了物品、补了新系统时，
+# 老玩家的存档仍然可以被安全迁移。
+
+migrations:
+  - from_version: "0.1.0"
+    to_version: "0.2.0"
+    actions:
+      - type: "rename_item"
+        old_id: "old_item_id"
+        new_id: "new_item_id"
+      - type: "remove_item"
+        item_id: "removed_item_id"
+        replacement_id: "replacement_item_id"
+      - type: "add_default_state"
+        description: "为新增系统补默认玩家状态"

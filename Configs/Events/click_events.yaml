@@ -1,0 +1,13 @@
+# 可重复点击事件
+
+events:
+  - id: "evt_click_chop"
+    name_key: "点击砍树"
+    description_key: "手动砍一下树，立即获得 1 个原木。"
+    type: "RepeatableClick"
+    prerequisites:
+      - { condition_type: "HasItem", target_id: "tool_stone_axe", required_value: 1 }
+    costs: []
+    effects:
+      - { effect_type: "GrantItem", target_id: "mat_wood_log", int_value: 1 }
+    button_list_group: "MainClick"
