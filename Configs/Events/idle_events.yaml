@@ -4,6 +4,7 @@ events:
   - id: "evt_idle_chop"
     name_key: "挂机砍树"
     description_key: "自动持续砍树，获得原木和砍树经验。"
+    hover_info_key: "持续自动砍树。开始后会在状态栏显示当前挂机项目和读条进度。"
     type: "IdleLoop"
     prerequisites:
       - { condition_type: "HasItem", target_id: "tool_stone_axe", required_value: 1 }

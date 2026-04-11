@@ -50,6 +50,21 @@ public partial class MainUiLayoutSettings : Resource
     public int FooterButtonSpacing { get; set; } = 10;
 
     [Export]
+    public int CollapsedLogHeight { get; set; } = 170;
+
+    [Export]
+    public int ExpandedLogMargin { get; set; } = 24;
+
+    [Export]
+    public int StatusCategoryFontSize { get; set; } = 20;
+
+    [Export]
+    public int StatusItemFontSize { get; set; } = 16;
+
+    [Export]
+    public int DialogMinWidth { get; set; } = 560;
+
+    [Export]
     public int WindowBaseWidth { get; set; } = 1600;
 
     [Export]

@@ -4,6 +4,7 @@ events:
   - id: "evt_click_chop"
     name_key: "点击砍树"
     description_key: "手动砍一下树，立即获得 1 个原木。"
+    hover_info_key: "手动执行一次砍树动作。适合你想自己一点点体验流程时使用。"
     type: "RepeatableClick"
     prerequisites:
       - { condition_type: "HasItem", target_id: "tool_stone_axe", required_value: 1 }

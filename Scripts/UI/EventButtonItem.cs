@@ -29,7 +29,7 @@ public partial class EventButtonItem : Button
     {
         EventId = data.EventId;
         Text = BuildDisplayText(data);
-        TooltipText = data.Description;
+        TooltipText = string.IsNullOrWhiteSpace(data.TooltipText) ? data.Description : data.TooltipText;
         Disabled = data.IsDisabled;
         CustomMinimumSize = new Vector2(0, layoutSettings.EventButtonMinHeight);
         AddThemeFontSizeOverride("font_size", layoutSettings.BodyFontSize);

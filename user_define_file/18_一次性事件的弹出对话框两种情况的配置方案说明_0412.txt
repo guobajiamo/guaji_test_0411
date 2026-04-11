@@ -1,0 +1,190 @@
+【0412 一次性事件弹出对话框两种情况的配置方案说明】
+
+这次新增的“一次性事件弹窗”功能，配置入口在：
+Configs/Events/oneshot_events.yaml
+
+你可以把它理解为：
+“某个一次性按钮被点击后，不是立刻执行，而是先弹出一个说明框，再由玩家确认或做选择。”
+
+
+一、支持的两种弹窗情况
+1. 情况一：只有一个确认按钮
+   适合：
+   - 说明剧情
+   - 告知新功能
+   - 播放一次性提示
+   - 玩家只能接受，不能二选一
+
+2. 情况二：底部出现两个互斥按钮
+   适合：
+   - 接受 / 拒绝
+   - 同意 / 反对
+   - 收金币 / 收道具
+   - 选阵营 / 不选阵营
+
+
+二、单按钮弹窗怎么配
+写法示例：
+
+events:
+  - id: "evt_read_chopping_notice"
+    name_key: "阅读伐木心得"
+    description_key: "阅读一段说明文字，了解刚入门时该怎么做。"
+    hover_info_key: "这是单按钮弹窗的示例事件。点击后会先弹出说明框，再由你确认执行。"
+    type: "OneshotClick"
+    prerequisites:
+      - { condition_type: "HasItem", target_id: "tool_stone_axe", required_value: 1 }
+    costs: []
+    effects:
+      - { effect_type: "GrantGold", target_id: "", int_value: 5 }
+    button_list_group: "MainOneshot"
+    dialog:
+      body_text: "你终于拿到了第一把石斧。\n接下来你可以先尝试点击砍树，也可以直接开始挂机砍树。"
+      confirm_button_text: "我知道了"
+
+字段说明：
+1. id
+   - 这个事件自己的唯一 ID
+
+2. name_key
+   - 按钮显示名
+   - 也是弹窗标题默认会显示的内容
+
+3. description_key
+   - 事件基础描述
+
+4. hover_info_key
+   - 鼠标悬浮在按钮上时显示的额外说明
+   - 不写的话会回退到 description_key
+
+5. effects
+   - 玩家点击弹窗里的确认按钮之后，真正执行的奖励或效果
+
+6. dialog.body_text
+   - 弹窗正文
+
+7. dialog.confirm_button_text
+   - 唯一确认按钮上的文字
+   - 你可以自由改成：
+     我知道了
+     无奈接受
+     我要报仇
+     继续前进
+
+
+三、双选项弹窗怎么配
+推荐拆成“1 个源弹窗事件 + 2 个隐藏目标事件”。
+
+写法示例：
+
+events:
+  - id: "evt_stranger_reward_offer"
+    name_key: "路人的谢礼"
+    description_key: "一位路人想给你一份谢礼，你决定如何回应？"
+    hover_info_key: "这是双选项弹窗的示例事件。两个按钮只能二选一，并且会触发不同的一次性事件。"
+    type: "OneshotClick"
+    prerequisites:
+      - { condition_type: "HasItem", target_id: "tool_stone_axe", required_value: 1 }
+    costs: []
+    effects: []
+    button_list_group: "MainOneshot"
+    dialog:
+      body_text: "一位路人看你初来乍到，想送你一点谢礼。\n你可以接受一小袋金币，也可以婉拒后收下一份干粮。"
+      consume_source_event_on_choice: true
+      choices:
+        - { button_text: "接受馈赠", target_event_id: "evt_accept_gift_gold" }
+        - { button_text: "婉拒谢礼", target_event_id: "evt_decline_reward_food" }
+
+  - id: "evt_accept_gift_gold"
+    name_key: "接受馈赠"
+    description_key: "你接受了谢礼，获得了一小袋金币。"
+    type: "OneshotClick"
+    prerequisites: []
+    costs: []
+    effects:
+      - { effect_type: "GrantGold", target_id: "", int_value: 30 }
+    button_list_group: "None"
+
+  - id: "evt_decline_reward_food"
+    name_key: "婉拒谢礼"
+    description_key: "你谢绝了金币，但收下了一份包子。"
+    type: "OneshotClick"
+    prerequisites: []
+    costs: []
+    effects:
+      - { effect_type: "GrantItem", target_id: "food_baozi", int_value: 1 }
+    button_list_group: "None"
+
+字段说明：
+1. 源事件 evt_stranger_reward_offer
+   - 负责显示在按钮列表中
+   - 负责弹出对话框
+   - 一般不建议在它自己身上写奖励
+
+2. dialog.choices
+   - 这里写两个按钮
+   - 每个按钮都连接一个 target_event_id
+
+3. 目标事件 evt_accept_gift_gold / evt_decline_reward_food
+   - 这些才是真正执行奖励的事件
+   - button_list_group 建议写成 None
+   - 这样它们不会直接出现在主界面按钮列表里
+
+4. dialog.consume_source_event_on_choice
+   - 通常建议写 true
+   - 作用是：玩家选过一次之后，源弹窗事件就会消失，不会再重复触发
+
+
+四、什么时候用单按钮，什么时候用双按钮
+1. 用单按钮
+   - 玩家只是“看完并确认”
+   - 不需要分支结果
+   - 适合教程、通知、剧情提示
+
+2. 用双按钮
+   - 玩家必须二选一
+   - 两个选择结果不同
+   - 适合剧情抉择、是否接受任务、收金币还是收道具
+
+
+五、你后续新增弹窗时的推荐写法
+1. 如果只是说明
+   - 直接写一个事件
+   - 在 dialog 里写 body_text + confirm_button_text
+   - 奖励直接写在这个事件的 effects 里
+
+2. 如果是分支选择
+   - 写 1 个源弹窗事件
+   - 再写 2 个目标事件
+   - 源事件只负责弹窗
+   - 目标事件分别负责不同奖励或不同后果
+
+
+六、当前这套配置的限制
+1. 当前双选项模式只按需求支持 2 个按钮，不支持 3 个或更多。
+2. 当前弹窗标题默认使用事件 name_key。
+3. 当前最适合用于一次性事件，不建议先拿来做可重复刷的事件。
+4. 当前双选项源事件建议不要再自己附带 costs / effects，避免逻辑含义混乱。
+
+
+七、你后续如果还想继续扩展
+后面可以在这套结构上继续加：
+1. 弹窗插图
+2. 弹窗角色名
+3. 按钮颜色区分
+4. 三选一或更多分支
+5. 分支按钮的前置条件
+6. 弹窗关闭音效 / 选择音效
+
+
+八、给你的最实用结论
+1. 只有一个按钮：
+   - 用 dialog.confirm_button_text
+
+2. 有两个互斥分支：
+   - 用 dialog.choices
+   - 每个 choices 按钮连接一个隐藏目标事件
+
+3. 想让它只出现一次：
+   - 事件类型保持 OneshotClick
+   - 双选项再加上 consume_source_event_on_choice: true

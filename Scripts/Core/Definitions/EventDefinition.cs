@@ -15,6 +15,12 @@ public class EventDefinition
 
     public string DescriptionKey { get; set; } = string.Empty;
 
+    /// <summary>
+    /// 鼠标悬浮说明。
+    /// 如果为空，就默认回退到 DescriptionKey。
+    /// </summary>
+    public string HoverInfoKey { get; set; } = string.Empty;
+
     public EventType Type { get; set; } = EventType.RepeatableClick;
 
     public List<EventConditionEntry> Prerequisites { get; } = new();
@@ -34,6 +40,12 @@ public class EventDefinition
     public ButtonListGroup ButtonListGroup { get; set; } = ButtonListGroup.MainClick;
 
     public bool RemoveAfterTriggered { get; set; }
+
+    /// <summary>
+    /// 预留的弹窗配置。
+    /// 只有部分一次性事件会用到它。
+    /// </summary>
+    public EventDialogDefinition? Dialog { get; set; }
 }
 
 /// <summary>

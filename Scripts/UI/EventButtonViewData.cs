@@ -12,6 +12,8 @@ public class EventButtonViewData
 
     public string Description { get; set; } = string.Empty;
 
+    public string TooltipText { get; set; } = string.Empty;
+
     public bool IsDisabled { get; set; }
 
     public double ProgressRatio { get; set; }

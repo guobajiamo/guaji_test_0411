@@ -86,7 +86,17 @@ public partial class InventoryPanel : Control
 
             ItemSlotUI slot = new();
             slot.BindItem(item.Id, item.GetDisplayName(_gameManager.TranslateText), quantity);
-            slot.TooltipText = $"{item.GetDisplayDescription(_gameManager.TranslateText)}\n稀有度：{item.BaseRarity}\n售价：{item.SellPrice}";
+            string detailText = string.IsNullOrWhiteSpace(item.DetailDescriptionKey)
+                ? item.GetDisplayDescription(_gameManager.TranslateText)
+                : _gameManager.TranslateText(item.DetailDescriptionKey);
+            string acquisitionHint = string.IsNullOrWhiteSpace(item.AcquisitionHintKey)
+                ? "暂未填写获取途径说明。"
+                : _gameManager.TranslateText(item.AcquisitionHintKey);
+            slot.TooltipText =
+                $"{detailText}\n" +
+                $"获取提示：{acquisitionHint}\n" +
+                $"稀有度：{item.BaseRarity}\n" +
+                $"售价：{item.SellPrice}";
             _itemListContainer!.AddChild(slot);
         }
     }

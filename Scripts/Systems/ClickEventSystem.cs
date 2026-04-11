@@ -120,6 +120,38 @@ public partial class ClickEventSystem : Node
     }
 
     /// <summary>
+    /// 供“剧情分支弹窗”使用。
+    /// 源事件本身只负责弹框，真正奖励写在分支目标事件里。
+    /// </summary>
+    public bool TryTriggerDialogChoice(string sourceEventId, string targetEventId, bool consumeSourceEventOnChoice = true)
+    {
+        if (_profile == null || _eventRegistry == null)
+        {
+            return false;
+        }
+
+        EventDefinition? sourceDefinition = _eventRegistry.GetEvent(sourceEventId);
+        if (sourceDefinition == null || IsAlreadyConsumed(sourceDefinition) || !ArePrerequisitesMet(sourceDefinition))
+        {
+            return false;
+        }
+
+        bool sourceAdded = false;
+        if (consumeSourceEventOnChoice && (sourceDefinition.Type == EventType.OneshotClick || sourceDefinition.RemoveAfterTriggered))
+        {
+            sourceAdded = _profile.CompletedEventIds.Add(sourceDefinition.Id);
+        }
+
+        bool success = TryTriggerEvent(targetEventId);
+        if (!success && sourceAdded)
+        {
+            _profile.CompletedEventIds.Remove(sourceDefinition.Id);
+        }
+
+        return success;
+    }
+
+    /// <summary>
     /// 一次性事件和“触发后移除”的事件，需要在系统层再做一次防重复保护。
     /// 这样即使 UI 没及时隐藏按钮，也不会被重复触发。
     /// </summary>

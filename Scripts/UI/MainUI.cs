@@ -1,6 +1,7 @@
 using Godot;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Test00_0410.Autoload;
 using Test00_0410.Core.Definitions;
 using Test00_0410.Core.Enums;
@@ -13,7 +14,7 @@ namespace Test00_0410.UI;
 /// <summary>
 /// 主界面脚本。
 /// 这里统一组织左侧事件区、中间标签页、右侧提示与状态栏，
-/// 同时也负责窗口自适应和底部特殊功能按钮。
+/// 同时也负责底部日志区、窗口自适应和一次性事件弹窗。
 /// </summary>
 public partial class MainUI : Control
 {
@@ -23,17 +24,23 @@ public partial class MainUI : Control
     private GameManager? _gameManager;
     private MainUiLayoutSettings _layoutSettings = new();
     private float _refreshAccumulator;
+    private bool _isLogExpanded;
 
     private ButtonListPanel? _oneshotPanel;
     private ButtonListPanel? _clickPanel;
     private ButtonListPanel? _idlePanel;
     private InventoryPanel? _inventoryPanel;
     private SkillPanel? _skillPanel;
-    private LogPanel? _logPanel;
     private DictionaryPanel? _dictionaryPanel;
     private CharacterStatusPanel? _statusPanel;
     private FactionPanel? _factionPanel;
     private ZoneSelectPanel? _zoneSelectPanel;
+    private LogPanel? _collapsedLogPanel;
+    private LogPanel? _expandedLogPanel;
+    private Control? _expandedLogOverlay;
+    private Button? _collapsedLogToggleButton;
+    private Button? _expandedLogToggleButton;
+    private EventDialogPanel? _eventDialogPanel;
 
     public override void _Ready()
     {
@@ -86,10 +93,14 @@ public partial class MainUI : Control
         _inventoryPanel?.RefreshInventory();
         _skillPanel?.RefreshSkills();
         _dictionaryPanel?.RefreshDictionary();
-        _logPanel?.SetMessages(_gameManager.RuntimeLogs);
         _statusPanel?.RefreshStatus();
         _factionPanel?.RefreshFactions();
         _zoneSelectPanel?.RefreshZones();
+
+        IReadOnlyList<string> runtimeLogs = _gameManager.RuntimeLogs;
+        _collapsedLogPanel?.SetMessages(runtimeLogs.TakeLast(5));
+        _expandedLogPanel?.SetMessages(runtimeLogs);
+        UpdateLogToggleButtons();
     }
 
     private void LoadLayoutSettings()
@@ -164,6 +175,17 @@ public partial class MainUI : Control
         contentRow.AddThemeConstantOverride("separation", _layoutSettings.PanelSpacing);
         root.AddChild(contentRow);
 
+        BuildLeftColumn(contentRow);
+        BuildCenterColumn(contentRow);
+        BuildRightColumn(contentRow);
+        BuildCollapsedLogDock(root);
+        BuildExpandedLogOverlay();
+        BuildEventDialogOverlay();
+        UpdateLogOverlayVisibility();
+    }
+
+    private void BuildLeftColumn(HBoxContainer contentRow)
+    {
         VBoxContainer leftColumn = new()
         {
             Name = "LeftColumn",
@@ -237,7 +259,10 @@ public partial class MainUI : Control
             "读取存档",
             "从系统默认存档目录读取进度。如果没有存档，会载入默认新档。",
             OnLoadGamePressed));
+    }
 
+    private void BuildCenterColumn(HBoxContainer contentRow)
+    {
         VBoxContainer centerColumn = new()
         {
             Name = "CenterColumn",
@@ -262,9 +287,6 @@ public partial class MainUI : Control
         _skillPanel.Configure(_gameManager!, OnSkillUpgradeRequested);
         tabContainer.AddChild(_skillPanel);
 
-        _logPanel = new LogPanel { Name = "日志" };
-        tabContainer.AddChild(_logPanel);
-
         _dictionaryPanel = new DictionaryPanel { Name = "图鉴" };
         _dictionaryPanel.Configure(_gameManager!);
         tabContainer.AddChild(_dictionaryPanel);
@@ -280,7 +302,10 @@ public partial class MainUI : Control
         tabContainer.AddChild(new QuestPanel { Name = "任务" });
         tabContainer.AddChild(new BattlePanel { Name = "战斗" });
         tabContainer.AddChild(new AchievementPanel { Name = "成就" });
+    }
 
+    private void BuildRightColumn(HBoxContainer contentRow)
+    {
         VBoxContainer rightColumn = new()
         {
             Name = "RightColumn",
@@ -304,8 +329,146 @@ public partial class MainUI : Control
             Name = "角色状态",
             SizeFlagsVertical = SizeFlags.ExpandFill
         };
-        _statusPanel.Configure(_gameManager!);
+        _statusPanel.Configure(_gameManager!, _layoutSettings);
         rightColumn.AddChild(_statusPanel);
+    }
+
+    private void BuildCollapsedLogDock(VBoxContainer root)
+    {
+        PanelContainer logDock = new()
+        {
+            Name = "CollapsedLogDock",
+            CustomMinimumSize = new Vector2(0, _layoutSettings.CollapsedLogHeight),
+            SizeFlagsHorizontal = SizeFlags.ExpandFill
+        };
+        root.AddChild(logDock);
+
+        VBoxContainer dockContent = new()
+        {
+            Name = "DockContent",
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+            SizeFlagsVertical = SizeFlags.ExpandFill
+        };
+        dockContent.AddThemeConstantOverride("separation", 6);
+        logDock.AddChild(dockContent);
+
+        HBoxContainer headerRow = new()
+        {
+            Name = "HeaderRow",
+            SizeFlagsHorizontal = SizeFlags.ExpandFill
+        };
+        dockContent.AddChild(headerRow);
+
+        Label headerLabel = new()
+        {
+            Text = "日志（默认折叠，仅显示最新 5 行）",
+            SizeFlagsHorizontal = SizeFlags.ExpandFill
+        };
+        headerLabel.AddThemeFontSizeOverride("font_size", _layoutSettings.SectionHeaderFontSize);
+        headerRow.AddChild(headerLabel);
+
+        _collapsedLogToggleButton = new Button
+        {
+            Text = "展开",
+            CustomMinimumSize = new Vector2(100, 36)
+        };
+        _collapsedLogToggleButton.Pressed += ToggleLogExpandedState;
+        headerRow.AddChild(_collapsedLogToggleButton);
+
+        _collapsedLogPanel = new LogPanel
+        {
+            Name = "CollapsedLogPanel",
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+            SizeFlagsVertical = SizeFlags.ExpandFill
+        };
+        dockContent.AddChild(_collapsedLogPanel);
+    }
+
+    private void BuildExpandedLogOverlay()
+    {
+        _expandedLogOverlay = new Control
+        {
+            Name = "ExpandedLogOverlay",
+            Visible = false,
+            MouseFilter = MouseFilterEnum.Stop,
+            ZIndex = 120
+        };
+        _expandedLogOverlay.SetAnchorsPreset(LayoutPreset.FullRect);
+        AddChild(_expandedLogOverlay);
+
+        ColorRect overlayBackground = new()
+        {
+            Color = new Color(0, 0, 0, 0.6f),
+            MouseFilter = MouseFilterEnum.Stop
+        };
+        overlayBackground.SetAnchorsPreset(LayoutPreset.FullRect);
+        _expandedLogOverlay.AddChild(overlayBackground);
+
+        MarginContainer overlayMargin = new()
+        {
+            MouseFilter = MouseFilterEnum.Stop
+        };
+        overlayMargin.SetAnchorsPreset(LayoutPreset.FullRect);
+        overlayMargin.AddThemeConstantOverride("margin_left", _layoutSettings.ExpandedLogMargin);
+        overlayMargin.AddThemeConstantOverride("margin_top", _layoutSettings.ExpandedLogMargin);
+        overlayMargin.AddThemeConstantOverride("margin_right", _layoutSettings.ExpandedLogMargin);
+        overlayMargin.AddThemeConstantOverride("margin_bottom", _layoutSettings.ExpandedLogMargin);
+        _expandedLogOverlay.AddChild(overlayMargin);
+
+        PanelContainer overlayPanel = new()
+        {
+            MouseFilter = MouseFilterEnum.Stop
+        };
+        overlayMargin.AddChild(overlayPanel);
+
+        VBoxContainer overlayContent = new()
+        {
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+            SizeFlagsVertical = SizeFlags.ExpandFill
+        };
+        overlayContent.AddThemeConstantOverride("separation", 8);
+        overlayPanel.AddChild(overlayContent);
+
+        HBoxContainer headerRow = new()
+        {
+            SizeFlagsHorizontal = SizeFlags.ExpandFill
+        };
+        overlayContent.AddChild(headerRow);
+
+        Label headerLabel = new()
+        {
+            Text = "日志（展开状态）",
+            SizeFlagsHorizontal = SizeFlags.ExpandFill
+        };
+        headerLabel.AddThemeFontSizeOverride("font_size", _layoutSettings.HeaderFontSize);
+        headerRow.AddChild(headerLabel);
+
+        _expandedLogToggleButton = new Button
+        {
+            Text = "折叠",
+            CustomMinimumSize = new Vector2(100, 40)
+        };
+        _expandedLogToggleButton.Pressed += ToggleLogExpandedState;
+        headerRow.AddChild(_expandedLogToggleButton);
+
+        _expandedLogPanel = new LogPanel
+        {
+            Name = "ExpandedLogPanel",
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+            SizeFlagsVertical = SizeFlags.ExpandFill
+        };
+        overlayContent.AddChild(_expandedLogPanel);
+    }
+
+    private void BuildEventDialogOverlay()
+    {
+        _eventDialogPanel = new EventDialogPanel
+        {
+            Name = "EventDialogPanel"
+        };
+        _eventDialogPanel.Configure(_layoutSettings);
+        AddChild(_eventDialogPanel);
+        _eventDialogPanel.HideDialog();
     }
 
     private ButtonListPanel CreateEventColumnPanel(string title)
@@ -328,6 +491,10 @@ public partial class MainUI : Control
 
         foreach (EventDefinition definition in _gameManager.EventRegistry.GetEventsByGroup(group))
         {
+            string tooltipText = _gameManager.TranslateText(string.IsNullOrWhiteSpace(definition.HoverInfoKey)
+                ? definition.DescriptionKey
+                : definition.HoverInfoKey);
+
             if (group == ButtonListGroup.MainIdle)
             {
                 bool isRunning = _gameManager.IdleSystem?.IsRunningEvent(definition.Id) ?? false;
@@ -342,6 +509,7 @@ public partial class MainUI : Control
                     EventId = definition.Id,
                     DisplayName = isRunning ? $"停止：{_gameManager.TranslateText(definition.NameKey)}" : _gameManager.TranslateText(definition.NameKey),
                     Description = _gameManager.TranslateText(definition.DescriptionKey),
+                    TooltipText = tooltipText,
                     IsDisabled = false,
                     ProgressRatio = isRunning ? (_gameManager.IdleSystem?.GetProgressRatio(definition.Id) ?? 0.0) : 0.0
                 };
@@ -359,6 +527,7 @@ public partial class MainUI : Control
                 EventId = definition.Id,
                 DisplayName = _gameManager.TranslateText(definition.NameKey),
                 Description = _gameManager.TranslateText(definition.DescriptionKey),
+                TooltipText = tooltipText,
                 IsDisabled = !(_gameManager.ClickEventSystem?.CanTriggerEvent(definition.Id) ?? false),
                 ProgressRatio = 0.0
             };
@@ -372,12 +541,14 @@ public partial class MainUI : Control
             return;
         }
 
-        string eventName = _gameManager.GetEventDisplayName(eventId);
-        bool success = _gameManager.ClickEventSystem.TryTriggerEvent(eventId);
-        _gameManager.AddGameLog(success
-            ? $"执行事件成功：{eventName}"
-            : $"执行事件失败：{eventName}");
-        RefreshAllPanels();
+        EventDefinition? definition = _gameManager.EventRegistry.GetEvent(eventId);
+        if (definition?.Dialog != null && (definition.Dialog.HasConfirmButton || definition.Dialog.HasChoices))
+        {
+            ShowEventDialog(definition);
+            return;
+        }
+
+        ExecuteClickEventAndLog(eventId);
     }
 
     private void OnIdleEventPressed(string eventId)
@@ -418,6 +589,74 @@ public partial class MainUI : Control
         _gameManager.AddGameLog(success
             ? $"技能升级成功：{skillName}"
             : $"技能升级失败：{skillName}");
+        RefreshAllPanels();
+    }
+
+    private void ShowEventDialog(EventDefinition definition)
+    {
+        if (_gameManager == null || _eventDialogPanel == null || definition.Dialog == null)
+        {
+            return;
+        }
+
+        List<EventDialogPanel.DialogButtonConfig> buttons = new();
+        if (definition.Dialog.HasChoices)
+        {
+            foreach (EventDialogChoiceDefinition choice in definition.Dialog.Choices.Take(2))
+            {
+                buttons.Add(new EventDialogPanel.DialogButtonConfig
+                {
+                    Text = choice.ButtonText,
+                    OnPressed = () => ExecuteDialogChoiceAndLog(definition, choice)
+                });
+            }
+        }
+        else
+        {
+            buttons.Add(new EventDialogPanel.DialogButtonConfig
+            {
+                Text = definition.Dialog.ConfirmButtonText,
+                OnPressed = () => ExecuteClickEventAndLog(definition.Id)
+            });
+        }
+
+        _eventDialogPanel.ShowDialog(
+            _gameManager.TranslateText(definition.NameKey),
+            _gameManager.TranslateText(definition.Dialog.BodyTextKey),
+            buttons);
+    }
+
+    private void ExecuteClickEventAndLog(string eventId)
+    {
+        if (_gameManager?.ClickEventSystem == null)
+        {
+            return;
+        }
+
+        string eventName = _gameManager.GetEventDisplayName(eventId);
+        bool success = _gameManager.ClickEventSystem.TryTriggerEvent(eventId);
+        _gameManager.AddGameLog(success
+            ? $"执行事件成功：{eventName}"
+            : $"执行事件失败：{eventName}");
+        RefreshAllPanels();
+    }
+
+    private void ExecuteDialogChoiceAndLog(EventDefinition sourceDefinition, EventDialogChoiceDefinition choice)
+    {
+        if (_gameManager?.ClickEventSystem == null)
+        {
+            return;
+        }
+
+        string targetEventName = _gameManager.GetEventDisplayName(choice.TargetEventId);
+        bool success = _gameManager.ClickEventSystem.TryTriggerDialogChoice(
+            sourceDefinition.Id,
+            choice.TargetEventId,
+            sourceDefinition.Dialog?.ConsumeSourceEventOnChoice ?? true);
+
+        _gameManager.AddGameLog(success
+            ? $"你选择了“{choice.ButtonText}”，已执行分支事件：{targetEventName}"
+            : $"选择“{choice.ButtonText}”失败，分支事件未执行。");
         RefreshAllPanels();
     }
 
@@ -484,5 +723,33 @@ public partial class MainUI : Control
 
         _gameManager.LoadGame();
         RefreshAllPanels();
+    }
+
+    private void ToggleLogExpandedState()
+    {
+        _isLogExpanded = !_isLogExpanded;
+        UpdateLogOverlayVisibility();
+        UpdateLogToggleButtons();
+    }
+
+    private void UpdateLogOverlayVisibility()
+    {
+        if (_expandedLogOverlay != null)
+        {
+            _expandedLogOverlay.Visible = _isLogExpanded;
+        }
+    }
+
+    private void UpdateLogToggleButtons()
+    {
+        if (_collapsedLogToggleButton != null)
+        {
+            _collapsedLogToggleButton.Text = _isLogExpanded ? "折叠" : "展开";
+        }
+
+        if (_expandedLogToggleButton != null)
+        {
+            _expandedLogToggleButton.Text = _isLogExpanded ? "折叠" : "展开";
+        }
     }
 }

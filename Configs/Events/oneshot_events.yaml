@@ -5,9 +5,64 @@ events:
   - id: "evt_pickup_stone_axe"
     name_key: "捡起石斧"
     description_key: "你在路边发现了一把粗糙的石斧，捡起来吧。"
+    hover_info_key: "获得石斧，获得人生。获得第一个技能：砍树。"
     type: "OneshotClick"
     prerequisites: []
     costs: []
     effects:
       - { effect_type: "GrantItem", target_id: "tool_stone_axe", int_value: 1 }
     button_list_group: "MainOneshot"
+
+  - id: "evt_read_chopping_notice"
+    name_key: "阅读伐木心得"
+    description_key: "阅读一段说明文字，了解刚入门时该怎么做。"
+    hover_info_key: "这是单按钮弹窗的示例事件。点击后会先弹出说明框，再由你确认执行。"
+    type: "OneshotClick"
+    prerequisites:
+      - { condition_type: "HasItem", target_id: "tool_stone_axe", required_value: 1 }
+    costs: []
+    effects:
+      - { effect_type: "GrantGold", target_id: "", int_value: 5 }
+    button_list_group: "MainOneshot"
+    dialog:
+      body_text: "你终于拿到了第一把石斧。\n接下来你可以先尝试点击砍树，也可以直接开始挂机砍树。\n这条弹窗演示的是“只有一个确认按钮”的配置方式。"
+      confirm_button_text: "我知道了"
+
+  - id: "evt_stranger_reward_offer"
+    name_key: "路人的谢礼"
+    description_key: "一位路人想给你一份谢礼，你决定如何回应？"
+    hover_info_key: "这是双选项弹窗的示例事件。两个按钮只能二选一，并且会触发不同的一次性事件。"
+    type: "OneshotClick"
+    prerequisites:
+      - { condition_type: "HasItem", target_id: "tool_stone_axe", required_value: 1 }
+    costs: []
+    effects: []
+    button_list_group: "MainOneshot"
+    dialog:
+      body_text: "一位路人看你初来乍到，想送你一点谢礼。\n你可以接受一小袋金币，也可以婉拒后收下一份干粮。"
+      consume_source_event_on_choice: true
+      choices:
+        - { button_text: "接受馈赠", target_event_id: "evt_accept_gift_gold" }
+        - { button_text: "婉拒谢礼", target_event_id: "evt_decline_reward_food" }
+
+  - id: "evt_accept_gift_gold"
+    name_key: "接受馈赠"
+    description_key: "你接受了谢礼，获得了一小袋金币。"
+    hover_info_key: "这是隐藏分支事件，通常不直接显示在按钮列表里。"
+    type: "OneshotClick"
+    prerequisites: []
+    costs: []
+    effects:
+      - { effect_type: "GrantGold", target_id: "", int_value: 30 }
+    button_list_group: "None"
+
+  - id: "evt_decline_reward_food"
+    name_key: "婉拒谢礼"
+    description_key: "你谢绝了金币，但收下了一份包子。"
+    hover_info_key: "这是隐藏分支事件，通常不直接显示在按钮列表里。"
+    type: "OneshotClick"
+    prerequisites: []
+    costs: []
+    effects:
+      - { effect_type: "GrantItem", target_id: "food_baozi", int_value: 1 }
+    button_list_group: "None"

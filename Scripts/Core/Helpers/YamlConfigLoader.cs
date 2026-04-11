@@ -164,11 +164,33 @@ public class YamlConfigLoader
                 Id = GetString(entry, "id"),
                 NameKey = GetString(entry, "name_key"),
                 DescriptionKey = GetString(entry, "description_key"),
+                HoverInfoKey = GetString(entry, "hover_info_key"),
                 Type = GetEnum(entry, "type", EventType.RepeatableClick),
                 LinkedSkillId = GetString(entry, "linked_skill_id"),
                 ButtonListGroup = GetEnum(entry, "button_list_group", ButtonListGroup.MainClick),
                 RemoveAfterTriggered = GetBool(entry, "remove_after_triggered", false)
             };
+
+            if (entry.TryGetValue("dialog", out object? dialogValue) && dialogValue is Dictionary<string, object?> dialogMap)
+            {
+                EventDialogDefinition dialog = new()
+                {
+                    BodyTextKey = GetString(dialogMap, "body_text"),
+                    ConfirmButtonText = GetString(dialogMap, "confirm_button_text"),
+                    ConsumeSourceEventOnChoice = GetBool(dialogMap, "consume_source_event_on_choice", true)
+                };
+
+                foreach (Dictionary<string, object?> choiceMap in GetListOfMaps(dialogMap, "choices"))
+                {
+                    dialog.Choices.Add(new EventDialogChoiceDefinition
+                    {
+                        ButtonText = GetString(choiceMap, "button_text"),
+                        TargetEventId = GetString(choiceMap, "target_event_id")
+                    });
+                }
+
+                definition.Dialog = dialog;
+            }
 
             foreach (Dictionary<string, object?> prerequisite in GetListOfMaps(entry, "prerequisites"))
             {
