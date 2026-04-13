@@ -1,0 +1,11 @@
+# 本文件是“正式剧本游戏内容界面布局”的说明入口。
+# 更新时间：2025-04-13
+#
+# 正式布局实例请写到：
+# `res://Configs/Scenarios/MainStory/UI/GameplayLayout/`
+#
+# 职责划分：
+# - `Zones/Definitions/*.yaml` 负责玩法层 zone 规则
+# - `UI/GameplayLayout/*.yaml` 负责新 UI 的区域树、子场景与事件挂载
+#
+# 根文件保留为空说明页，避免与 `GameplayLayout/` 子目录中的真实布局来源重复。

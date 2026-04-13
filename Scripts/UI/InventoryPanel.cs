@@ -123,13 +123,17 @@ public partial class InventoryPanel : Control
             Name = "SummaryLabel",
             Text = "背包内容"
         };
+        _summaryLabel.AddThemeColorOverride("font_color", new Color("#f0e0b8"));
+        _summaryLabel.AddThemeFontSizeOverride("font_size", 18);
         root.AddChild(_summaryLabel);
 
         _scrollContainer = new ScrollContainer
         {
             Name = "ScrollContainer",
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
-            SizeFlagsVertical = SizeFlags.ExpandFill
+            SizeFlagsVertical = SizeFlags.ExpandFill,
+            HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled,
+            VerticalScrollMode = ScrollContainer.ScrollMode.Auto
         };
         root.AddChild(_scrollContainer);
 

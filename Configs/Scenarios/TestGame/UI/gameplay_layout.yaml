@@ -1,0 +1,33 @@
+# 本文件是“游戏内容界面布局”的总说明入口，不再直接承载正式区域树数据。
+# 更新时间：2025-04-13
+#
+# 当前新 UI 的职责划分：
+# 1. `Zones/Definitions/*.yaml`
+#    负责玩法系统层的 zone 定义，例如：
+#    - 探索 / 通关 / 解锁链
+#    - 副本推进
+#    - 区域通关次数等
+#
+# 2. `UI/GameplayLayout/*.yaml`
+#    负责新 UI 的界面层级结构，例如：
+#    - 左侧一级区域
+#    - 一级区域下的二级区域
+#    - 二级区域下的子场景
+#    - 每个子场景挂哪些事件按钮
+#    - 这些界面节点的可见条件
+#
+# 维护建议：
+# - `00_Settings.yaml` 只放全局设置，例如 `default_area_id`
+# - 其余文件按“一级区域一份 yaml”继续拆分维护
+# - 程序会自动把 `UI/GameplayLayout/` 目录下的多个 yaml 合并成一份布局数据
+#
+# 如果你要新增“人间之里”下的新二级区域或子场景：
+# - 请修改 `UI/GameplayLayout/01_HumanVillage_Zone.yaml`
+# 如果你要新增“魔法之森”下的新二级区域或子场景：
+# - 请修改 `UI/GameplayLayout/02_MagicForest_Zone.yaml`
+#
+# 注意：
+# `gameplay_layout.yaml` 根文件现在只保留说明，不应再继续写入正式布局实例，
+# 以免与 `UI/GameplayLayout/` 子目录里的真实配置产生双份来源、造成误解。
+#
+# 真实布局入口：`res://Configs/Scenarios/TestGame/UI/GameplayLayout/`

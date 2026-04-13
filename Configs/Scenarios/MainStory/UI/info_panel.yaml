@@ -1,0 +1,32 @@
+# 本文件用于配置“正式剧本的右上角信息面板”。
+# 字段结构与 TestGame 的 info_panel.yaml 相同。
+#
+# 顶层键说明：
+# summary_lines:
+#   面板顶部摘要行列表，支持占位符：
+#   {{scenario_display_name}} / {{scenario_id}} / {{scenario_description}} / {{event_count}} / {{is_test_scenario}} / {{system_tab_enabled}}
+# states:
+#   当前支持 no_scenario / test_scenario / story_empty / story_default
+# content_lines:
+#   各状态下的正文多行文本列表
+#
+summary_lines:
+  - "当前剧本：{{scenario_display_name}}"
+  - "事件总数：{{event_count}}"
+
+states:
+  no_scenario:
+    content_lines:
+      - "请先从主菜单进入一个剧本。"
+
+  story_empty:
+    content_lines:
+      - "当前主线剧本还没有配置事件。"
+      - "这正是主线与测试剧本分离后的正常状态。"
+      - "后续你可以直接去 Configs/Scenarios/MainStory/ 下逐步填写 YAML。"
+
+  story_default:
+    content_lines:
+      - "当前为正式剧本模式。"
+      - "建议在“系统”标签里手动保存存档。"
+      - "如果你要继续扩写剧情，优先修改当前剧本对应的 YAML 配置。"

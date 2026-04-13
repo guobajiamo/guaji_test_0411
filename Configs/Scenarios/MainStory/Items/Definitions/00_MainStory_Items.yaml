@@ -1,0 +1,18 @@
+# 本文件是“正式剧本专用物品表”。
+# 当前为空，表示正式剧本暂时还没有独立物品数据。
+#
+# 后续新增物品时常用字段：
+# items: 物品列表
+# id: 物品唯一 ID
+# parent_id: 所属分类 ID
+# name_key / description_key / detail_description_key: 文本显示
+# definition_order: 排序值，越小越靠前
+# base_rarity: Common / Uncommon / Rare / Epic / Legendary
+# base_max_stack: 最大堆叠数
+# buy_price / sell_price: 买卖价格
+# tags: 标签数组
+# has_durability / max_durability: 耐久配置
+# acquisition_hint_key: 获取提示
+# tool_bonuses: 工具类加成
+#
+items: []

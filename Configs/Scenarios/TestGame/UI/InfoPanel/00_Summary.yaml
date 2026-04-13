@@ -1,0 +1,8 @@
+# UI map bundle example.
+# Map-like YAML files are recursively merged:
+# - dictionaries merge by key
+# - lists append
+# - scalar values are overwritten by later files
+summary_lines:
+  - "当前剧本：{{scenario_display_name}}"
+  - "事件总数：{{event_count}}"

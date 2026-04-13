@@ -1,0 +1,73 @@
+# 本文件是“测试剧本专用循环挂机事件表”。
+# 它同时演示了：
+# - 旧砍树挂机
+# - 新的钓鱼挂机
+# - 显示 / 置灰 / 自动停机
+# - 每轮扣除成本
+#
+# 顶层键说明：
+# events: 挂机事件列表。
+#
+# 单个挂机事件支持的字段：
+# id / name_key / description_key / hover_info_key:
+#   基础显示信息。
+# type:
+#   这里通常固定写 "IdleLoop"。
+# linked_skill_id:
+#   绑定技能 ID。
+#   挂机的每轮产出、时长、经验都主要参考这个技能。
+#
+# 三段条件字段：
+# display_condition_count + display_conditions:
+#   控制按钮是否显示。
+# interaction_condition_count + interaction_conditions:
+#   控制按钮显示后是否可启动；不满足时会显示为置灰。
+# hide_condition_count + hide_conditions:
+#   控制按钮是否在后期彻底隐藏。
+#
+# costs:
+#   “每轮挂机”都会扣一次这里写的成本。
+#   例如鱼饵写 1，表示每结算一轮钓鱼扣 1 个鱼饵。
+#   如果材料耗尽，挂机会自动停止。
+# button_list_group:
+#   一般写 MainIdle。
+#
+# 重要理解：
+# - display_conditions 决定“看不看得见”
+# - interaction_conditions 决定“看见后能不能点”
+# - costs 决定“开始后每轮还能不能持续跑”
+#
+events:
+  - id: "evt_idle_chop"
+    name_key: "挂机砍树"
+    description_key: "自动持续砍树，获得原木和砍树经验。"
+    hover_info_key: "持续自动砍树。开始后会在状态栏显示当前挂机项目和读条进度。"
+    type: "IdleLoop"
+    display_condition_count: 0
+    display_conditions: []
+    interaction_condition_count: 1
+    interaction_conditions:
+      - { condition_type: "HasItem", target_id: "tool_stone_axe", required_value: 1 }
+    hide_condition_count: 0
+    hide_conditions: []
+    costs: []
+    linked_skill_id: "skill_chopping"
+    button_list_group: "MainIdle"
+
+  - id: "evt_idle_fishing"
+    name_key: "挂机钓鱼"
+    description_key: "自动持续钓鱼，获得鲤鱼和钓鱼经验。"
+    hover_info_key: "按钮从一开始就显示，但只有同时持有鱼竿和鱼饵·蚯蚓时才会点亮。每次结算会消耗 1 个鱼饵。"
+    type: "IdleLoop"
+    display_condition_count: 0
+    display_conditions: []
+    interaction_condition_count: 2
+    interaction_conditions:
+      - { condition_type: "HasItem", target_id: "tool_fishing_rod", required_value: 1 }
+      - { condition_type: "HasItem", target_id: "bait_worm", required_value: 1 }
+    hide_condition_count: 0
+    hide_conditions: []
+    costs:
+      - { item_id: "bait_worm", amount: 1 }
+    linked_skill_id: "skill_fishing"
+    button_list_group: "MainIdle"

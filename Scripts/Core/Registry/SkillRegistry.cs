@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Godot;
 using Test00_0410.Core.Definitions;
 
 namespace Test00_0410.Core.Registry;
@@ -19,6 +20,12 @@ public class SkillRegistry
 
         foreach (SkillDefinition definition in definitions)
         {
+            if (_skills.ContainsKey(definition.Id))
+            {
+                GD.PushWarning($"[SkillRegistry] 检测到重复技能 ID：{definition.Id}。已保留先加载的定义，忽略来源 {definition.SourceFilePath}。");
+                continue;
+            }
+
             _skills[definition.Id] = definition;
         }
     }

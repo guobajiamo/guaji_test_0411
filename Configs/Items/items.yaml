@@ -2,6 +2,62 @@
 # 必填字段：id、parent_id、name_key
 # 其余字段都可以按需要逐步补充
 
+# 本文件用于定义“具体物品”。
+# 作用：决定物品属于哪个分类、能否堆叠、价格、标签、工具加成等。
+#
+# 顶层键说明：
+# items: 物品列表。
+#
+# 单个物品支持的字段：
+# id:
+#   物品唯一 ID，建议英文小写 + 下划线。
+#   事件奖励、商店、掉落、技能产出都会引用它。
+# parent_id:
+#   该物品所属的分类 ID，必须指向 categories.yaml 里已存在的分类。
+# name_key:
+#   物品显示名。当前可直接写中文。
+# description_key:
+#   物品简述。常用于背包列表和基础说明。
+# detail_description_key:
+#   更详细的长描述，可用于详情面板。
+# definition_order:
+#   同分类下的排序值，越小越靠前。
+#   推荐 100、200、300 这样留间隔。
+# base_rarity:
+#   稀有度。当前可选：
+#   Common / Uncommon / Rare / Epic / Legendary
+#   数值主要影响显示和排序语义。
+# base_max_stack:
+#   默认最大堆叠数。
+#   1 表示不可叠加装备/工具。
+#   大于 1 表示消耗品/材料可叠加。
+#   建议填正整数。
+# buy_price:
+#   NPC 商店向玩家出售该物品时的默认金币价格。
+# sell_price:
+#   玩家出售给系统/NPC 时的默认金币价格。
+# tags:
+#   物品标签列表，可多选。
+#   当前常见值：
+#   Material / Consumable / Equipment / Tool / Helmet / Armor / Weapon / Fuel / Food / QuestItem / Currency / Axe
+# has_durability:
+#   是否启用耐久度。
+# max_durability:
+#   最大耐久度，仅当 has_durability=true 时有意义。
+# acquisition_hint_key:
+#   获取提示文本，例如“通过砍树获得”“商店购买”。
+# is_visible:
+#   是否默认可见；不写时加载器默认 true。
+# deprecated / deprecated_since / replacement_id:
+#   预留给旧物品废弃和迁移使用。
+#
+# tool_bonuses:
+#   仅工具类物品通常会写。
+#   log_yield_multiplier:
+#     产出倍率。1.0 = 不加成，2.0 = 产出翻倍。
+#   chop_speed_multiplier:
+#     速度倍率。1.0 = 正常速度，2.0 = 间隔减半。
+#
 items:
   - id: "mat_wood_log"
     parent_id: "mat_wood"

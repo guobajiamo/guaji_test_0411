@@ -1,0 +1,16 @@
+states:
+  no_scenario:
+    content_lines:
+      - "请先从主菜单进入一个剧本。"
+
+  story_empty:
+    content_lines:
+      - "当前正式剧本还没有配置事件。"
+      - "这是主线与测试剧本拆分后的正常状态。"
+      - "后续你可以直接去 Configs/Scenarios/MainStory/ 下逐步填写 YAML。"
+
+  story_default:
+    content_lines:
+      - "当前为正式剧本模式。"
+      - "建议在“系统”标签里手动保存存档。"
+      - "如果你要继续扩写剧情，优先修改当前剧本对应的 YAML 配置。"

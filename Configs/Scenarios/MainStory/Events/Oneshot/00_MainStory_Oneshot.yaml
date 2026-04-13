@@ -1,0 +1,12 @@
+# 本文件是“正式剧本专用一次性事件表”。
+# 当前为空，表示正式剧本还没开始录入一次性事件。
+#
+# 后续新增时推荐直接使用新三段条件字段：
+# display_condition_count + display_conditions
+# interaction_condition_count + interaction_conditions
+# hide_condition_count + hide_conditions
+#
+# 其余常用字段：
+# id / name_key / description_key / hover_info_key / type / costs / effects / button_list_group / dialog
+#
+events: []

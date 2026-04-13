@@ -1,0 +1,13 @@
+# 本文件是“正式剧本专用挂机事件表”。
+# 当前为空，表示正式剧本还没开始录入挂机事件。
+#
+# 后续新增时常用字段：
+# id / name_key / description_key / hover_info_key / type("IdleLoop")
+# display_condition_count / display_conditions
+# interaction_condition_count / interaction_conditions
+# hide_condition_count / hide_conditions
+# costs: 每轮成本
+# linked_skill_id: 绑定技能
+# button_list_group: 一般写 MainIdle
+#
+events: []

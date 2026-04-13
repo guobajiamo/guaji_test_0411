@@ -4,6 +4,7 @@ using System.Linq;
 using Test00_0410.Autoload;
 using Test00_0410.Core.Definitions;
 using Test00_0410.Core.Enums;
+using Test00_0410.Core.Helpers;
 using Test00_0410.Core.Registry;
 using Test00_0410.Core.Runtime;
 
@@ -11,7 +12,7 @@ namespace Test00_0410.Systems;
 
 /// <summary>
 /// 挂机循环系统。
-/// 它以后会负责：计时、读条、结算资源、发放技能经验。
+/// 负责计时、读条、结算资源、发放技能经验，并在条件失效或成本耗尽时自动停止。
 /// </summary>
 public partial class IdleSystem : Node
 {
@@ -19,6 +20,7 @@ public partial class IdleSystem : Node
     private EventRegistry? _eventRegistry;
     private SkillRegistry? _skillRegistry;
     private ItemRegistry? _itemRegistry;
+    private SignalBus? _signalBus;
 
     public void Configure(PlayerProfile profile, EventRegistry eventRegistry, SkillRegistry skillRegistry, ItemRegistry itemRegistry)
     {
@@ -26,6 +28,7 @@ public partial class IdleSystem : Node
         _eventRegistry = eventRegistry;
         _skillRegistry = skillRegistry;
         _itemRegistry = itemRegistry;
+        _signalBus ??= GetNodeOrNull<SignalBus>("/root/SignalBus");
     }
 
     public bool StartIdleEvent(string eventId)
@@ -41,6 +44,7 @@ public partial class IdleSystem : Node
         idleState.AccumulatedProgressSeconds = 0.0;
         idleState.PendingOutputFraction = 0.0;
         idleState.LastProgressUnixSeconds = GetNowUnixSeconds();
+        EmitIdleEventChanged(eventId);
         return true;
     }
 
@@ -55,6 +59,8 @@ public partial class IdleSystem : Node
             idleState.PendingOutputFraction = 0.0;
             idleState.LastProgressUnixSeconds = GetNowUnixSeconds();
         }
+
+        EmitIdleEventChanged(string.Empty);
     }
 
     public override void _Process(double delta)
@@ -72,7 +78,6 @@ public partial class IdleSystem : Node
 
     /// <summary>
     /// 读档后调用这个方法，可以把离线这段时间补算进去。
-    /// 这里只先定义清楚契约，具体收益算法等后续接技能表时再补。
     /// </summary>
     public void ApplyOfflineProgress(long nowUnixSeconds)
     {
@@ -102,9 +107,34 @@ public partial class IdleSystem : Node
             && string.Equals(_profile.IdleState.ActiveEventId, eventId, StringComparison.Ordinal);
     }
 
+    public bool ShouldShowEvent(string eventId)
+    {
+        if (_profile == null || _eventRegistry == null || _skillRegistry == null)
+        {
+            return false;
+        }
+
+        EventDefinition? definition = _eventRegistry.GetEvent(eventId);
+        if (definition == null || definition.Type != EventType.IdleLoop)
+        {
+            return false;
+        }
+
+        return !string.IsNullOrWhiteSpace(definition.LinkedSkillId)
+            && _skillRegistry.GetSkill(definition.LinkedSkillId) != null
+            && EventAvailabilityEvaluator.ShouldShowButton(_profile, definition);
+    }
+
     public bool CanStartIdleEvent(string eventId)
     {
-        return TryResolveIdleContext(eventId, out _, out _, out _, out _);
+        if (!TryResolveIdleContext(eventId, out EventDefinition? eventDefinition, out _, out _, out _)
+            || eventDefinition == null)
+        {
+            return false;
+        }
+
+        return EventAvailabilityEvaluator.CanInteractButton(_profile, eventDefinition)
+            && GetAffordableCycleCount(eventDefinition, 1) > 0;
     }
 
     public double GetProgressRatio(string eventId)
@@ -160,6 +190,13 @@ public partial class IdleSystem : Node
             return;
         }
 
+        if (!EventAvailabilityEvaluator.CanInteractButton(_profile, eventDefinition))
+        {
+            StopIdleEvent();
+            GameManager.Instance?.AddGameLog("当前挂机项目已不再满足显示或互动条件，系统已自动停止挂机。");
+            return;
+        }
+
         double interval = GetEffectiveIntervalSeconds(levelEntry, tool);
         if (interval <= 0.0)
         {
@@ -172,10 +209,19 @@ public partial class IdleSystem : Node
             return;
         }
 
-        idleState.AccumulatedProgressSeconds -= completedCycles * interval;
+        int affordableCycles = GetAffordableCycleCount(eventDefinition, completedCycles);
+        if (affordableCycles <= 0)
+        {
+            StopIdleEvent();
+            GameManager.Instance?.AddGameLog($"挂机材料不足，已自动停止：{GameManager.Instance?.TranslateText(eventDefinition.NameKey) ?? eventDefinition.NameKey}");
+            return;
+        }
+
+        idleState.AccumulatedProgressSeconds -= affordableCycles * interval;
+        ConsumeCycleCosts(eventDefinition, affordableCycles);
 
         double outputMultiplier = tool?.ToolBonuses.LogYieldMultiplier ?? 1.0;
-        double outputWithFraction = (completedCycles * levelEntry.Output * outputMultiplier) + idleState.PendingOutputFraction;
+        double outputWithFraction = (affordableCycles * levelEntry.Output * outputMultiplier) + idleState.PendingOutputFraction;
         int wholeOutput = (int)Math.Floor(outputWithFraction);
         idleState.PendingOutputFraction = outputWithFraction - wholeOutput;
 
@@ -184,15 +230,20 @@ public partial class IdleSystem : Node
             _profile.Inventory.AddItem(skillDefinition.PrimaryOutputItemId, wholeOutput);
         }
 
-        // 经验门槛表当前都是整数值，所以这里把每轮经验奖励也收敛为整数，
-        // 避免升级后 UI 突然出现很多小数经验，影响首版文字游戏的直观体验。
         int expPerCycle = Math.Max(1, (int)Math.Round(levelEntry.Interval, MidpointRounding.AwayFromZero));
-        double totalExp = completedCycles * expPerCycle;
+        double totalExp = affordableCycles * expPerCycle;
         GameManager.Instance?.SkillSystem?.AddExp(skillDefinition.Id, totalExp);
 
         string eventName = GameManager.Instance?.TranslateText(eventDefinition.NameKey) ?? eventDefinition.NameKey;
         string outputName = GameManager.Instance?.GetItemDisplayName(skillDefinition.PrimaryOutputItemId) ?? skillDefinition.PrimaryOutputItemId;
-        GameManager.Instance?.AddGameLog($"挂机结算：{eventName} 完成 {completedCycles} 次，获得 {wholeOutput} 个 {outputName}，经验 +{totalExp:0}。");
+        GameManager.Instance?.AddGameLog($"挂机结算：{eventName} 完成 {affordableCycles} 次，获得 {wholeOutput} 个 {outputName}，经验 +{totalExp:0}。");
+        EmitIdleEventChanged(idleState.ActiveEventId);
+
+        if (affordableCycles < completedCycles)
+        {
+            StopIdleEvent();
+            GameManager.Instance?.AddGameLog($"挂机材料已耗尽，已自动停止：{eventName}");
+        }
     }
 
     private bool TryResolveIdleContext(
@@ -270,8 +321,54 @@ public partial class IdleSystem : Node
         return Math.Max(0.2, levelEntry.Interval / speedMultiplier);
     }
 
+    private int GetAffordableCycleCount(EventDefinition definition, int requestedCycles)
+    {
+        if (_profile == null || requestedCycles <= 0)
+        {
+            return 0;
+        }
+
+        int affordableCycles = requestedCycles;
+        foreach (ItemCostEntry cost in definition.Costs)
+        {
+            if (cost.Amount <= 0)
+            {
+                continue;
+            }
+
+            int ownedAmount = _profile.Inventory.GetItemAmount(cost.ItemId);
+            int cyclesByThisCost = ownedAmount / cost.Amount;
+            affordableCycles = Math.Min(affordableCycles, cyclesByThisCost);
+        }
+
+        return affordableCycles;
+    }
+
+    private void ConsumeCycleCosts(EventDefinition definition, int cycleCount)
+    {
+        if (_profile == null || cycleCount <= 0)
+        {
+            return;
+        }
+
+        foreach (ItemCostEntry cost in definition.Costs)
+        {
+            int totalAmount = cost.Amount * cycleCount;
+            if (totalAmount > 0)
+            {
+                _profile.Inventory.TryRemoveItem(cost.ItemId, totalAmount);
+            }
+        }
+    }
+
     private static long GetNowUnixSeconds()
     {
         return DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+    }
+
+    private void EmitIdleEventChanged(string eventId)
+    {
+        _signalBus ??= GetNodeOrNull<SignalBus>("/root/SignalBus");
+        _signalBus?.EmitSignal(SignalBus.SignalName.ActiveIdleEventChanged, eventId);
     }
 }

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Godot;
 using Test00_0410.Core.Definitions;
 using Test00_0410.Core.Helpers;
 
@@ -44,6 +45,7 @@ public class ItemRegistry
         {
             if (_categories.ContainsKey(category.Id) || _nodes.ContainsKey(category.Id))
             {
+                GD.PushWarning($"[ItemRegistry] 检测到重复分类 ID：{category.Id}。已保留先加载的定义，忽略来源 {category.SourceFilePath}。");
                 continue;
             }
 
@@ -55,6 +57,7 @@ public class ItemRegistry
         {
             if (_items.ContainsKey(item.Id) || _nodes.ContainsKey(item.Id))
             {
+                GD.PushWarning($"[ItemRegistry] 检测到重复物品 ID：{item.Id}。已保留先加载的定义，忽略来源 {item.SourceFilePath}。");
                 continue;
             }
 
@@ -142,6 +145,8 @@ public class ItemRegistry
             .Where(node => node != null)
             .Cast<NodeDefinitionBase>()
             .OrderBy(node => node.DefinitionOrder)
+            .ThenBy(node => node.SourceFileOrder)
+            .ThenBy(node => node.SourceEntryOrder)
             .ThenBy(node => node.Id)
             .ToList();
     }
@@ -162,6 +167,13 @@ public class ItemRegistry
     /// </summary>
     public void DumpTreeToDefaultRuntimeFile()
     {
-        TreePrinter.WriteToFile(this, RuntimePathHelper.ItemTreeDumpPath);
+        try
+        {
+            TreePrinter.WriteToFile(this, RuntimePathHelper.ItemTreeDumpPath);
+        }
+        catch (System.Exception exception)
+        {
+            GD.PushWarning($"[ItemRegistry] 物品树调试文件写入失败：{exception.Message}");
+        }
     }
 }

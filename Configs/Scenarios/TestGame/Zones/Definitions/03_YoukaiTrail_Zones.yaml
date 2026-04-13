@@ -1,0 +1,9 @@
+zones:
+  - id: "zone_youkai_trail"
+    name_key: "妖怪小道"
+    description_key: "通往妖怪山的蜿蜒小路。"
+    max_clear_count: 10
+    unlocks_zone_id: ""
+    unlocks_faction_id: "faction_youkai_mountain"
+    unlock_conditions:
+      - { condition_type: "ZoneCleared", target_id: "zone_misty_lake", required_value: 10 }

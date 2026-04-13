@@ -1,0 +1,22 @@
+regions:
+  - id: "bamboo_forest"
+    title: "迷途竹林"
+    accent: "primary_story"
+    expanded_by_default: false
+    visibility_condition_count: 0
+    visibility_conditions: []
+    areas:
+      - id: "eientei"
+        title: "永远亭"
+        accent: "secondary_peace"
+        visibility_condition_count: 1
+        visibility_conditions:
+          # TODO: evt_talk_to_rabbit_chief is not instantiated yet.
+          - { condition_type: "EventCompleted", target_id: "evt_talk_to_rabbit_chief", required_value: 1 }
+        scenes:
+          - id: "eientei_courtyard"
+            title: "前庭"
+            description: "永远亭对外开放后的入口区域。"
+            visibility_condition_count: 0
+            visibility_conditions: []
+            event_ids: []

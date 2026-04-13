@@ -1,0 +1,47 @@
+# 本文件用于配置“右上角信息面板”的默认文本。
+# 这部分主要是说明文字，不参与战斗/数值，只影响 UI 展示。
+#
+# 顶层键说明：
+# summary_lines:
+#   面板顶部摘要行列表。
+#   支持占位符：
+#   {{scenario_display_name}}
+#   {{scenario_id}}
+#   {{scenario_description}}
+#   {{event_count}}
+#   {{is_test_scenario}}
+#   {{system_tab_enabled}}
+#
+# states:
+#   按不同游戏状态切换正文内容。
+#   当前支持：
+#   no_scenario: 还没进入任何剧本
+#   test_scenario: 已进入测试剧本
+#   story_empty: 正式剧本已进入，但还没有事件数据
+#   story_default: 正式剧本正常状态
+#
+# 每个 state 下可写：
+# content_lines:
+#   正文多行文本列表。
+#   每一项就是一行。
+#   同样支持上面的占位符。
+#
+summary_lines:
+  - "当前剧本：{{scenario_display_name}}"
+  - "事件总数：{{event_count}}"
+
+states:
+  no_scenario:
+    content_lines:
+      - "请先从主菜单进入一个剧本。"
+
+  test_scenario:
+    content_lines:
+      - "上手提示："
+      - "1. 先点“捡起石斧”"
+      - "2. 再点“点击砍树”或“挂机砍树”"
+      - "3. 技能有经验后再去“技能页手动升级”"
+
+  story_default:
+    content_lines:
+      - "当前为正式剧本模式。"

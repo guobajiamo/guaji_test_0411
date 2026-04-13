@@ -8,28 +8,22 @@ using Test00_0410.Core.Helpers;
 using Test00_0410.Core.Registry;
 using Test00_0410.Core.Runtime;
 using Test00_0410.Core.SaveLoad;
+using Test00_0410.Core.Scenario;
 using Test00_0410.Systems;
 
 namespace Test00_0410.Autoload;
 
 /// <summary>
 /// 游戏总管理器。
-/// 你可以把它理解成项目启动时的总指挥：创建注册表、系统、玩家档案，并协调初始化顺序。
+/// 这一版除了负责系统初始化，也开始负责“当前加载的是哪个剧本”。
 /// </summary>
 public partial class GameManager : Node
 {
-    private const string CategoriesConfigPath = "res://Configs/Items/categories.yaml";
-    private const string ItemsConfigPath = "res://Configs/Items/items.yaml";
-    private const string SkillsConfigPath = "res://Configs/Skills/skills.yaml";
-    private const string OneshotEventsConfigPath = "res://Configs/Events/oneshot_events.yaml";
-    private const string ClickEventsConfigPath = "res://Configs/Events/click_events.yaml";
-    private const string IdleEventsConfigPath = "res://Configs/Events/idle_events.yaml";
-    private const string FactionsConfigPath = "res://Configs/Factions/factions.yaml";
-    private const string ZonesConfigPath = "res://Configs/Zones/zones.yaml";
-    private const string LocalizationZhPath = "res://Configs/Localization/locale_zh.yaml";
+    private const string ScenarioDirectoryPath = "res://Resources/Scenarios";
 
     private readonly YamlConfigLoader _configLoader = new();
     private readonly List<string> _runtimeLogs = new();
+    private readonly Dictionary<string, GameScenarioDefinition> _scenarioDefinitions = new(StringComparer.Ordinal);
 
     public static GameManager? Instance { get; private set; }
 
@@ -48,6 +42,10 @@ public partial class GameManager : Node
     public SaveManager SaveManager { get; private set; } = new();
 
     public PlayerProfile PlayerProfile { get; private set; } = new();
+
+    public GameScenarioDefinition? ActiveScenario { get; private set; }
+
+    public IReadOnlyDictionary<string, GameScenarioDefinition> ScenarioDefinitions => _scenarioDefinitions;
 
     public IdleSystem? IdleSystem { get; private set; }
 
@@ -84,11 +82,237 @@ public partial class GameManager : Node
     public override void _Ready()
     {
         Instance = this;
+        LoadScenarioDefinitions();
         CreateDefaultProfile();
-        LoadStaticData();
-        InitializeProfileFromDefinitions();
         InitializeSystems();
-        AddGameLog("初版游戏已完成启动。");
+        AddGameLog("游戏主菜单入口已准备完成。");
+    }
+
+    public IReadOnlyList<GameScenarioDefinition> GetVisibleNewGameScenarios()
+    {
+        return _scenarioDefinitions.Values
+            .Where(scenario => scenario.ShowInNewGameMenu)
+            .OrderByDescending(scenario => scenario.IsDefaultStoryScenario)
+            .ThenBy(scenario => scenario.DisplayName)
+            .ToList();
+    }
+
+    public GameScenarioDefinition? GetDefaultStoryScenario()
+    {
+        return _scenarioDefinitions.Values.FirstOrDefault(scenario => scenario.IsDefaultStoryScenario)
+            ?? GetVisibleNewGameScenarios().FirstOrDefault();
+    }
+
+    public GameScenarioDefinition? GetTestScenario()
+    {
+        return _scenarioDefinitions.Values.FirstOrDefault(scenario => scenario.IsTestScenario);
+    }
+
+    public GameScenarioDefinition? GetScenario(string scenarioId)
+    {
+        return _scenarioDefinitions.GetValueOrDefault(scenarioId);
+    }
+
+    public bool StartDefaultStoryScenario()
+    {
+        GameScenarioDefinition? scenario = GetDefaultStoryScenario();
+        return scenario != null && StartScenario(scenario.ScenarioId, string.Empty, true);
+    }
+
+    public bool StartTestScenario()
+    {
+        GameScenarioDefinition? scenario = GetTestScenario();
+        return scenario != null && StartScenario(scenario.ScenarioId, RuntimePathHelper.GetTestSavePath(), true);
+    }
+
+    /// <summary>
+    /// 开始载入某个剧本。
+    /// resetProfile=true 时会丢弃当前进度，重新创建新档。
+    /// </summary>
+    public bool StartScenario(string scenarioId, string savePath, bool resetProfile)
+    {
+        if (!_scenarioDefinitions.TryGetValue(scenarioId, out GameScenarioDefinition? scenario))
+        {
+            AddGameLog($"未找到剧本：{scenarioId}");
+            return false;
+        }
+
+        ActiveScenario = scenario;
+        _runtimeLogs.Clear();
+
+        if (resetProfile)
+        {
+            CreateDefaultProfile();
+        }
+
+        SaveManager.SavePath = string.IsNullOrWhiteSpace(savePath)
+            ? (scenario.IsTestScenario ? RuntimePathHelper.GetTestSavePath() : string.Empty)
+            : savePath;
+
+        LoadStaticData(scenario);
+        InitializeProfileFromDefinitions();
+        ConfigureSystems();
+        AddGameLog($"已载入剧本：{scenario.DisplayName}");
+        return true;
+    }
+
+    public IReadOnlyList<SaveSlotSummary> GetStorySaveSlotSummaries()
+    {
+        List<SaveSlotSummary> summaries = new();
+        for (int slotIndex = 1; slotIndex <= 10; slotIndex++)
+        {
+            string path = RuntimePathHelper.GetStorySaveSlotPath(slotIndex);
+            SaveMetadata? metadata = SaveManager.TryReadMetadata(path);
+            summaries.Add(new SaveSlotSummary
+            {
+                SlotIndex = slotIndex,
+                FilePath = path,
+                FileName = System.IO.Path.GetFileName(path),
+                Exists = metadata != null,
+                ScenarioId = metadata?.ScenarioId ?? string.Empty,
+                ScenarioDisplayName = metadata?.ScenarioDisplayName ?? string.Empty,
+                SavedAtUnixSeconds = metadata?.SavedAtUnixSeconds ?? 0
+            });
+        }
+
+        return summaries;
+    }
+
+    /// <summary>
+    /// 给 GDScript 和调试工具使用的简化接口。
+    /// 直接返回某个故事模式槽位对应的绝对路径，避免跨语言传递复杂泛型对象时受限。
+    /// </summary>
+    public string GetStorySaveSlotPath(int slotIndex)
+    {
+        return RuntimePathHelper.GetStorySaveSlotPath(slotIndex);
+    }
+
+    public bool SaveGameToPath(string path)
+    {
+        if (ActiveScenario == null)
+        {
+            AddGameLog("当前没有已加载的剧本，无法保存。");
+            return false;
+        }
+
+        SaveData saveData = SaveManager.CreateFromProfile(PlayerProfile);
+        PopulateSaveMetadata(saveData.Metadata);
+
+        bool success = SaveManager.SaveToPath(saveData, path);
+        AddGameLog(success
+            ? $"已保存到存档位：{path}"
+            : $"保存失败：{path}");
+        return success;
+    }
+
+    public bool LoadGameFromPath(string path)
+    {
+        SaveMetadata? metadata = SaveManager.TryReadMetadata(path);
+        if (metadata == null)
+        {
+            AddGameLog($"读取存档失败：未找到存档 {path}");
+            return false;
+        }
+
+        string scenarioId = string.IsNullOrWhiteSpace(metadata.ScenarioId)
+            ? (GetDefaultStoryScenario()?.ScenarioId ?? string.Empty)
+            : metadata.ScenarioId;
+
+        if (string.IsNullOrWhiteSpace(scenarioId) || !_scenarioDefinitions.ContainsKey(scenarioId))
+        {
+            AddGameLog($"读取存档失败：存档引用了未知剧本 {metadata.ScenarioId}");
+            return false;
+        }
+
+        if (!StartScenario(scenarioId, path, true))
+        {
+            return false;
+        }
+
+        if (!SaveManager.TryLoad(path, out SaveData? saveData) || saveData == null)
+        {
+            AddGameLog($"读取存档失败：{path}");
+            return false;
+        }
+
+        PlayerProfile = saveData.Profile;
+        InitializeProfileFromDefinitions();
+        ConfigureSystems();
+        IdleSystem?.ApplyOfflineProgress(DateTimeOffset.UtcNow.ToUnixTimeSeconds());
+        AddGameLog($"已执行读档。路径：{path}");
+        return true;
+    }
+
+    private void LoadScenarioDefinitions()
+    {
+        _scenarioDefinitions.Clear();
+
+        DirAccess? directory = DirAccess.Open(ScenarioDirectoryPath);
+        if (directory == null)
+        {
+            GD.PushWarning($"[GameManager] 未找到剧本目录：{ScenarioDirectoryPath}");
+            return;
+        }
+
+        directory.ListDirBegin();
+        while (true)
+        {
+            string fileName = directory.GetNext();
+            if (string.IsNullOrWhiteSpace(fileName))
+            {
+                break;
+            }
+
+            if (directory.CurrentIsDir())
+            {
+                continue;
+            }
+
+            string? resourcePath = ResolveScenarioResourcePath(fileName);
+            if (string.IsNullOrWhiteSpace(resourcePath))
+            {
+                continue;
+            }
+
+            GameScenarioDefinition? scenario = ResourceLoader.Load<GameScenarioDefinition>(resourcePath);
+            if (scenario == null || string.IsNullOrWhiteSpace(scenario.ScenarioId))
+            {
+                GD.PushWarning($"[GameManager] 剧本资源加载失败：{resourcePath}");
+                continue;
+            }
+
+            _scenarioDefinitions[scenario.ScenarioId] = scenario;
+        }
+        directory.ListDirEnd();
+
+        if (_scenarioDefinitions.Count == 0)
+        {
+            GD.PushWarning($"[GameManager] 剧本目录扫描完成，但未发现可用剧本资源。目录={ScenarioDirectoryPath}");
+        }
+
+        AddGameLog($"已发现剧本数量：{_scenarioDefinitions.Count}");
+    }
+
+    private static string? ResolveScenarioResourcePath(string fileName)
+    {
+        if (string.IsNullOrWhiteSpace(fileName))
+        {
+            return null;
+        }
+
+        string normalizedFileName = fileName;
+        if (normalizedFileName.EndsWith(".remap", StringComparison.OrdinalIgnoreCase))
+        {
+            normalizedFileName = normalizedFileName[..^".remap".Length];
+        }
+
+        if (!normalizedFileName.EndsWith(".tres", StringComparison.OrdinalIgnoreCase)
+            && !normalizedFileName.EndsWith(".res", StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        return $"{ScenarioDirectoryPath}/{normalizedFileName}";
     }
 
     private void CreateDefaultProfile()
@@ -133,22 +357,29 @@ public partial class GameManager : Node
         return node;
     }
 
-    private void LoadStaticData()
+    private void LoadStaticData(GameScenarioDefinition scenario)
     {
         try
         {
-            List<CategoryDefinition> categories = _configLoader.LoadCategories(CategoriesConfigPath);
-            List<ItemDefinition> items = _configLoader.LoadItems(ItemsConfigPath);
-            List<SkillDefinition> skills = _configLoader.LoadSkills(SkillsConfigPath);
+            ItemRegistry = new ItemRegistry();
+            SkillRegistry = new SkillRegistry();
+            EventRegistry = new EventRegistry();
+            FactionRegistry = new FactionRegistry();
+            ZoneRegistry = new ZoneRegistry();
+            LocalizationManager = new LocalizationManager();
+
+            List<CategoryDefinition> categories = _configLoader.LoadCategories(scenario.CategoriesConfigPath);
+            List<ItemDefinition> items = _configLoader.LoadItems(scenario.ItemsConfigPath);
+            List<SkillDefinition> skills = _configLoader.LoadSkills(scenario.SkillsConfigPath);
 
             List<EventDefinition> events = new();
-            events.AddRange(_configLoader.LoadEvents(OneshotEventsConfigPath));
-            events.AddRange(_configLoader.LoadEvents(ClickEventsConfigPath));
-            events.AddRange(_configLoader.LoadEvents(IdleEventsConfigPath));
+            events.AddRange(_configLoader.LoadEvents(scenario.OneshotEventsConfigPath));
+            events.AddRange(_configLoader.LoadEvents(scenario.ClickEventsConfigPath));
+            events.AddRange(_configLoader.LoadEvents(scenario.IdleEventsConfigPath));
 
-            YamlConfigLoader.FactionConfigSet factionConfig = _configLoader.LoadFactions(FactionsConfigPath);
-            List<ZoneDefinition> zones = _configLoader.LoadZones(ZonesConfigPath);
-            YamlConfigLoader.LocalizationConfig localization = _configLoader.LoadLocalization(LocalizationZhPath);
+            YamlConfigLoader.FactionConfigSet factionConfig = _configLoader.LoadFactions(scenario.FactionsConfigPath);
+            List<ZoneDefinition> zones = _configLoader.LoadZones(scenario.ZonesConfigPath);
+            YamlConfigLoader.LocalizationConfig localization = _configLoader.LoadLocalization(scenario.LocalizationPath);
 
             ItemRegistry.LoadDefinitions(categories, items);
             SkillRegistry.LoadDefinitions(skills);
@@ -170,7 +401,7 @@ public partial class GameManager : Node
             }
 
             ItemRegistry.DumpTreeToDefaultRuntimeFile();
-            AddGameLog($"静态配置加载完成：分类 {categories.Count}，物品 {items.Count}，技能 {skills.Count}，事件 {events.Count}。");
+            AddGameLog($"静态配置加载完成：剧本 {scenario.DisplayName}，分类 {categories.Count}，物品 {items.Count}，技能 {skills.Count}，事件 {events.Count}。");
         }
         catch (Exception exception)
         {
@@ -255,6 +486,23 @@ public partial class GameManager : Node
         return item == null ? itemId : item.GetDisplayName(TranslateText);
     }
 
+    /// <summary>
+    /// 给 GDScript、调试脚本和 UI 快速判断“背包里是否拥有某个物品”。
+    /// </summary>
+    public bool HasOwnedItem(string itemId)
+    {
+        return PlayerProfile.Inventory.HasItem(itemId);
+    }
+
+    /// <summary>
+    /// 给调试脚本快速确认当前剧本到底载入了多少事件。
+    /// 这次主要用来确认“主线剧本是否还是误用了测试事件配置”。
+    /// </summary>
+    public int GetRegisteredEventCount()
+    {
+        return EventRegistry.Events.Count;
+    }
+
     public string GetEventDisplayName(string eventId)
     {
         EventDefinition? definition = EventRegistry.GetEvent(eventId);
@@ -263,7 +511,14 @@ public partial class GameManager : Node
 
     public bool SaveGame()
     {
-        bool success = SaveManager.Save(SaveManager.CreateFromProfile(PlayerProfile));
+        if (string.IsNullOrWhiteSpace(SaveManager.SavePath))
+        {
+            SaveManager.SavePath = RuntimePathHelper.GetTestSavePath();
+        }
+
+        SaveData saveData = SaveManager.CreateFromProfile(PlayerProfile);
+        PopulateSaveMetadata(saveData.Metadata);
+        bool success = SaveManager.Save(saveData);
         AddGameLog(success
             ? $"已执行手动保存。路径：{SaveManager.SavePath}"
             : "手动保存失败，请检查日志。");
@@ -272,21 +527,16 @@ public partial class GameManager : Node
 
     public bool LoadGame()
     {
-        try
-        {
-            SaveData saveData = SaveManager.LoadOrCreateDefault();
-            PlayerProfile = saveData.Profile;
-            InitializeProfileFromDefinitions();
-            ConfigureSystems();
-            IdleSystem?.ApplyOfflineProgress(DateTimeOffset.UtcNow.ToUnixTimeSeconds());
-            AddGameLog($"已执行读档。路径：{SaveManager.SavePath}");
-            return true;
-        }
-        catch (Exception exception)
-        {
-            GD.PushError($"[GameManager] 读档失败：{exception}");
-            AddGameLog("读档失败，请检查日志。");
-            return false;
-        }
+        string path = string.IsNullOrWhiteSpace(SaveManager.SavePath)
+            ? RuntimePathHelper.GetTestSavePath()
+            : SaveManager.SavePath;
+        return LoadGameFromPath(path);
+    }
+
+    private void PopulateSaveMetadata(SaveMetadata metadata)
+    {
+        metadata.Locale = LocalizationManager.CurrentLocale;
+        metadata.ScenarioId = ActiveScenario?.ScenarioId ?? string.Empty;
+        metadata.ScenarioDisplayName = ActiveScenario?.DisplayName ?? string.Empty;
     }
 }

@@ -1,0 +1,5 @@
+# Gameplay layout bundle.
+# Recommended rule:
+# - Keep only global settings in 00_Settings.yaml.
+# - Put one primary region per file below.
+default_area_id: "market_street"

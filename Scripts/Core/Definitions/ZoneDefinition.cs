@@ -10,6 +10,12 @@ public class ZoneDefinition
 {
     public string Id { get; set; } = string.Empty;
 
+    public string SourceFilePath { get; set; } = string.Empty;
+
+    public int SourceFileOrder { get; set; }
+
+    public int SourceEntryOrder { get; set; }
+
     public string NameKey { get; set; } = string.Empty;
 
     public string DescriptionKey { get; set; } = string.Empty;

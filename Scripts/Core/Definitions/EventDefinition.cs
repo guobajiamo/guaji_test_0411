@@ -11,6 +11,12 @@ public class EventDefinition
 {
     public string Id { get; set; } = string.Empty;
 
+    public string SourceFilePath { get; set; } = string.Empty;
+
+    public int SourceFileOrder { get; set; }
+
+    public int SourceEntryOrder { get; set; }
+
     public string NameKey { get; set; } = string.Empty;
 
     public string DescriptionKey { get; set; } = string.Empty;
@@ -23,7 +29,23 @@ public class EventDefinition
 
     public EventType Type { get; set; } = EventType.RepeatableClick;
 
-    public List<EventConditionEntry> Prerequisites { get; } = new();
+    public int DisplayConditionCount { get; set; }
+
+    public List<EventConditionEntry> DisplayConditions { get; } = new();
+
+    public int InteractionConditionCount { get; set; }
+
+    public List<EventConditionEntry> InteractionConditions { get; } = new();
+
+    public int HideConditionCount { get; set; }
+
+    public List<EventConditionEntry> HideConditions { get; } = new();
+
+    /// <summary>
+    /// 兼容旧 YAML 的别名。
+    /// 当前建议统一改用 InteractionConditions / interaction_conditions。
+    /// </summary>
+    public List<EventConditionEntry> Prerequisites => InteractionConditions;
 
     public List<ItemCostEntry> Costs { get; } = new();
 

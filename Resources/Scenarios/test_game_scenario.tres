@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="GameScenarioDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Scripts/Core/Scenario/GameScenarioDefinition.cs" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+ScenarioId = "test_game"
+DisplayName = "游戏测试剧本"
+Description = "专门给调试用的测试入口。默认继续使用 save_data.json，并保留旧版测试界面的便捷存读档按钮。"
+ShowInNewGameMenu = false
+IsDefaultStoryScenario = false
+IsTestScenario = true
+EnableSystemTab = true
+CategoriesConfigPath = "res://Configs/Scenarios/TestGame/Items/Categories"
+ItemsConfigPath = "res://Configs/Scenarios/TestGame/Items/Definitions"
+SkillsConfigPath = "res://Configs/Scenarios/TestGame/Skills/Definitions"
+OneshotEventsConfigPath = "res://Configs/Scenarios/TestGame/Events/Oneshot"
+ClickEventsConfigPath = "res://Configs/Scenarios/TestGame/Events/Click"
+IdleEventsConfigPath = "res://Configs/Scenarios/TestGame/Events/Idle"
+FactionsConfigPath = "res://Configs/Scenarios/TestGame/Factions/Definitions"
+ZonesConfigPath = "res://Configs/Scenarios/TestGame/Zones/Definitions"
+LocalizationPath = "res://Configs/Scenarios/TestGame/Localization/Bundle"
+InfoPanelConfigPath = "res://Configs/Scenarios/TestGame/UI/InfoPanel"

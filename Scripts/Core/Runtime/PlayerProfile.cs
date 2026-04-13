@@ -22,6 +22,12 @@ public class PlayerProfile
     /// </summary>
     public PlayerIdleState IdleState { get; set; } = new();
 
+    /// <summary>
+    /// 玩家当前界面选择状态。
+    /// 这里主要记录当前区域和收藏场景等轻量 UI 信息。
+    /// </summary>
+    public PlayerUiState UiState { get; set; } = new();
+
     public Dictionary<string, PlayerSkillState> SkillStates { get; } = new();
 
     public Dictionary<string, PlayerFactionState> FactionStates { get; } = new();

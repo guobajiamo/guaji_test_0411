@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Godot;
 using Test00_0410.Core.Definitions;
 using Test00_0410.Core.Enums;
 
@@ -21,6 +22,12 @@ public class EventRegistry
 
         foreach (EventDefinition definition in definitions)
         {
+            if (_events.ContainsKey(definition.Id))
+            {
+                GD.PushWarning($"[EventRegistry] 检测到重复事件 ID：{definition.Id}。已保留先加载的定义，忽略来源 {definition.SourceFilePath}。");
+                continue;
+            }
+
             _events[definition.Id] = definition;
         }
     }
@@ -39,7 +46,9 @@ public class EventRegistry
     {
         return _events.Values
             .Where(definition => definition.ButtonListGroup == group)
-            .OrderBy(definition => definition.Id)
+            .OrderBy(definition => definition.SourceFileOrder)
+            .ThenBy(definition => definition.SourceEntryOrder)
+            .ThenBy(definition => definition.Id)
             .ToList();
     }
 }

@@ -1,0 +1,21 @@
+regions:
+  - id: "old_hell"
+    title: "旧地狱"
+    accent: "primary_story"
+    expanded_by_default: false
+    visibility_condition_count: 1
+    visibility_conditions:
+      - { condition_type: "EventCompleted", target_id: "evt_unlock_old_hell_placeholder", required_value: 1 }
+    areas:
+      - id: "palace_of_the_earth_spirits"
+        title: "地灵殿"
+        accent: "secondary_peace"
+        visibility_condition_count: 0
+        visibility_conditions: []
+        scenes:
+          - id: "satori_reception_room"
+            title: "会客厅"
+            description: "旧地狱解锁后的剧情接待区域。"
+            visibility_condition_count: 0
+            visibility_conditions: []
+            event_ids: []

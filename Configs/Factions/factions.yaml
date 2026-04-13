@@ -1,3 +1,46 @@
+# 本文件用于定义“势力”和“势力 NPC 商店”。
+# 作用：控制声望门槛、可交易 NPC、可购买商品等。
+#
+# 顶层键说明：
+# factions: 势力列表。
+# npcs: NPC 列表。
+#
+# factions 中单个势力支持的字段：
+# id: 势力唯一 ID。
+# name_key: 势力名称。
+# description_key: 势力简介。
+# max_reputation:
+#   最大声望值上限，一般建议填正整数，如 100。
+# peace_threshold:
+#   预留给“和解/和平状态”判断的阈值。
+# npc_ids:
+#   属于这个势力的 NPC ID 列表。
+# faction_event_ids:
+#   与该势力关联的事件 ID 列表。
+#
+# npcs 中单个 NPC 支持的字段：
+# id: NPC 唯一 ID。
+# name_key: NPC 名称。
+# faction_id: 该 NPC 所属势力 ID。
+# has_shop: 是否开放商店。
+# required_reputation:
+#   玩家需要达到多少该势力声望，NPC 才会开放互动/商店。
+#
+# shop_items:
+#   NPC 商店商品列表。
+#   item_id: 出售的物品 ID。
+#   stock:
+#     库存数量。
+#     -1 通常表示无限库存，正整数表示限量。
+#   payment_type:
+#     支付方式。当前可选：
+#     Gold / Item / Mixed
+#   gold_cost: 金币价格。
+#   barter_costs:
+#     以物易物成本列表，条目结构为 item_id + amount。
+#   required_reputation:
+#     购买该条商品所需的最低声望。
+#
 factions:
   - id: "faction_scarlet_devil"
     name_key: "红魔馆"

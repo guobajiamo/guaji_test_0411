@@ -1,0 +1,34 @@
+regions:
+  - id: "forest"
+    title: "魔法之森"
+    accent: "primary_story"
+    expanded_by_default: true
+    visibility_condition_count: 0
+    visibility_conditions: []
+    areas:
+      - id: "forest_outer"
+        title: "魔法之森外围"
+        accent: "secondary_battle"
+        visibility_condition_count: 0
+        visibility_conditions: []
+        scenes:
+          - id: "forest_clearing"
+            title: "林间空地"
+            description: "当前测试剧本的砍树与挂机入口。"
+            visibility_condition_count: 0
+            visibility_conditions: []
+            event_ids:
+              - "evt_click_chop"
+              - "evt_idle_chop"
+      - id: "forest_depths"
+        title: "魔法之森深处"
+        accent: "secondary_battle"
+        visibility_condition_count: 0
+        visibility_conditions: []
+        scenes:
+          - id: "deep_forest"
+            title: "深处林道"
+            description: "预留给后续战斗副本。"
+            visibility_condition_count: 0
+            visibility_conditions: []
+            event_ids: []

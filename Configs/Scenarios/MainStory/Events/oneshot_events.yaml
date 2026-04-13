@@ -1,0 +1,19 @@
+# 本文件是“正式剧本专用一次性事件表”的说明模板。
+# 更新时间：2025-04-13
+# 当前正式剧本仍以占位为主，因此这里保留空表与完整注释。
+# 后续新增正式剧本一次性事件时，建议把真实实例写到 `Events/Oneshot/` 子目录。
+#
+# 新增功能提示：
+# dialog.show_cancel_button
+#   true  = 显示“我再想想”按钮
+#   false = 不显示“我再想想”按钮，适合强制确认或必须立即做出选择的事件
+#   该开关同时适用于单确认弹窗与双选项弹窗
+#
+# 其余常用字段：
+# id / name_key / description_key / hover_info_key / type / costs / effects / button_list_group / dialog
+# 三段条件字段：
+# display_condition_count + display_conditions
+# interaction_condition_count + interaction_conditions
+# hide_condition_count + hide_conditions
+#
+events: []

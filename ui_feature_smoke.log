@@ -24,7 +24,10 @@ Loading resource: res://Scripts/Autoload/SignalBus.cs
 Loaded system CA certificates
 Loading resource: res://Scenes/Debug/UiFeatureSmokeTest.tscn
 Loading resource: res://Scripts/Debug/UiFeatureSmokeTest.cs
-[GameLog] [00:50:51] 静态配置加载完成：分类 6，物品 11，技能 1，事件 7。
+Loading resource: res://Resources/Scenarios/main_story_scenario.tres
+Loading resource: res://Scripts/Core/Scenario/GameScenarioDefinition.cs
+Loading resource: res://Resources/Scenarios/test_game_scenario.tres
+[GameLog] [20:27:53] 已发现剧本数量：2
 Loading resource: res://Scripts/Systems/IdleSystem.cs
 Loading resource: res://Scripts/Systems/ClickEventSystem.cs
 Loading resource: res://Scripts/Systems/SkillSystem.cs
@@ -38,27 +41,43 @@ Loading resource: res://Scripts/Systems/BattleSystem.cs
 Loading resource: res://Scripts/Systems/AchievementSystem.cs
 Loading resource: res://Scripts/Systems/EquipmentSystem.cs
 Loading resource: res://Scripts/Systems/BuffSystem.cs
-[GameLog] [00:50:51] 初版游戏已完成启动。
+[GameLog] [20:27:53] 游戏主菜单入口已准备完成。
 Loading resource: res://Scenes/Main.tscn
-Loading resource: res://Scenes/UI/MainUI.tscn
-Loading resource: res://Scripts/UI/MainUI.cs
+Loading resource: res://Scripts/UI/AppRoot.cs
 Loading resource: res://Scripts/UI/MainUiLayoutSettings.cs
 Loading resource: res://Resources/UI/main_ui_layout.tres
-Loading resource: res://Scripts/UI/ButtonListPanel.cs
-Loading resource: res://Scripts/UI/TabContainer.cs
+Loading resource: res://Scenes/UI/MainMenuUI.tscn
+Loading resource: res://Scripts/UI/MainMenuUI.cs
+Loading resource: res://Scripts/UI/SaveSlotDialog.cs
+Loading resource: res://Scripts/UI/ConfirmActionDialog.cs
+[YamlConfigLoader] bundle=categories path=res://Configs/Scenarios/TestGame/Items/Categories 已解析 1 个 yaml 文件。
+[YamlConfigLoader] bundle=items path=res://Configs/Scenarios/TestGame/Items/Definitions 已解析 4 个 yaml 文件。
+[YamlConfigLoader] bundle=skills path=res://Configs/Scenarios/TestGame/Skills/Definitions 已解析 2 个 yaml 文件。
+[YamlConfigLoader] bundle=events path=res://Configs/Scenarios/TestGame/Events/Oneshot 已解析 2 个 yaml 文件。
+[YamlConfigLoader] bundle=events path=res://Configs/Scenarios/TestGame/Events/Click 已解析 3 个 yaml 文件。
+[YamlConfigLoader] bundle=events path=res://Configs/Scenarios/TestGame/Events/Idle 已解析 2 个 yaml 文件。
+[YamlConfigLoader] bundle=factions path=res://Configs/Scenarios/TestGame/Factions/Definitions 已解析 3 个 yaml 文件。
+[YamlConfigLoader] bundle=zones path=res://Configs/Scenarios/TestGame/Zones/Definitions 已解析 3 个 yaml 文件。
+[YamlConfigLoader] bundle=localization path=res://Configs/Scenarios/TestGame/Localization/Bundle 已解析 1 个 yaml 文件。
+[GameLog] [20:27:53] 静态配置加载完成：剧本 游戏测试剧本，分类 7，物品 14，技能 2，事件 13。
+[GameLog] [20:27:53] 已载入剧本：游戏测试剧本
+Loading resource: res://Scenes/UI/MainUI.tscn
+Loading resource: res://Scripts/UI/MainUI.cs
+Loading resource: res://Scripts/UI/GamePlayUI.cs
 Loading resource: res://Scripts/UI/InventoryPanel.cs
 Loading resource: res://Scripts/UI/SkillPanel.cs
 Loading resource: res://Scripts/UI/DictionaryPanel.cs
-Loading resource: res://Scripts/UI/FactionPanel.cs
-Loading resource: res://Scripts/UI/ZoneSelectPanel.cs
-Loading resource: res://Scripts/UI/Placeholder/QuestPanel.cs
-Loading resource: res://Scripts/UI/Placeholder/BattlePanel.cs
-Loading resource: res://Scripts/UI/Placeholder/AchievementPanel.cs
-Loading resource: res://Scripts/UI/CharacterStatusPanel.cs
 Loading resource: res://Scripts/UI/LogPanel.cs
+Loading resource: res://Scripts/UI/ConfigurableInfoPanel.cs
+Loading resource: res://Scripts/UI/CharacterStatusPanel.cs
 Loading resource: res://Scripts/UI/EventDialogPanel.cs
+[YamlConfigLoader] bundle=gameplay_layout path=res://Configs/Scenarios/TestGame/UI/GameplayLayout 已解析 8 个 yaml 文件。
+[YamlConfigLoader] bundle=gameplay_layout path=res://Configs/Scenarios/TestGame/UI/GameplayLayout 已解析 8 个 yaml 文件。
+Loading resource: res://Scripts/UI/SystemPanel.cs
 Loading resource: res://Scripts/UI/EventButtonItem.cs
-[UiFeatureSmokeTest] all checks passed
+[YamlConfigLoader] bundle=info_panel path=res://Configs/Scenarios/TestGame/UI/InfoPanel 已解析 3 个 yaml 文件。
+[YamlConfigLoader] bundle=info_panel path=res://Configs/Scenarios/TestGame/UI/InfoPanel 已解析 3 个 yaml 文件。
+Loading resource: res://Scripts/UI/ItemSlotUI.cs
 Unloading: Disposing tracked instances...
 Unloading: Finished disposing tracked instances.
 XR: Clearing primary interface

@@ -1,0 +1,162 @@
+# 本文件是“测试剧本专用物品表”。
+# 字段含义与 Configs/Items/items.yaml 相同，只是这里的数据只会被测试剧本读取。
+#
+# 常用字段回顾：
+# id: 物品唯一 ID
+# parent_id: 所属分类 ID
+# name_key / description_key / detail_description_key: 显示文本
+# definition_order: 同分类排序值，越小越靠前，建议按 100 间隔
+# base_rarity: Common / Uncommon / Rare / Epic / Legendary
+# base_max_stack: 最大堆叠数
+# buy_price / sell_price: 买入价 / 卖出价
+# tags: 物品标签数组，可多选
+# has_durability / max_durability: 是否启用耐久及其上限
+# acquisition_hint_key: 获取提示
+# tool_bonuses:
+#   log_yield_multiplier: 产出倍率
+#   chop_speed_multiplier: 速度倍率
+#
+# 测试剧本里新增的钓鱼相关物品也在这里配置：
+# - tool_fishing_rod: 鱼竿
+# - bait_worm: 蚯蚓鱼饵
+# - mat_carp: 鲤鱼
+#
+items:
+  - id: "mat_wood_log"
+    parent_id: "mat_wood"
+    name_key: "原木"
+    description_key: "最基础的木材，通过砍树获得"
+    definition_order: 100
+    base_rarity: "Common"
+    base_max_stack: 9999
+    buy_price: 0
+    sell_price: 1
+    tags: ["Material"]
+    has_durability: false
+    acquisition_hint_key: "通过砍树获得"
+    detail_description_key: "从树上砍下来的原木，可以继续加工成更多木制品。"
+
+  - id: "mat_wood_firewood"
+    parent_id: "mat_wood"
+    name_key: "柴火"
+    description_key: "可用于生火的木柴"
+    definition_order: 200
+    base_rarity: "Common"
+    base_max_stack: 999
+    sell_price: 2
+    tags: ["Material", "Fuel"]
+
+  - id: "mat_carp"
+    parent_id: "mat_fish"
+    name_key: "鲤鱼"
+    description_key: "常见的淡水鱼，可作为渔获测试物品"
+    definition_order: 100
+    base_rarity: "Common"
+    base_max_stack: 999
+    sell_price: 3
+    tags: ["Material", "Food"]
+
+  - id: "tool_stone_axe"
+    parent_id: "tool"
+    name_key: "石斧"
+    description_key: "最基础的伐木工具"
+    definition_order: 100
+    base_rarity: "Common"
+    base_max_stack: 1
+    sell_price: 0
+    tags: ["Tool", "Weapon", "Axe"]
+    has_durability: false
+    tool_bonuses:
+      log_yield_multiplier: 1.0
+      chop_speed_multiplier: 1.0
+
+  - id: "tool_fishing_rod"
+    parent_id: "tool"
+    name_key: "鱼竿"
+    description_key: "基础钓鱼工具，用于测试钓鱼事件的互动条件"
+    definition_order: 150
+    base_rarity: "Common"
+    base_max_stack: 1
+    sell_price: 0
+    tags: ["Tool"]
+    has_durability: false
+
+  - id: "tool_iron_axe"
+    parent_id: "tool"
+    name_key: "铁斧"
+    description_key: "更加坚固的铁制斧头，伐木效率更高"
+    definition_order: 200
+    base_rarity: "Uncommon"
+    base_max_stack: 1
+    sell_price: 50
+    tags: ["Tool", "Weapon", "Axe"]
+    tool_bonuses:
+      log_yield_multiplier: 2.0
+      chop_speed_multiplier: 1.0
+
+  - id: "tool_alloy_axe"
+    parent_id: "tool"
+    name_key: "合金斧"
+    description_key: "用特殊合金打造的高级斧头"
+    definition_order: 300
+    base_rarity: "Rare"
+    base_max_stack: 1
+    sell_price: 200
+    tags: ["Tool", "Weapon", "Axe"]
+    tool_bonuses:
+      log_yield_multiplier: 4.0
+      chop_speed_multiplier: 1.0
+
+  - id: "bait_worm"
+    parent_id: "consumable_ingredient"
+    name_key: "鱼饵·蚯蚓"
+    description_key: "最基础的钓鱼鱼饵，每次挂机钓鱼会消耗一个"
+    definition_order: 120
+    base_rarity: "Common"
+    base_max_stack: 999
+    sell_price: 1
+    tags: ["Consumable", "Material"]
+
+  - id: "food_baozi"
+    parent_id: "consumable_cooking"
+    name_key: "包子"
+    description_key: "热腾腾的包子"
+    definition_order: 100
+    base_max_stack: 99
+    sell_price: 5
+    tags: ["Consumable", "Food"]
+
+  - id: "food_bingzi"
+    parent_id: "consumable_cooking"
+    name_key: "饼子"
+    description_key: "香脆的饼子"
+    definition_order: 200
+    tags: ["Consumable", "Food"]
+
+  - id: "food_mantou"
+    parent_id: "consumable_cooking"
+    name_key: "馒头"
+    description_key: "松软的馒头"
+    definition_order: 300
+    tags: ["Consumable", "Food"]
+
+  - id: "ingredient_flour"
+    parent_id: "consumable_ingredient"
+    name_key: "面粉"
+    description_key: "研磨谷物制成的面粉"
+    definition_order: 100
+    tags: ["Material", "Food"]
+
+  - id: "ingredient_rice"
+    parent_id: "consumable_ingredient"
+    name_key: "稻米"
+    description_key: "脱壳后的稻米"
+    definition_order: 200
+    tags: ["Material", "Food"]
+
+  - id: "ingredient_oil"
+    parent_id: "consumable_ingredient"
+    name_key: "食用油"
+    description_key: "烹饪常用的基础材料"
+    definition_order: 300
+    tags: ["Material", "Food"]

@@ -14,6 +14,8 @@ public partial class EventDialogPanel : Control
     private PanelContainer? _dialogPanel;
     private Label? _titleLabel;
     private RichTextLabel? _bodyLabel;
+    private CenterContainer? _dismissRow;
+    private Button? _dismissButton;
     private HBoxContainer? _buttonRow;
 
     public override void _Ready()
@@ -28,14 +30,19 @@ public partial class EventDialogPanel : Control
         _dialogPanel!.CustomMinimumSize = new Vector2(layoutSettings.DialogMinWidth, 0);
         _titleLabel!.AddThemeFontSizeOverride("font_size", layoutSettings.SectionHeaderFontSize);
         _bodyLabel!.AddThemeFontSizeOverride("normal_font_size", layoutSettings.BodyFontSize);
+        _dismissButton!.AddThemeFontSizeOverride("font_size", layoutSettings.BodyFontSize);
     }
 
-    public void ShowDialog(string title, string bodyText, IReadOnlyList<DialogButtonConfig> buttons)
+    public void ShowDialog(string title, string bodyText, IReadOnlyList<DialogButtonConfig> buttons, bool showCancelButton = true)
     {
         EnsureStructure();
 
         _titleLabel!.Text = title;
         _bodyLabel!.Text = bodyText;
+        _dismissButton!.Text = "我再想想";
+        _dismissButton.TooltipText = "我还没做好准备，晚点再说。";
+        _dismissRow!.Visible = showCancelButton;
+        _dismissButton.Visible = showCancelButton;
 
         ClearButtonRow();
         foreach (DialogButtonConfig buttonConfig in buttons)
@@ -43,6 +50,7 @@ public partial class EventDialogPanel : Control
             Button button = new()
             {
                 Text = buttonConfig.Text,
+                TooltipText = buttonConfig.TooltipText,
                 SizeFlagsHorizontal = SizeFlags.ExpandFill,
                 CustomMinimumSize = new Vector2(120, 42)
             };
@@ -65,7 +73,13 @@ public partial class EventDialogPanel : Control
 
     private void EnsureStructure()
     {
-        if (_overlay != null && _dialogPanel != null && _titleLabel != null && _bodyLabel != null && _buttonRow != null)
+        if (_overlay != null
+            && _dialogPanel != null
+            && _titleLabel != null
+            && _bodyLabel != null
+            && _dismissRow != null
+            && _dismissButton != null
+            && _buttonRow != null)
         {
             return;
         }
@@ -125,6 +139,22 @@ public partial class EventDialogPanel : Control
         };
         content.AddChild(_bodyLabel);
 
+        _dismissRow = new CenterContainer
+        {
+            Name = "DismissRow",
+            SizeFlagsHorizontal = SizeFlags.ExpandFill
+        };
+        content.AddChild(_dismissRow);
+
+        _dismissButton = new Button
+        {
+            Name = "DismissButton",
+            Text = "我再想想",
+            CustomMinimumSize = new Vector2(140, 40)
+        };
+        _dismissButton.Pressed += HideDialog;
+        _dismissRow.AddChild(_dismissButton);
+
         _buttonRow = new HBoxContainer
         {
             Name = "ButtonRow",
@@ -152,6 +182,8 @@ public partial class EventDialogPanel : Control
     public sealed class DialogButtonConfig
     {
         public string Text { get; set; } = string.Empty;
+
+        public string TooltipText { get; set; } = string.Empty;
 
         public Action? OnPressed { get; set; }
     }

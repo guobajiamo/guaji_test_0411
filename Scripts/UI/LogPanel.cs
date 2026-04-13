@@ -1,16 +1,20 @@
 using Godot;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Test00_0410.UI;
 
 /// <summary>
-/// 日志面板。
-/// 开发期可显示调试日志，后期也可显示给玩家看的行动记录。
+/// 运行日志面板。
+/// 折叠状态只显示最近几行，展开状态显示全部内容。
 /// </summary>
 public partial class LogPanel : Control
 {
+    private const int CollapsedLineCount = 5;
+
     private TextEdit? _textEdit;
+    private bool _isExpanded;
     private string _lastMessageSignature = string.Empty;
 
     public override void _Ready()
@@ -18,10 +22,23 @@ public partial class LogPanel : Control
         EnsureStructure();
     }
 
+    public void SetDisplayMode(bool isExpanded)
+    {
+        _isExpanded = isExpanded;
+        _lastMessageSignature = string.Empty;
+    }
+
     public void SetMessages(IEnumerable<string> messages)
     {
         EnsureStructure();
-        string nextText = string.Join("\n", messages);
+
+        List<string> messageList = messages.ToList();
+        if (!_isExpanded && messageList.Count > CollapsedLineCount)
+        {
+            messageList = messageList.Skip(messageList.Count - CollapsedLineCount).ToList();
+        }
+
+        string nextText = string.Join("\n", messageList);
         if (nextText == _lastMessageSignature)
         {
             return;
@@ -29,19 +46,6 @@ public partial class LogPanel : Control
 
         _lastMessageSignature = nextText;
         _textEdit!.Text = nextText;
-        _textEdit.SetCaretLine(Math.Max(0, _textEdit.GetLineCount() - 1));
-    }
-
-    public void AppendLog(string message)
-    {
-        EnsureStructure();
-        if (!string.IsNullOrWhiteSpace(_textEdit!.Text))
-        {
-            _textEdit.Text += "\n";
-        }
-
-        _textEdit.Text += message;
-        _lastMessageSignature = _textEdit.Text;
         _textEdit.SetCaretLine(Math.Max(0, _textEdit.GetLineCount() - 1));
     }
 
@@ -56,9 +60,14 @@ public partial class LogPanel : Control
         {
             Name = "LogTextEdit",
             Editable = false,
+            WrapMode = TextEdit.LineWrappingMode.Boundary,
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
             SizeFlagsVertical = SizeFlags.ExpandFill
         };
+        _textEdit.AddThemeColorOverride("background_color", new Color("#10161a"));
+        _textEdit.AddThemeColorOverride("font_readonly_color", new Color("#dae2e8"));
+        _textEdit.AddThemeColorOverride("font_color", new Color("#dae2e8"));
+        _textEdit.AddThemeColorOverride("caret_color", new Color("#d6a34a"));
         _textEdit.SetAnchorsPreset(LayoutPreset.FullRect);
         AddChild(_textEdit);
     }

@@ -1,5 +1,33 @@
 # 挂机循环事件
 
+# 本文件用于定义“循环挂机事件”。
+# 这类事件开始后会持续进行，直到玩家手动停止，或条件/材料不再满足。
+#
+# 顶层键说明：
+# events: 挂机事件列表。
+#
+# 常用字段：
+# id / name_key / description_key / hover_info_key:
+#   含义与其他事件相同。
+# type:
+#   这里通常固定写 "IdleLoop"。
+# prerequisites:
+#   老格式互动前置条件。
+#   只有满足这些条件，按钮才允许启动。
+# linked_skill_id:
+#   绑定的技能 ID。
+#   挂机的每轮产出、每轮时长、经验结算通常都来自这个技能定义。
+# costs:
+#   如果写了，表示“每一轮挂机都会扣除一次这些成本”。
+#   例如钓鱼每轮消耗一个鱼饵，就写在这里。
+# button_list_group:
+#   一般写 MainIdle，表示出现在挂机按钮组中。
+#
+# 使用建议：
+# - 想让挂机依赖工具：在 prerequisites 里检查 HasItem。
+# - 想让挂机消耗材料：在 costs 里配置每轮成本。
+# - 当 prerequisites 或 costs 不再满足时，系统会自动停机。
+#
 events:
   - id: "evt_idle_chop"
     name_key: "挂机砍树"

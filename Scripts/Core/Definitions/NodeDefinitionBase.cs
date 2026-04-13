@@ -76,6 +76,24 @@ public abstract class NodeDefinitionBase
     public Dictionary<string, string> ExtensionData { get; } = new();
 
     /// <summary>
+    /// 该定义来自哪个 YAML 文件。
+    /// 仅用于调试、告警和多文件拆分后的来源追踪，不参与存档。
+    /// </summary>
+    public string SourceFilePath { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 多 YAML 合并时，该定义所在文件的排序序号。
+    /// 数值越小，表示越早加载。
+    /// </summary>
+    public int SourceFileOrder { get; set; }
+
+    /// <summary>
+    /// 多 YAML 合并时，该定义在所属文件中的出现顺序。
+    /// 用于在 definition_order 相同的情况下继续保持稳定排序。
+    /// </summary>
+    public int SourceEntryOrder { get; set; }
+
+    /// <summary>
     /// 获取显示名称。
     /// 如果传入了翻译函数，就先走翻译；否则直接返回原始 key。
     /// </summary>

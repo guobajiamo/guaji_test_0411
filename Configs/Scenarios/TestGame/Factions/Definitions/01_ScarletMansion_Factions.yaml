@@ -1,0 +1,33 @@
+# Scarlet Mansion faction pack.
+factions:
+  - id: "faction_scarlet_devil"
+    name_key: "红魔馆"
+    description_key: "坐落在雾之湖畔的洋馆，蕾米莉亚的居所。"
+    max_reputation: 100
+    peace_threshold: 100
+    npc_ids: ["npc_sakuya", "npc_patchouli"]
+    faction_event_ids: ["evt_sdm_work", "evt_sdm_trade"]
+
+npcs:
+  - id: "npc_sakuya"
+    name_key: "十六夜咲夜"
+    faction_id: "faction_scarlet_devil"
+    has_shop: true
+    required_reputation: 20
+    shop_items:
+      - item_id: "tool_iron_axe"
+        stock: 1
+        payment_type: "Gold"
+        gold_cost: 500
+        required_reputation: 30
+      - item_id: "food_baozi"
+        stock: -1
+        payment_type: "Gold"
+        gold_cost: 10
+        required_reputation: 20
+
+  - id: "npc_patchouli"
+    name_key: "帕秋莉·诺蕾姬"
+    faction_id: "faction_scarlet_devil"
+    has_shop: false
+    required_reputation: 50

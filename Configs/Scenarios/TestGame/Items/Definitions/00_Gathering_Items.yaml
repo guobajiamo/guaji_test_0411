@@ -1,0 +1,38 @@
+# Shared gathering outputs.
+# Suggested naming rule:
+# - Prefix with 00_, 01_, 02_ to control file merge order.
+# - Keep related instances together so later searches are easier.
+items:
+  - id: "mat_wood_log"
+    parent_id: "mat_wood"
+    name_key: "原木"
+    description_key: "最基础的木材，通过砍树获得"
+    definition_order: 100
+    base_rarity: "Common"
+    base_max_stack: 9999
+    buy_price: 0
+    sell_price: 1
+    tags: ["Material"]
+    has_durability: false
+    acquisition_hint_key: "通过砍树获得"
+    detail_description_key: "从树上砍下来的原木，可以继续加工成更多木制品。"
+
+  - id: "mat_wood_firewood"
+    parent_id: "mat_wood"
+    name_key: "柴火"
+    description_key: "可用于生火的木柴"
+    definition_order: 200
+    base_rarity: "Common"
+    base_max_stack: 999
+    sell_price: 2
+    tags: ["Material", "Fuel"]
+
+  - id: "mat_carp"
+    parent_id: "mat_fish"
+    name_key: "鲤鱼"
+    description_key: "常见的淡水鱼，可作为渔获测试物品"
+    definition_order: 100
+    base_rarity: "Common"
+    base_max_stack: 999
+    sell_price: 3
+    tags: ["Material", "Food"]

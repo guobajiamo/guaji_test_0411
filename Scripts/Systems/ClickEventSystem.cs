@@ -2,6 +2,7 @@ using Godot;
 using System;
 using Test00_0410.Core.Definitions;
 using Test00_0410.Core.Enums;
+using Test00_0410.Core.Helpers;
 using Test00_0410.Core.Registry;
 using Test00_0410.Core.Runtime;
 
@@ -35,6 +36,11 @@ public partial class ClickEventSystem : Node
 
     public bool TryTriggerEvent(string eventId)
     {
+        return TryTriggerEventInternal(eventId, true);
+    }
+
+    private bool TryTriggerEventInternal(string eventId, bool requireVisibleButton)
+    {
         if (_profile == null || _eventRegistry == null)
         {
             return false;
@@ -46,12 +52,17 @@ public partial class ClickEventSystem : Node
             return false;
         }
 
-        if (IsAlreadyConsumed(definition))
+        if (requireVisibleButton && !ShouldShowEvent(definition.Id))
         {
             return false;
         }
 
-        if (!ArePrerequisitesMet(definition))
+        if (IsAlreadyConsumed(definition) || IsHiddenByConditions(definition))
+        {
+            return false;
+        }
+
+        if (!AreInteractionConditionsMet(definition))
         {
             return false;
         }
@@ -74,13 +85,14 @@ public partial class ClickEventSystem : Node
 
     /// <summary>
     /// 供 UI 判断“这个事件按钮现在该不该显示”。
-    /// 当前首版规则比较简单：
-    /// 1. 一次性事件如果做完了，就隐藏
-    /// 2. 前置条件没满足，也先隐藏
+    /// 当前规则拆成了：
+    /// 1. 显示条件满足才显示
+    /// 2. 隐藏条件满足后直接隐藏
+    /// 3. 一次性 / 触发后移除事件被消耗后也隐藏
     /// </summary>
     public bool ShouldShowEvent(string eventId)
     {
-        if (_eventRegistry == null)
+        if (_eventRegistry == null || _profile == null)
         {
             return false;
         }
@@ -91,27 +103,25 @@ public partial class ClickEventSystem : Node
             return false;
         }
 
-        if (IsAlreadyConsumed(definition))
-        {
-            return false;
-        }
-
-        return ArePrerequisitesMet(definition);
+        return EventAvailabilityEvaluator.ShouldShowButton(_profile, definition);
     }
 
     /// <summary>
     /// 供 UI 判断“按钮亮了以后现在能不能点”。
-    /// 当前主要是看是否有足够的消耗品。
+    /// 当前需要同时满足：
+    /// 1. 按钮本身可见
+    /// 2. 互动条件满足
+    /// 3. 有足够的消耗品
     /// </summary>
     public bool CanTriggerEvent(string eventId)
     {
-        if (_eventRegistry == null)
+        if (_eventRegistry == null || _profile == null)
         {
             return false;
         }
 
         EventDefinition? definition = _eventRegistry.GetEvent(eventId);
-        if (definition == null || IsAlreadyConsumed(definition) || !ArePrerequisitesMet(definition))
+        if (definition == null || !EventAvailabilityEvaluator.CanInteractButton(_profile, definition))
         {
             return false;
         }
@@ -131,7 +141,7 @@ public partial class ClickEventSystem : Node
         }
 
         EventDefinition? sourceDefinition = _eventRegistry.GetEvent(sourceEventId);
-        if (sourceDefinition == null || IsAlreadyConsumed(sourceDefinition) || !ArePrerequisitesMet(sourceDefinition))
+        if (sourceDefinition == null || !CanTriggerEvent(sourceEventId))
         {
             return false;
         }
@@ -142,7 +152,7 @@ public partial class ClickEventSystem : Node
             sourceAdded = _profile.CompletedEventIds.Add(sourceDefinition.Id);
         }
 
-        bool success = TryTriggerEvent(targetEventId);
+        bool success = TryTriggerEventInternal(targetEventId, false);
         if (!success && sourceAdded)
         {
             _profile.CompletedEventIds.Remove(sourceDefinition.Id);
@@ -157,53 +167,17 @@ public partial class ClickEventSystem : Node
     /// </summary>
     private bool IsAlreadyConsumed(EventDefinition definition)
     {
-        if (_profile == null)
-        {
-            return false;
-        }
-
-        if (definition.Type != EventType.OneshotClick && !definition.RemoveAfterTriggered)
-        {
-            return false;
-        }
-
-        return _profile.CompletedEventIds.Contains(definition.Id);
+        return EventAvailabilityEvaluator.IsConsumed(_profile, definition);
     }
 
-    private bool ArePrerequisitesMet(EventDefinition definition)
+    private bool AreInteractionConditionsMet(EventDefinition definition)
     {
-        foreach (EventConditionEntry condition in definition.Prerequisites)
-        {
-            if (!IsConditionMet(condition))
-            {
-                return false;
-            }
-        }
-
-        return true;
+        return EventAvailabilityEvaluator.AreInteractionConditionsMet(_profile, definition);
     }
 
-    private bool IsConditionMet(EventConditionEntry condition)
+    private bool IsHiddenByConditions(EventDefinition definition)
     {
-        if (_profile == null)
-        {
-            return false;
-        }
-
-        int requiredValue = (int)condition.RequiredValue;
-
-        return condition.ConditionType switch
-        {
-            ConditionType.None => true,
-            ConditionType.HasItem => _profile.Inventory.HasItem(condition.TargetId, requiredValue),
-            ConditionType.HasGold => _profile.Economy.Gold >= requiredValue,
-            ConditionType.SkillLevel => _profile.GetOrCreateSkillState(condition.TargetId).Level >= requiredValue,
-            ConditionType.FactionReputation => _profile.GetOrCreateFactionState(condition.TargetId).Reputation >= requiredValue,
-            ConditionType.ZoneCleared => _profile.GetOrCreateZoneState(condition.TargetId).ClearCount >= requiredValue,
-            ConditionType.EventCompleted => _profile.CompletedEventIds.Contains(condition.TargetId),
-            ConditionType.QuestCompleted => _profile.CompletedQuestIds.Contains(condition.TargetId),
-            _ => false
-        };
+        return EventAvailabilityEvaluator.AreHideConditionsMet(_profile, definition);
     }
 
     private bool TryPayCosts(EventDefinition definition)

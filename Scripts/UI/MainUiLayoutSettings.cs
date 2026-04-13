@@ -17,13 +17,13 @@ public partial class MainUiLayoutSettings : Resource
     public int PanelSpacing { get; set; } = 10;
 
     [Export]
-    public int LeftColumnMinWidth { get; set; } = 720;
+    public int LeftColumnMinWidth { get; set; } = 860;
 
     [Export]
-    public int RightColumnMinWidth { get; set; } = 280;
+    public int RightColumnMinWidth { get; set; } = 320;
 
     [Export]
-    public int EventColumnMinWidth { get; set; } = 220;
+    public int EventColumnMinWidth { get; set; } = 260;
 
     [Export]
     public int EventColumnSpacing { get; set; } = 10;
@@ -65,10 +65,10 @@ public partial class MainUiLayoutSettings : Resource
     public int DialogMinWidth { get; set; } = 560;
 
     [Export]
-    public int WindowBaseWidth { get; set; } = 1600;
+    public int WindowBaseWidth { get; set; } = 1920;
 
     [Export]
-    public int WindowBaseHeight { get; set; } = 900;
+    public int WindowBaseHeight { get; set; } = 1080;
 
     [Export]
     public float RefreshIntervalSeconds { get; set; } = 0.2f;

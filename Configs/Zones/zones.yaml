@@ -1,3 +1,29 @@
+# 本文件用于定义“副本/区域解锁链”。
+# 当前 zone 更偏向“可反复通关的区域节点”，而不是左侧 UI 的一级/二级区域。
+#
+# 顶层键说明：
+# zones: 区域列表。
+#
+# 单个区域支持的字段：
+# id: 区域唯一 ID。
+# name_key: 区域显示名。
+# description_key: 区域说明文本。
+# max_clear_count:
+#   最大通关记录参考值。
+# unlocks_zone_id:
+#   通关/推进该区域后解锁的下一个区域 ID。
+#   留空表示不直接解锁后继区域。
+# unlocks_faction_id:
+#   通关/推进后可解锁的势力 ID。
+#   留空表示不解锁势力。
+# unlock_conditions:
+#   本区域自身的解锁条件列表。
+#   条件格式与事件条件相同：
+#   condition_type / target_id / required_value
+#   例如：
+#   ZoneCleared + 上一个 zone ID + 10
+#   表示上一个区域通关 10 次后才开放这里。
+#
 zones:
   - id: "zone_forest_of_magic"
     name_key: "魔法之森"

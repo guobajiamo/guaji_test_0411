@@ -21,12 +21,16 @@ EDITOR API HASH: 555353998
 SceneTreeFTI: traversal method DEFAULT
 Loading resource: res://Scripts/Autoload/GameManager.cs
 Loading resource: res://Scripts/Autoload/SignalBus.cs
-Loaded system CA certificates
+ERROR: Failed to read the root certificate store.
+   at: get_system_ca_certificates (platform/windows/os_windows.cpp:2570)
+Loaded builtin CA certificates
 Loading resource: res://Scenes/Main.tscn
-Loading resource: res://Scenes/UI/MainUI.tscn
-Loading resource: res://Scripts/UI/MainUI.cs
+Loading resource: res://Scripts/UI/AppRoot.cs
 Loading resource: res://Scripts/UI/MainUiLayoutSettings.cs
-[GameLog] [00:27:16] 静态配置加载完成：分类 6，物品 11，技能 1，事件 7。
+Loading resource: res://Resources/Scenarios/main_story_scenario.tres
+Loading resource: res://Scripts/Core/Scenario/GameScenarioDefinition.cs
+Loading resource: res://Resources/Scenarios/test_game_scenario.tres
+[GameLog] [15:48:55] 已发现剧本数量：2
 Loading resource: res://Scripts/Systems/IdleSystem.cs
 Loading resource: res://Scripts/Systems/ClickEventSystem.cs
 Loading resource: res://Scripts/Systems/SkillSystem.cs
@@ -40,22 +44,12 @@ Loading resource: res://Scripts/Systems/BattleSystem.cs
 Loading resource: res://Scripts/Systems/AchievementSystem.cs
 Loading resource: res://Scripts/Systems/EquipmentSystem.cs
 Loading resource: res://Scripts/Systems/BuffSystem.cs
-[GameLog] [00:27:16] 初版游戏已完成启动。
+[GameLog] [15:48:55] 游戏主菜单入口已准备完成。
 Loading resource: res://Resources/UI/main_ui_layout.tres
-Loading resource: res://Scripts/UI/ButtonListPanel.cs
-Loading resource: res://Scripts/UI/TabContainer.cs
-Loading resource: res://Scripts/UI/InventoryPanel.cs
-Loading resource: res://Scripts/UI/SkillPanel.cs
-Loading resource: res://Scripts/UI/DictionaryPanel.cs
-Loading resource: res://Scripts/UI/FactionPanel.cs
-Loading resource: res://Scripts/UI/ZoneSelectPanel.cs
-Loading resource: res://Scripts/UI/Placeholder/QuestPanel.cs
-Loading resource: res://Scripts/UI/Placeholder/BattlePanel.cs
-Loading resource: res://Scripts/UI/Placeholder/AchievementPanel.cs
-Loading resource: res://Scripts/UI/CharacterStatusPanel.cs
-Loading resource: res://Scripts/UI/LogPanel.cs
-Loading resource: res://Scripts/UI/EventDialogPanel.cs
-Loading resource: res://Scripts/UI/EventButtonItem.cs
+Loading resource: res://Scenes/UI/MainMenuUI.tscn
+Loading resource: res://Scripts/UI/MainMenuUI.cs
+Loading resource: res://Scripts/UI/SaveSlotDialog.cs
+Loading resource: res://Scripts/UI/ConfirmActionDialog.cs
 Unloading: Disposing tracked instances...
 Unloading: Finished disposing tracked instances.
 XR: Clearing primary interface

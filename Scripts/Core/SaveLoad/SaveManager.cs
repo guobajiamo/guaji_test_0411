@@ -28,18 +28,24 @@ public class SaveManager
 
     public bool Save(SaveData saveData)
     {
+        return SaveToPath(saveData, SavePath);
+    }
+
+    public bool SaveToPath(SaveData saveData, string path)
+    {
         try
         {
             saveData.Metadata.SaveVersion = SemanticVersion.Current.ToString();
             saveData.Metadata.SavedAtUnixSeconds = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
-            RuntimePathHelper.EnsureParentDirectoryExists(SavePath);
+            RuntimePathHelper.EnsureParentDirectoryExists(path);
 
             SaveFileDocument document = CreateDocument(saveData);
             string json = JsonSerializer.Serialize(document, _jsonOptions);
-            File.WriteAllText(SavePath, json);
+            File.WriteAllText(path, json);
 
-            GD.Print($"[SaveManager] 存档保存成功：{SavePath}");
+            SavePath = path;
+            GD.Print($"[SaveManager] 存档保存成功：{path}");
             return true;
         }
         catch (Exception exception)
@@ -51,15 +57,20 @@ public class SaveManager
 
     public SaveData LoadOrCreateDefault()
     {
+        return LoadOrCreateDefault(SavePath);
+    }
+
+    public SaveData LoadOrCreateDefault(string path)
+    {
         try
         {
-            if (!File.Exists(SavePath))
+            if (!File.Exists(path))
             {
-                GD.Print($"[SaveManager] 未找到存档，已载入默认新档：{SavePath}");
+                GD.Print($"[SaveManager] 未找到存档，已载入默认新档：{path}");
                 return _migrationRunner.RunMigrations(new SaveData());
             }
 
-            string json = File.ReadAllText(SavePath);
+            string json = File.ReadAllText(path);
             SaveFileDocument? document = JsonSerializer.Deserialize<SaveFileDocument>(json, _jsonOptions);
             if (document == null)
             {
@@ -68,7 +79,8 @@ public class SaveManager
             }
 
             SaveData saveData = RestoreSaveData(document);
-            GD.Print($"[SaveManager] 存档读取成功：{SavePath}");
+            SavePath = path;
+            GD.Print($"[SaveManager] 存档读取成功：{path}");
             return _migrationRunner.RunMigrations(saveData);
         }
         catch (Exception exception)
@@ -85,6 +97,59 @@ public class SaveManager
             Metadata = new SaveMetadata(),
             Profile = profile
         };
+    }
+
+    public bool TryLoad(string path, out SaveData? saveData)
+    {
+        saveData = null;
+
+        if (!File.Exists(path))
+        {
+            return false;
+        }
+
+        try
+        {
+            string json = File.ReadAllText(path);
+            SaveFileDocument? document = JsonSerializer.Deserialize<SaveFileDocument>(json, _jsonOptions);
+            if (document == null)
+            {
+                return false;
+            }
+
+            saveData = _migrationRunner.RunMigrations(RestoreSaveData(document));
+            SavePath = path;
+            return true;
+        }
+        catch (Exception exception)
+        {
+            GD.PushError($"[SaveManager] 读取指定存档失败：{exception}");
+            return false;
+        }
+    }
+
+    public SaveMetadata? TryReadMetadata(string path)
+    {
+        if (!File.Exists(path))
+        {
+            return null;
+        }
+
+        try
+        {
+            using JsonDocument document = JsonDocument.Parse(File.ReadAllText(path));
+            if (!document.RootElement.TryGetProperty("Metadata", out JsonElement metadataElement))
+            {
+                return null;
+            }
+
+            return JsonSerializer.Deserialize<SaveMetadata>(metadataElement.GetRawText(), _jsonOptions);
+        }
+        catch (Exception exception)
+        {
+            GD.PushWarning($"[SaveManager] 读取存档元信息失败：{exception.Message}");
+            return null;
+        }
     }
 
     private SaveFileDocument CreateDocument(SaveData saveData)
@@ -110,6 +175,12 @@ public class SaveManager
                     PendingOutputFraction = profile.IdleState.PendingOutputFraction,
                     LastProgressUnixSeconds = profile.IdleState.LastProgressUnixSeconds,
                     OfflineSettlementCapSeconds = profile.IdleState.OfflineSettlementCapSeconds
+                },
+                UiState = new UiStateSnapshot
+                {
+                    SelectedAreaId = profile.UiState.SelectedAreaId,
+                    SelectedTabId = profile.UiState.SelectedTabId,
+                    FavoriteSceneIds = profile.UiState.FavoriteSceneIds.ToList()
                 },
                 SkillStates = profile.SkillStates.Values
                     .OrderBy(state => state.SkillId)
@@ -188,6 +259,18 @@ public class SaveManager
         profile.IdleState.PendingOutputFraction = document.Profile.IdleState.PendingOutputFraction;
         profile.IdleState.LastProgressUnixSeconds = document.Profile.IdleState.LastProgressUnixSeconds;
         profile.IdleState.OfflineSettlementCapSeconds = document.Profile.IdleState.OfflineSettlementCapSeconds;
+
+        profile.UiState.SelectedAreaId = document.Profile.UiState.SelectedAreaId;
+        profile.UiState.SelectedTabId = string.IsNullOrWhiteSpace(document.Profile.UiState.SelectedTabId)
+            ? "current_region"
+            : document.Profile.UiState.SelectedTabId;
+        foreach (string sceneId in document.Profile.UiState.FavoriteSceneIds)
+        {
+            if (!string.IsNullOrWhiteSpace(sceneId))
+            {
+                profile.UiState.FavoriteSceneIds.Add(sceneId);
+            }
+        }
 
         foreach (SkillStateSnapshot skill in document.Profile.SkillStates)
         {
@@ -285,6 +368,8 @@ public class SaveManager
 
         public IdleStateSnapshot IdleState { get; set; } = new();
 
+        public UiStateSnapshot UiState { get; set; } = new();
+
         public List<SkillStateSnapshot> SkillStates { get; set; } = new();
 
         public List<FactionStateSnapshot> FactionStates { get; set; } = new();
@@ -337,6 +422,15 @@ public class SaveManager
         public long LastProgressUnixSeconds { get; set; }
 
         public int OfflineSettlementCapSeconds { get; set; } = 28800;
+    }
+
+    private sealed class UiStateSnapshot
+    {
+        public string SelectedAreaId { get; set; } = string.Empty;
+
+        public string SelectedTabId { get; set; } = "current_region";
+
+        public List<string> FavoriteSceneIds { get; set; } = new();
     }
 
     private sealed class SkillStateSnapshot

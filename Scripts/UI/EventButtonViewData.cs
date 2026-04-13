@@ -14,7 +14,11 @@ public class EventButtonViewData
 
     public string TooltipText { get; set; } = string.Empty;
 
+    public string StyleVariant { get; set; } = "event_click";
+
     public bool IsDisabled { get; set; }
 
     public double ProgressRatio { get; set; }
+
+    public bool ShowProgressBar { get; set; }
 }

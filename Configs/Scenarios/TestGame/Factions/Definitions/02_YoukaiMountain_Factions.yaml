@@ -1,0 +1,24 @@
+# Youkai Mountain faction pack.
+factions:
+  - id: "faction_youkai_mountain"
+    name_key: "妖怪山"
+    description_key: "天狗和河童居住的高山。"
+    max_reputation: 100
+    peace_threshold: 100
+    npc_ids: ["npc_nitori"]
+    faction_event_ids: []
+
+npcs:
+  - id: "npc_nitori"
+    name_key: "河城荷取"
+    faction_id: "faction_youkai_mountain"
+    has_shop: true
+    required_reputation: 10
+    shop_items:
+      - item_id: "tool_alloy_axe"
+        stock: 1
+        payment_type: "Mixed"
+        gold_cost: 1000
+        barter_costs:
+          - { item_id: "mat_wood_log", amount: 100 }
+        required_reputation: 60

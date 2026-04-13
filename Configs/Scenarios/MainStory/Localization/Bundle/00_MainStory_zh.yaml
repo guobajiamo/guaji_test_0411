@@ -1,0 +1,9 @@
+# 本文件是“正式剧本专用中文翻译表”。
+# 当前 translations 为空，表示正式剧本暂未维护独立翻译词条。
+#
+# 顶层键说明：
+# locale: 语言代号，中文一般写 "zh"
+# translations: 翻译表，键值格式为 "key": "显示文本"
+#
+locale: "zh"
+translations: {}

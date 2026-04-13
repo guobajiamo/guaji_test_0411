@@ -1,0 +1,213 @@
+# 本文件用于配置“游戏内容界面的整体视觉主题”。
+# 它只影响显示效果，不影响数值逻辑。
+#
+# 顶层分组说明：
+# general:
+#   尺寸、留白、字号等基础布局参数。
+# panels:
+#   各面板的底色、透明度、边框色。
+# tabs:
+#   中间标签页的文本和配色。
+# status:
+#   右下人物状态面板的配色与文案。
+# labels:
+#   其他零散 UI 文案格式。
+# region_accents:
+#   区域标题风格预设，给 gameplay_layout.yaml 的 accent 字段引用。
+#
+# general 常用字段：
+# background_color:
+#   主界面背景色，建议填十六进制颜色，如 "#000000"。
+# outer_margin:
+#   整个主界面距离窗口边缘的外边距，单位像素。
+# section_gap:
+#   各大分区之间的间距。
+# inner_gap:
+#   分区内部控件的间距。
+# left_right_column_width:
+#   左栏和右栏基础宽度。
+# top_bar_height:
+#   顶部状态条高度。
+# bottom_log_height:
+#   底部日志展开状态高度。
+# info_panel_min_height:
+#   右上信息面板最小高度。
+# tab_bar_height:
+#   中间标签栏高度。
+# scene_card_min_width:
+#   子场景卡片最小宽度。
+# scene_button_min_height:
+#   事件按钮最小高度。
+# progress_bar_height:
+#   进度条高度。
+# region_header_font_size / region_item_font_size / region_count_font_size:
+#   左侧区域标题、区域项、计数字号。
+# scene_title_font_size / body_font_size:
+#   子场景标题和正文文字字号。
+# tab_font_size / tab_active_font_size:
+#   标签普通态 / 激活态字号。
+# status_header_font_size / status_body_font_size:
+#   右下状态标题 / 正文字号。
+# corner_radius:
+#   统一圆角大小。
+#
+# panels 下每个面板都支持：
+# color:
+#   底色。
+# alpha:
+#   底色透明度，常见范围 0.0 到 1.0。
+# border_color:
+#   边框色。
+# border_alpha:
+#   边框透明度，常见范围 0.0 到 1.0。
+#
+# tabs 下常用字段：
+# current_region_text / inventory_text / skills_text / dictionary_text / system_text:
+#   标签名称。
+# normal_color / active_color:
+#   普通态 / 激活态底色。
+# normal_alpha / active_alpha:
+#   普通态 / 激活态透明度。
+# normal_text_color / active_text_color:
+#   标签文字颜色。
+# border_color:
+#   标签边框色。
+#
+# status 下常用字段：
+# header_text_color / body_text_color / accent_text_color:
+#   标题 / 正文 / 强调文字颜色。
+# progress_fill_color / progress_background_color:
+#   进度条填充色 / 背景色。
+# target_title / skills_title / status_title / currency_title / reputation_title:
+#   各区块标题。
+# resting_text / empty_status_text / empty_reputation_text:
+#   空状态或默认状态文案。
+#
+# labels 下常用字段：
+# top_bar_scenario_format / top_bar_area_format:
+#   顶部信息格式字符串，通常带 {0} 占位符。
+# interaction_count_format:
+#   左侧区域可互动数量显示格式。
+# idle_marker_text:
+#   挂机中的标记文本。
+# empty_scene_text / empty_area_text / favorite_hint_text:
+#   无内容时的提示文案。
+#
+# region_accents:
+#   每个 accent 键都支持：
+#   text_color: 文字颜色
+#   font_size: 字号
+#   可在 gameplay_layout.yaml 中通过 accent: "xxx" 引用。
+#
+general:
+  background_color: "#0b0f12"
+  outer_margin: 20
+  section_gap: 16
+  inner_gap: 12
+  left_right_column_width: 336
+  top_bar_height: 54
+  bottom_log_height: 196
+  info_panel_min_height: 240
+  tab_bar_height: 54
+  scene_card_min_width: 300
+  scene_button_min_height: 56
+  progress_bar_height: 12
+  region_header_font_size: 26
+  region_item_font_size: 18
+  region_count_font_size: 13
+  scene_title_font_size: 22
+  body_font_size: 17
+  tab_font_size: 17
+  tab_active_font_size: 21
+  status_header_font_size: 18
+  status_body_font_size: 15
+  corner_radius: 14
+
+panels:
+  top_bar:
+    color: "#223329"
+    alpha: 0.88
+    border_color: "#91af87"
+    border_alpha: 0.75
+  left_column:
+    color: "#162028"
+    alpha: 0.9
+    border_color: "#597283"
+    border_alpha: 0.62
+  center_column:
+    color: "#201a15"
+    alpha: 0.92
+    border_color: "#a98b60"
+    border_alpha: 0.7
+  bottom_log:
+    color: "#151a20"
+    alpha: 0.9
+    border_color: "#738090"
+    border_alpha: 0.58
+  right_info:
+    color: "#19231f"
+    alpha: 0.92
+    border_color: "#8ea67f"
+    border_alpha: 0.64
+  right_status:
+    color: "#221b16"
+    alpha: 0.92
+    border_color: "#b5905f"
+    border_alpha: 0.64
+  scene_card:
+    color: "#13181c"
+    alpha: 0.96
+    border_color: "#8b7858"
+    border_alpha: 0.62
+
+tabs:
+  current_region_text: "当前区域"
+  inventory_text: "背包"
+  skills_text: "技能"
+  dictionary_text: "图鉴"
+  system_text: "系统"
+  normal_color: "#14191d"
+  normal_alpha: 0.88
+  active_color: "#445743"
+  active_alpha: 0.96
+  normal_text_color: "#d7d8cf"
+  active_text_color: "#f7f0df"
+  border_color: "#9eaf88"
+
+status:
+  header_text_color: "#f7f0df"
+  body_text_color: "#d8d8ce"
+  accent_text_color: "#dcb86e"
+  progress_fill_color: "#c9973f"
+  progress_background_color: "#32261a"
+  target_title: "目标"
+  skills_title: "技能"
+  status_title: "状态"
+  currency_title: "货币"
+  reputation_title: "声望"
+  resting_text: "正在休息"
+  empty_status_text: "暂无异常状态"
+  empty_reputation_text: "暂无已解锁声望"
+
+labels:
+  top_bar_scenario_format: "当前剧本：{0}"
+  top_bar_area_format: "当前区域：{0}"
+  interaction_count_format: "({0})"
+  idle_marker_text: "★"
+  empty_scene_text: "当前场景暂无可互动内容。"
+  empty_area_text: "当前区域暂无可显示场景。"
+  favorite_hint_text: "右键场景标题可切换收藏置顶。"
+
+region_accents:
+  primary_story:
+    text_color: "#8fcb7f"
+    font_size: 24
+  primary_faction:
+    text_color: "#d97a63"
+    font_size: 24
+  secondary_peace:
+    text_color: "#dfbf79"
+    font_size: 18
+  secondary_battle:
+    text_color: "#d9876a"
+    font_size: 18

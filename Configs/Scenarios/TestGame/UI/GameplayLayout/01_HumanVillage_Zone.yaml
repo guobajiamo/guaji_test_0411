@@ -1,0 +1,75 @@
+# One primary region per file.
+regions:
+  - id: "human_village"
+    title: "人间之里"
+    accent: "primary_story"
+    expanded_by_default: true
+    visibility_condition_count: 0
+    visibility_conditions: []
+    areas:
+      - id: "market_street"
+        title: "商店街"
+        accent: "secondary_peace"
+        visibility_condition_count: 0
+        visibility_conditions: []
+        scenes:
+          - id: "dessert_house"
+            title: "琉璃点心屋"
+            description: "人间之里里最热闹的小店之一。"
+            visibility_condition_count: 0
+            visibility_conditions: []
+            event_ids: []
+          - id: "tea_house"
+            title: "甘味茶屋"
+            description: "适合放慢节奏的休息点。"
+            visibility_condition_count: 0
+            visibility_conditions: []
+            event_ids: []
+          - id: "sasaki_carpenter_shop"
+            title: "佐佐木木匠屋"
+            description: "村里的木匠作坊，适合放置伐木入门、教程提示与木工相关事件。"
+            visibility_condition_count: 0
+            visibility_conditions: []
+            event_ids:
+              - "evt_pickup_stone_axe"
+              - "evt_read_chopping_notice"
+              - "evt_stranger_reward_offer"
+          - id: "fishing_tackle_shop"
+            title: "渔具屋"
+            description: "用于测试鱼竿、鱼饵和钓鱼按钮解锁逻辑。"
+            visibility_condition_count: 0
+            visibility_conditions: []
+            event_ids:
+              - "evt_claim_fishing_rod"
+              - "evt_claim_spare_fishing_rod"
+              - "evt_get_worm_bait"
+          - id: "forge_shop"
+            title: "孙惣左卫门锻冶"
+            description: "这里暂时还没有可互动内容。"
+            visibility_condition_count: 0
+            visibility_conditions: []
+            event_ids: []
+      - id: "guard_office"
+        title: "自警队办事处"
+        accent: "secondary_peace"
+        visibility_condition_count: 0
+        visibility_conditions: []
+        scenes:
+          - id: "service_counter"
+            title: "办事柜台"
+            description: "预留给后续人间之里的委托和公会。"
+            visibility_condition_count: 0
+            visibility_conditions: []
+            event_ids: []
+      - id: "hida_mansion"
+        title: "稗田邸"
+        accent: "secondary_peace"
+        visibility_condition_count: 0
+        visibility_conditions: []
+        scenes:
+          - id: "archive_room"
+            title: "书库"
+            description: "预留给图鉴和剧情相关事件。"
+            visibility_condition_count: 0
+            visibility_conditions: []
+            event_ids: []

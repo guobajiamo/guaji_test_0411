@@ -10,23 +10,25 @@ using Test00_0410.Core.Runtime;
 namespace Test00_0410.UI;
 
 /// <summary>
-/// 右侧角色状态栏。
-/// 这一版改成了“可折叠大类 + 子项列表”的结构，
-/// 这样后面继续加工具、技能、挂机状态时会更清晰。
+/// 右侧人物状态栏。
+/// 使用折叠分组展示目标、技能、状态、货币和声望。
 /// </summary>
 public partial class CharacterStatusPanel : Control
 {
     private ScrollContainer? _scrollContainer;
     private VBoxContainer? _rootContainer;
     private GameManager? _gameManager;
-    private MainUiLayoutSettings _layoutSettings = new();
-    private string _lastStatusSignature = string.Empty;
+    private GameplayUiTheme _theme = new();
+    private Func<string, GameplayActionContext?>? _actionContextResolver;
+    private string _lastSignature = string.Empty;
+    private ProgressBar? _targetProgressBar;
     private readonly Dictionary<string, bool> _expandedStates = new()
     {
-        ["economy"] = true,
-        ["tool"] = true,
-        ["skill"] = true,
-        ["idle"] = true
+        ["target"] = true,
+        ["skills"] = true,
+        ["status"] = true,
+        ["currency"] = true,
+        ["reputation"] = true
     };
 
     public override void _Ready()
@@ -34,10 +36,14 @@ public partial class CharacterStatusPanel : Control
         EnsureStructure();
     }
 
-    public void Configure(GameManager gameManager, MainUiLayoutSettings? layoutSettings = null)
+    public void Configure(
+        GameManager gameManager,
+        GameplayUiTheme theme,
+        Func<string, GameplayActionContext?>? actionContextResolver = null)
     {
         _gameManager = gameManager;
-        _layoutSettings = layoutSettings ?? new MainUiLayoutSettings();
+        _theme = theme;
+        _actionContextResolver = actionContextResolver;
         EnsureStructure();
     }
 
@@ -49,88 +55,45 @@ public partial class CharacterStatusPanel : Control
         {
             RebuildContent(new[]
             {
-                BuildInfoSection(
-                    "empty",
-                    "状态",
-                    new[] { CreateItem("状态栏尚未绑定 GameManager。", "状态栏尚未绑定 GameManager。") })
+                new StatusSectionData
+                {
+                    SectionId = "empty",
+                    Title = "状态",
+                    Items = new List<StatusItemData>
+                    {
+                        new()
+                        {
+                            Text = "状态栏尚未绑定 GameManager。",
+                            TooltipText = "状态栏尚未绑定 GameManager。"
+                        }
+                    }
+                }
             });
             return;
         }
 
         PlayerProfile profile = _gameManager.PlayerProfile;
-        List<ItemDefinition> ownedTools = _gameManager.ItemRegistry.Items.Values
-            .Where(item => item.HasTag(ItemTag.Tool) && profile.Inventory.HasItem(item.Id))
-            .OrderBy(item => item.DefinitionOrder)
-            .ThenBy(item => item.Id)
-            .ToList();
-
-        ItemDefinition? currentTool = _gameManager.GetBestOwnedTool(ItemTag.Axe);
-        string currentToolId = currentTool?.Id ?? "none";
-
-        List<StatusItemData> economyItems = new()
-        {
-            CreateItem($"金币：{profile.Economy.Gold}", "当前持有的金币数量。你后面可以把更详细的经济说明写在这里。")
-        };
-
-        List<StatusItemData> toolItems = new();
-        if (ownedTools.Count == 0)
-        {
-            toolItems.Add(CreateItem("当前没有已获得工具", "当前工具附加信息"));
-        }
-        else
-        {
-            foreach (ItemDefinition tool in ownedTools)
-            {
-                string toolName = tool.GetDisplayName(_gameManager.TranslateText);
-                string label = tool.Id == currentToolId ? $"{toolName}（当前使用）" : toolName;
-                string detailText = string.IsNullOrWhiteSpace(tool.DetailDescriptionKey)
-                    ? tool.GetDisplayDescription(_gameManager.TranslateText)
-                    : _gameManager.TranslateText(tool.DetailDescriptionKey);
-                toolItems.Add(CreateItem(label, detailText));
-            }
-        }
-
-        List<StatusItemData> skillItems = new();
-        foreach (SkillDefinition skillDefinition in _gameManager.SkillRegistry.Skills.Values.OrderBy(skill => skill.Id))
-        {
-            PlayerSkillState state = profile.GetOrCreateSkillState(skillDefinition.Id);
-            skillItems.Add(CreateItem(
-                $"{_gameManager.TranslateText(skillDefinition.NameKey)}等级：Lv.{state.Level}",
-                _gameManager.TranslateText(skillDefinition.DescriptionKey)));
-            skillItems.Add(CreateItem(
-                $"{_gameManager.TranslateText(skillDefinition.NameKey)}经验：{FormatExpValue(state.StoredExp)}",
-                $"{_gameManager.TranslateText(skillDefinition.NameKey)}当前已存储的经验值。"));
-        }
-
-        string idleStatusText = "当前未挂机";
-        string progressText = "当前读条进度：0%";
-        string idleTooltip = "当前挂机项目附加信息";
-        if (_gameManager.IdleSystem != null && profile.IdleState.IsRunning && !string.IsNullOrWhiteSpace(profile.IdleState.ActiveEventId))
-        {
-            idleStatusText = $"当前挂机：{_gameManager.GetEventDisplayName(profile.IdleState.ActiveEventId)}";
-            progressText = $"当前读条进度：{_gameManager.IdleSystem.GetProgressRatio(profile.IdleState.ActiveEventId):P0}";
-            idleTooltip = "这里显示当前正在进行的挂机项目。";
-        }
-
         List<StatusSectionData> sections = new()
         {
-            BuildInfoSection("economy", "经济", economyItems),
-            BuildInfoSection("tool", "工具", toolItems),
-            BuildInfoSection("skill", "技能", skillItems),
-            BuildInfoSection("idle", "当前挂机项目", new[]
-            {
-                CreateItem(idleStatusText, idleTooltip),
-                CreateItem(progressText, "当前挂机项目的读条进度。")
-            })
+            BuildTargetSection(profile),
+            BuildSkillsSection(profile),
+            BuildStatusSection(profile),
+            BuildCurrencySection(profile),
+            BuildReputationSection(profile)
         };
 
-        string nextSignature = BuildSignature(sections);
-        if (nextSignature == _lastStatusSignature)
+        string signature = string.Join("|", sections.SelectMany(section =>
+            new[]
+            {
+                $"{section.SectionId}:{_expandedStates.GetValueOrDefault(section.SectionId, true)}",
+                $"{section.Title}:{section.ProgressRatio:0.###}"
+            }.Concat(section.Items.Select(item => $"{item.Text}:{item.TooltipText}"))));
+        if (signature == _lastSignature)
         {
             return;
         }
 
-        _lastStatusSignature = nextSignature;
+        _lastSignature = signature;
         RebuildContent(sections);
     }
 
@@ -145,7 +108,9 @@ public partial class CharacterStatusPanel : Control
         {
             Name = "ScrollContainer",
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
-            SizeFlagsVertical = SizeFlags.ExpandFill
+            SizeFlagsVertical = SizeFlags.ExpandFill,
+            HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled,
+            VerticalScrollMode = ScrollContainer.ScrollMode.Auto
         };
         _scrollContainer.SetAnchorsPreset(LayoutPreset.FullRect);
         AddChild(_scrollContainer);
@@ -155,8 +120,183 @@ public partial class CharacterStatusPanel : Control
             Name = "RootContainer",
             SizeFlagsHorizontal = SizeFlags.ExpandFill
         };
-        _rootContainer.AddThemeConstantOverride("separation", 8);
+        _rootContainer.AddThemeConstantOverride("separation", 10);
         _scrollContainer.AddChild(_rootContainer);
+    }
+
+    private StatusSectionData BuildTargetSection(PlayerProfile profile)
+    {
+        string targetText = _theme.Status.RestingText;
+        string tooltip = "当前没有进行中的挂机项目。";
+        double progressRatio = 0.0;
+
+        if (_gameManager?.IdleSystem != null
+            && profile.IdleState.IsRunning
+            && !string.IsNullOrWhiteSpace(profile.IdleState.ActiveEventId))
+        {
+            string eventId = profile.IdleState.ActiveEventId;
+            string eventName = _gameManager.GetEventDisplayName(eventId);
+            if (eventName.StartsWith("挂机", StringComparison.Ordinal))
+            {
+                eventName = eventName[2..];
+            }
+
+            GameplayActionContext? context = _actionContextResolver?.Invoke(eventId);
+            targetText = context.HasValue
+                ? $"正在{context.Value.SceneTitle}{eventName}"
+                : $"正在{eventName}";
+            tooltip = context.HasValue
+                ? $"当前正在 {context.Value.AreaTitle} / {context.Value.SceneTitle} 执行 {eventName}。"
+                : $"当前正在执行 {eventName}。";
+            progressRatio = _gameManager.IdleSystem.GetProgressRatio(eventId);
+        }
+
+        return new StatusSectionData
+        {
+            SectionId = "target",
+            Title = _theme.Status.TargetSectionTitle,
+            TooltipText = "显示当前正在进行的目标。",
+            ProgressRatio = progressRatio,
+            Items = new List<StatusItemData>
+            {
+                new()
+                {
+                    Text = targetText,
+                    TooltipText = tooltip,
+                    IsAccent = true
+                }
+            }
+        };
+    }
+
+    private StatusSectionData BuildSkillsSection(PlayerProfile profile)
+    {
+        List<StatusItemData> items = new();
+        foreach (SkillDefinition skill in _gameManager!.SkillRegistry.Skills.Values.OrderBy(item => item.Id))
+        {
+            PlayerSkillState state = profile.GetOrCreateSkillState(skill.Id);
+            ItemDefinition? tool = skill.RequiredToolTag == ItemTag.None
+                ? null
+                : _gameManager.GetBestOwnedTool(skill.RequiredToolTag);
+
+            string tooltip =
+                $"{_gameManager.TranslateText(skill.DescriptionKey)}\n" +
+                $"等级：Lv.{state.Level}/{skill.MaxLevel}\n" +
+                $"当前经验：{FormatExp(state.StoredExp)}\n" +
+                $"总经验：{FormatExp(state.TotalEarnedExp)}\n" +
+                $"适用工具：{(tool == null ? "未持有" : tool.GetDisplayName(_gameManager.TranslateText))}";
+
+            items.Add(new StatusItemData
+            {
+                Text = _gameManager.TranslateText(skill.NameKey),
+                TooltipText = tooltip
+            });
+        }
+
+        if (items.Count == 0)
+        {
+            items.Add(new StatusItemData
+            {
+                Text = "暂无技能",
+                TooltipText = "当前剧本还没有可显示技能。"
+            });
+        }
+
+        return new StatusSectionData
+        {
+            SectionId = "skills",
+            Title = _theme.Status.SkillsSectionTitle,
+            TooltipText = "技能详细信息集中收纳在各条目的悬浮说明中。",
+            Items = items
+        };
+    }
+
+    private StatusSectionData BuildStatusSection(PlayerProfile profile)
+    {
+        List<StatusItemData> items = new()
+        {
+            new()
+            {
+                Text = _theme.Status.EmptyStatusText,
+                TooltipText = "后续角色异常状态、Buff 与 Debuff 可继续接入这里。"
+            },
+            new()
+            {
+                Text = $"已完成一次性事件：{profile.CompletedEventIds.Count}",
+                TooltipText = "当前已完成的一次性事件数量。"
+            }
+        };
+
+        return new StatusSectionData
+        {
+            SectionId = "status",
+            Title = _theme.Status.StatusSectionTitle,
+            TooltipText = "显示角色当前状态概览。",
+            Items = items
+        };
+    }
+
+    private StatusSectionData BuildCurrencySection(PlayerProfile profile)
+    {
+        List<StatusItemData> items = new()
+        {
+            new()
+            {
+                Text = $"金币：{profile.Economy.Gold}",
+                TooltipText = "当前持有的金币数量。",
+                IsAccent = true
+            }
+        };
+
+        foreach ((string currencyId, int amount) in profile.Economy.ExtraCurrencies.OrderBy(entry => entry.Key))
+        {
+            items.Add(new StatusItemData
+            {
+                Text = $"{currencyId}：{amount}",
+                TooltipText = $"额外货币 {currencyId} 的当前数量。"
+            });
+        }
+
+        return new StatusSectionData
+        {
+            SectionId = "currency",
+            Title = _theme.Status.CurrencySectionTitle,
+            TooltipText = "显示金币和额外货币数量。",
+            Items = items
+        };
+    }
+
+    private StatusSectionData BuildReputationSection(PlayerProfile profile)
+    {
+        List<StatusItemData> items = _gameManager!.FactionRegistry.Factions.Values
+            .OrderBy(faction => faction.Id)
+            .Select(faction =>
+            {
+                PlayerFactionState state = profile.GetOrCreateFactionState(faction.Id);
+                return new StatusItemData
+                {
+                    Text = $"{_gameManager.TranslateText(faction.NameKey)}：{state.Reputation}",
+                    TooltipText = _gameManager.TranslateText(faction.DescriptionKey)
+                };
+            })
+            .ToList();
+
+        if (items.Count == 0)
+        {
+            items.Add(new StatusItemData
+            {
+                Text = _theme.Status.EmptyReputationText,
+                TooltipText = "当前剧本还没有已注册的势力声望。"
+            });
+        }
+
+        return new StatusSectionData
+        {
+            SectionId = "reputation",
+            Title = _theme.Status.ReputationSectionTitle,
+            TooltipText = "显示当前已注册势力的声望。",
+            Items = items
+        };
     }
 
     private void RebuildContent(IEnumerable<StatusSectionData> sections)
@@ -165,6 +305,8 @@ public partial class CharacterStatusPanel : Control
         {
             return;
         }
+
+        _targetProgressBar = null;
 
         foreach (Node child in _rootContainer.GetChildren())
         {
@@ -178,14 +320,15 @@ public partial class CharacterStatusPanel : Control
             {
                 SizeFlagsHorizontal = SizeFlags.ExpandFill
             };
+            sectionPanel.AddThemeStyleboxOverride("panel", CreatePanelStyle(new Color("#0f1720"), 0.55f));
             _rootContainer.AddChild(sectionPanel);
 
-            VBoxContainer sectionContent = new()
+            VBoxContainer content = new()
             {
                 SizeFlagsHorizontal = SizeFlags.ExpandFill
             };
-            sectionContent.AddThemeConstantOverride("separation", 4);
-            sectionPanel.AddChild(sectionContent);
+            content.AddThemeConstantOverride("separation", 6);
+            sectionPanel.AddChild(content);
 
             Button headerButton = new()
             {
@@ -194,25 +337,47 @@ public partial class CharacterStatusPanel : Control
                 SizeFlagsHorizontal = SizeFlags.ExpandFill,
                 TooltipText = section.TooltipText
             };
-            headerButton.AddThemeFontSizeOverride("font_size", _layoutSettings.StatusCategoryFontSize);
-            headerButton.AddThemeColorOverride("font_color", new Color("d62828"));
-            headerButton.AddThemeColorOverride("font_hover_color", new Color("ef233c"));
-            headerButton.AddThemeStyleboxOverride("normal", CreateFlatStyle(new Color(0, 0, 0, 0.08f)));
-            headerButton.AddThemeStyleboxOverride("hover", CreateFlatStyle(new Color(0, 0, 0, 0.14f)));
+            headerButton.AddThemeFontSizeOverride("font_size", _theme.StatusHeaderFontSize);
+            headerButton.AddThemeColorOverride("font_color", _theme.Status.HeaderTextColor);
+            headerButton.AddThemeColorOverride("font_hover_color", _theme.Status.AccentTextColor);
+            headerButton.AddThemeStyleboxOverride("normal", CreateButtonStyle(false));
+            headerButton.AddThemeStyleboxOverride("hover", CreateButtonStyle(true));
+            headerButton.AddThemeStyleboxOverride("pressed", CreateButtonStyle(true));
             headerButton.Pressed += () => ToggleSection(section.SectionId);
-            sectionContent.AddChild(headerButton);
+            content.AddChild(headerButton);
 
             if (!_expandedStates.GetValueOrDefault(section.SectionId, true))
             {
                 continue;
             }
 
+            if (section.ProgressRatio > 0.0 || string.Equals(section.SectionId, "target", StringComparison.Ordinal))
+            {
+                ProgressBar progressBar = new()
+                {
+                    MinValue = 0,
+                    MaxValue = 100,
+                    Value = section.ProgressRatio * 100.0,
+                    ShowPercentage = false,
+                    CustomMinimumSize = new Vector2(0, 8),
+                    SizeFlagsHorizontal = SizeFlags.ExpandFill
+                };
+                progressBar.AddThemeColorOverride("fill", _theme.Status.ProgressFillColor);
+                progressBar.AddThemeColorOverride("background", _theme.Status.ProgressBackgroundColor);
+                content.AddChild(progressBar);
+
+                if (string.Equals(section.SectionId, "target", StringComparison.Ordinal))
+                {
+                    _targetProgressBar = progressBar;
+                }
+            }
+
             VBoxContainer itemList = new()
             {
                 SizeFlagsHorizontal = SizeFlags.ExpandFill
             };
-            itemList.AddThemeConstantOverride("separation", 2);
-            sectionContent.AddChild(itemList);
+            itemList.AddThemeConstantOverride("separation", 4);
+            content.AddChild(itemList);
 
             foreach (StatusItemData item in section.Items)
             {
@@ -223,8 +388,8 @@ public partial class CharacterStatusPanel : Control
                     SizeFlagsHorizontal = SizeFlags.ExpandFill,
                     TooltipText = item.TooltipText
                 };
-                label.AddThemeFontSizeOverride("font_size", _layoutSettings.StatusItemFontSize);
-                label.AddThemeColorOverride("font_color", new Color("2563eb"));
+                label.AddThemeFontSizeOverride("font_size", _theme.StatusBodyFontSize);
+                label.AddThemeColorOverride("font_color", item.IsAccent ? _theme.Status.AccentTextColor : _theme.Status.BodyTextColor);
                 itemList.AddChild(label);
             }
         }
@@ -233,59 +398,73 @@ public partial class CharacterStatusPanel : Control
     private void ToggleSection(string sectionId)
     {
         _expandedStates[sectionId] = !_expandedStates.GetValueOrDefault(sectionId, true);
-        _lastStatusSignature = string.Empty;
+        _lastSignature = string.Empty;
         RefreshStatus();
     }
 
-    private StatusSectionData BuildInfoSection(string sectionId, string title, IEnumerable<StatusItemData> items)
-    {
-        return new StatusSectionData
-        {
-            SectionId = sectionId,
-            Title = title,
-            TooltipText = $"{title}附加信息",
-            Items = items.ToList()
-        };
-    }
-
-    private static StatusItemData CreateItem(string text, string tooltipText)
-    {
-        return new StatusItemData
-        {
-            Text = text,
-            TooltipText = tooltipText
-        };
-    }
-
-    private string BuildSignature(IEnumerable<StatusSectionData> sections)
-    {
-        List<string> parts = new();
-        foreach (StatusSectionData section in sections)
-        {
-            parts.Add($"{section.SectionId}:{_expandedStates.GetValueOrDefault(section.SectionId, true)}");
-            parts.AddRange(section.Items.Select(item => $"{item.Text}:{item.TooltipText}"));
-        }
-
-        return string.Join("|", parts);
-    }
-
-    private static StyleBoxFlat CreateFlatStyle(Color backgroundColor)
+    private StyleBoxFlat CreateButtonStyle(bool hovered)
     {
         return new StyleBoxFlat
         {
-            BgColor = backgroundColor,
-            CornerRadiusTopLeft = 6,
-            CornerRadiusTopRight = 6,
-            CornerRadiusBottomLeft = 6,
-            CornerRadiusBottomRight = 6
+            BgColor = hovered ? new Color(0.27f, 0.32f, 0.24f, 0.78f) : new Color(0.17f, 0.21f, 0.18f, 0.54f),
+            BorderColor = hovered ? new Color("#c5a86a") : new Color("#66735f"),
+            BorderWidthLeft = 1,
+            BorderWidthTop = 1,
+            BorderWidthRight = 1,
+            BorderWidthBottom = 1,
+            CornerRadiusTopLeft = _theme.CornerRadius,
+            CornerRadiusTopRight = _theme.CornerRadius,
+            CornerRadiusBottomLeft = _theme.CornerRadius,
+            CornerRadiusBottomRight = _theme.CornerRadius,
+            ContentMarginLeft = 10,
+            ContentMarginTop = 7,
+            ContentMarginRight = 10,
+            ContentMarginBottom = 7
         };
     }
 
-    private static string FormatExpValue(double value)
+    private StyleBoxFlat CreatePanelStyle(Color color, float alpha)
+    {
+        Color finalColor = color;
+        finalColor.A = alpha;
+
+        return new StyleBoxFlat
+        {
+            BgColor = finalColor,
+            BorderColor = new Color("#7f6a4d"),
+            BorderWidthLeft = 1,
+            BorderWidthTop = 1,
+            BorderWidthRight = 1,
+            BorderWidthBottom = 1,
+            CornerRadiusTopLeft = _theme.CornerRadius,
+            CornerRadiusTopRight = _theme.CornerRadius,
+            CornerRadiusBottomLeft = _theme.CornerRadius,
+            CornerRadiusBottomRight = _theme.CornerRadius,
+            ShadowColor = new Color(0, 0, 0, 0.26f),
+            ShadowSize = 8,
+            ContentMarginLeft = 10,
+            ContentMarginTop = 10,
+            ContentMarginRight = 10,
+            ContentMarginBottom = 10
+        };
+    }
+
+    private static string FormatExp(double value)
     {
         return Math.Abs(value - Math.Round(value)) < 0.0001
             ? Math.Round(value).ToString("0")
             : value.ToString("0.###");
+    }
+
+    public void UpdateTargetProgress(double progressRatio, bool shouldShow)
+    {
+        if (_targetProgressBar == null || !IsInstanceValid(_targetProgressBar))
+        {
+            return;
+        }
+
+        _targetProgressBar.Visible = shouldShow;
+        _targetProgressBar.Value = Math.Max(0.0, Math.Min(100.0, progressRatio * 100.0));
     }
 
     private sealed class StatusSectionData
@@ -296,6 +475,8 @@ public partial class CharacterStatusPanel : Control
 
         public string TooltipText { get; set; } = string.Empty;
 
+        public double ProgressRatio { get; set; }
+
         public List<StatusItemData> Items { get; set; } = new();
     }
 
@@ -304,5 +485,7 @@ public partial class CharacterStatusPanel : Control
         public string Text { get; set; } = string.Empty;
 
         public string TooltipText { get; set; } = string.Empty;
+
+        public bool IsAccent { get; set; }
     }
 }

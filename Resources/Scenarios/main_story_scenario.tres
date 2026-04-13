@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="GameScenarioDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Scripts/Core/Scenario/GameScenarioDefinition.cs" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+ScenarioId = "main_story"
+DisplayName = "默认主线剧本"
+Description = "正式的新游戏主线入口。当前先复用现有测试配置，后续你可以改成独立的主线配置包。"
+ShowInNewGameMenu = true
+IsDefaultStoryScenario = true
+IsTestScenario = false
+EnableSystemTab = true
+CategoriesConfigPath = "res://Configs/Scenarios/MainStory/Items/Categories"
+ItemsConfigPath = "res://Configs/Scenarios/MainStory/Items/Definitions"
+SkillsConfigPath = "res://Configs/Scenarios/MainStory/Skills/Definitions"
+OneshotEventsConfigPath = "res://Configs/Scenarios/MainStory/Events/Oneshot"
+ClickEventsConfigPath = "res://Configs/Scenarios/MainStory/Events/Click"
+IdleEventsConfigPath = "res://Configs/Scenarios/MainStory/Events/Idle"
+FactionsConfigPath = "res://Configs/Scenarios/MainStory/Factions/Definitions"
+ZonesConfigPath = "res://Configs/Scenarios/MainStory/Zones/Definitions"
+LocalizationPath = "res://Configs/Scenarios/MainStory/Localization/Bundle"
+InfoPanelConfigPath = "res://Configs/Scenarios/MainStory/UI/InfoPanel"

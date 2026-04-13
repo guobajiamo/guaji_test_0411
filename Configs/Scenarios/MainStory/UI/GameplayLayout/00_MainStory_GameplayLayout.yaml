@@ -1,0 +1,43 @@
+# 本文件用于配置“正式剧本的区域布局”。
+# 字段结构与 TestGame 的 gameplay_layout.yaml 相同，只是当前仍是最小占位结构。
+#
+# 顶层键说明：
+# default_area_id:
+#   默认进入的二级区域 ID。
+# regions:
+#   一级区域列表。
+#
+# 一级区域字段：
+# id / title / accent / expanded_by_default / visibility_condition_count / visibility_conditions / areas
+#
+# 二级区域字段：
+# id / title / accent / two_column_candidate / visibility_condition_count / visibility_conditions / scenes
+#
+# 子场景字段：
+# id / title / description / visibility_condition_count / visibility_conditions / event_ids
+#
+# 条件条目统一格式：
+# - condition_type / target_id / required_value
+#
+default_area_id: "story_start"
+
+regions:
+  - id: "main_story_root"
+    title: "主线区域"
+    accent: "primary_story"
+    expanded_by_default: true
+    visibility_condition_count: 0
+    visibility_conditions: []
+    areas:
+      - id: "story_start"
+        title: "起始区域"
+        accent: "secondary_peace"
+        visibility_condition_count: 0
+        visibility_conditions: []
+        scenes:
+          - id: "story_start_scene"
+            title: "待补完场景"
+            description: "当前主线剧本尚未配置交互事件。"
+            visibility_condition_count: 0
+            visibility_conditions: []
+            event_ids: []

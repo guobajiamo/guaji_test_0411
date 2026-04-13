@@ -1,0 +1,21 @@
+regions:
+  - id: "scarlet_mansion"
+    title: "红魔馆"
+    accent: "primary_faction"
+    expanded_by_default: false
+    visibility_condition_count: 0
+    visibility_conditions: []
+    areas:
+      - id: "scarlet_front"
+        title: "馆前庭院"
+        accent: "secondary_peace"
+        two_column_candidate: true
+        visibility_condition_count: 0
+        visibility_conditions: []
+        scenes:
+          - id: "front_gate"
+            title: "门前"
+            description: "预留给后续阵营相关玩法。"
+            visibility_condition_count: 0
+            visibility_conditions: []
+            event_ids: []

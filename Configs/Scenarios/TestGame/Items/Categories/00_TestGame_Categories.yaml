@@ -1,0 +1,54 @@
+# TestGame item category bundle.
+# You can keep all categories in one file, or continue to add more files in this directory.
+# Loader behavior:
+# - Files are loaded by filename order.
+# - Entries from all files are appended into one logical categories list.
+categories:
+  - id: "gathering_material"
+    parent_id: ""
+    name_key: "采集素材"
+    description_key: "通过采集获得的基础素材"
+    definition_order: 100
+    is_visible: true
+
+  - id: "mat_wood"
+    parent_id: "gathering_material"
+    name_key: "木材"
+    description_key: "各类木质素材"
+    definition_order: 100
+    is_visible: true
+
+  - id: "mat_fish"
+    parent_id: "gathering_material"
+    name_key: "渔获"
+    description_key: "通过钓鱼获得的素材"
+    definition_order: 200
+    is_visible: true
+
+  - id: "consumable"
+    parent_id: ""
+    name_key: "消耗品"
+    description_key: "使用后会被消耗的物品"
+    definition_order: 200
+    is_visible: true
+
+  - id: "consumable_cooking"
+    parent_id: "consumable"
+    name_key: "烹饪食品"
+    description_key: "通过烹饪制作出的成品食物"
+    definition_order: 100
+    is_visible: true
+
+  - id: "consumable_ingredient"
+    parent_id: "consumable"
+    name_key: "食材"
+    description_key: "用于烹饪的基础原料"
+    definition_order: 200
+    is_visible: true
+
+  - id: "tool"
+    parent_id: ""
+    name_key: "工具"
+    description_key: "用于采集与互动的工具"
+    definition_order: 300
+    is_visible: true

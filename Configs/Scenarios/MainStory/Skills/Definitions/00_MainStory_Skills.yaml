@@ -1,0 +1,16 @@
+# 本文件是“正式剧本专用技能表”。
+# 当前为空，表示正式剧本暂时还没有独立技能数据。
+#
+# 后续新增技能时常用字段：
+# skills: 技能列表
+# id: 技能唯一 ID
+# name_key / description_key: 技能名和描述
+# max_level: 最大等级
+# initial_level: 初始等级
+# max_total_exp: 总经验上限
+# required_tool_tag: 所需工具标签；None 表示不要求工具
+# primary_output_item_id: 主要产出物
+# level_table:
+#   level / exp_to_next / output / interval
+#
+skills: []

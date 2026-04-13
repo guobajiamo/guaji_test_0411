@@ -1,0 +1,11 @@
+# 本文件是“正式剧本专用可重复点击事件表”。
+# 当前为空，表示正式剧本还没开始录入这类事件。
+#
+# 后续新增时常用字段：
+# id / name_key / description_key / hover_info_key / type
+# display_condition_count / display_conditions
+# interaction_condition_count / interaction_conditions
+# hide_condition_count / hide_conditions
+# costs / effects / button_list_group
+#
+events: []

@@ -1,6 +1,55 @@
 # 一次性触发事件
 # 开局先给玩家一个“捡起石斧”的按钮，便于后面测试整条流程。
 
+# 本文件用于定义“一次性事件按钮”。
+# 这类事件触发后通常会被消耗，不再重复出现。
+#
+# 顶层键说明：
+# events: 事件列表。
+#
+# 当前这份老格式配置仍在使用 prerequisites。
+# 兼容说明：
+# - prerequisites 会被系统当作 interaction_conditions（互动前置条件）读取。
+# - 如果你以后写新剧本，建议优先使用新三段条件写法：
+#   display_condition_count + display_conditions
+#   interaction_condition_count + interaction_conditions
+#   hide_condition_count + hide_conditions
+#
+# 单个事件常用字段：
+# id: 事件唯一 ID。
+# name_key: 按钮标题。
+# description_key: 事件描述。
+# hover_info_key: 鼠标悬浮说明；不写时一般退回 description_key。
+# type:
+#   这里通常固定写 "OneshotClick"。
+# prerequisites:
+#   老格式互动前置条件列表。
+#   留空 [] 表示默认可点击。
+#   条件条目格式：
+#   - condition_type: 条件类型
+#   - target_id: 目标 ID
+#   - required_value: 需求数量/等级/次数
+# costs:
+#   点击时要消耗的物品列表；为空 [] 表示无消耗。
+# effects:
+#   事件生效后的通用效果列表。
+#   常见 effect_type：
+#   GrantItem / RemoveItem / GrantGold / RemoveGold / GrantSkillExp / AddFactionReputation / UnlockZone / CompleteEvent / CompleteQuest / StartBattle
+# button_list_group:
+#   事件按钮所在分组。
+#   当前常见：
+#   MainOneshot / MainClick / MainIdle / None
+#   None 常用于“隐藏分支事件”。
+#
+# dialog:
+#   给一次性事件挂弹窗配置。
+#   body_text: 弹窗正文
+#   confirm_button_text: 单确认按钮文案
+#   consume_source_event_on_choice: 多分支时是否消耗源事件
+#   choices:
+#     button_text = 按钮文字
+#     target_event_id = 点击后真正执行的目标事件 ID
+#
 events:
   - id: "evt_pickup_stone_axe"
     name_key: "捡起石斧"

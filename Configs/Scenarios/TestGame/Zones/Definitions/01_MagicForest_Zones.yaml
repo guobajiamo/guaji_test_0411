@@ -1,0 +1,9 @@
+# Dungeon / battle zone definitions can also be split by progression stage.
+zones:
+  - id: "zone_forest_of_magic"
+    name_key: "魔法之森"
+    description_key: "充满危险蘑菇和妖精的森林。"
+    max_clear_count: 10
+    unlocks_zone_id: "zone_misty_lake"
+    unlocks_faction_id: ""
+    unlock_conditions: []

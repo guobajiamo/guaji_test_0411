@@ -1,0 +1,25 @@
+# Eientei and other reserved factions.
+factions:
+  - id: "faction_eientei"
+    name_key: "永远亭"
+    description_key: "隐藏在迷途竹林深处的月之民居所。"
+    max_reputation: 100
+    peace_threshold: 100
+    npc_ids: ["npc_eirin"]
+    faction_event_ids: []
+
+  - id: "faction_myourenji"
+    name_key: "命莲寺"
+    description_key: "由圣白莲主持的寺院。"
+    max_reputation: 100
+    peace_threshold: 100
+    npc_ids: []
+    faction_event_ids: []
+
+npcs:
+  - id: "npc_eirin"
+    name_key: "八意永琳"
+    faction_id: "faction_eientei"
+    has_shop: true
+    required_reputation: 30
+    shop_items: []

@@ -1,0 +1,20 @@
+regions:
+  - id: "hakurei"
+    title: "博丽神社"
+    accent: "primary_story"
+    expanded_by_default: false
+    visibility_condition_count: 0
+    visibility_conditions: []
+    areas:
+      - id: "hakurei_path"
+        title: "参道"
+        accent: "secondary_peace"
+        visibility_condition_count: 0
+        visibility_conditions: []
+        scenes:
+          - id: "torii_gate"
+            title: "鸟居前"
+            description: "预留给后续剧情与委托。"
+            visibility_condition_count: 0
+            visibility_conditions: []
+            event_ids: []

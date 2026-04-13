@@ -21,6 +21,13 @@ public class EventDialogDefinition
     public string ConfirmButtonText { get; set; } = string.Empty;
 
     /// <summary>
+    /// 是否显示“我再想想”取消按钮。
+    /// true = 玩家可以先关闭弹窗不处理。
+    /// false = 玩家必须确认或二选一，适合紧急事态类事件。
+    /// </summary>
+    public bool ShowCancelButton { get; set; } = true;
+
+    /// <summary>
     /// 双选项弹窗时使用的按钮列表。
     /// 当前按需求限制为最多两个按钮。
     /// </summary>

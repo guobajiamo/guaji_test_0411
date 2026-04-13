@@ -1,0 +1,31 @@
+# Split one skill per file when a skill later gains many custom fields.
+skills:
+  - id: "skill_chopping"
+    name_key: "砍树"
+    description_key: "砍伐树木的技能，等级越高效率越高"
+    max_level: 20
+    initial_level: 1
+    max_total_exp: 34200
+    required_tool_tag: "Axe"
+    primary_output_item_id: "mat_wood_log"
+    level_table:
+      - { level: 1, exp_to_next: 180, output: 5.000, interval: 6.000 }
+      - { level: 2, exp_to_next: 360, output: 7.368, interval: 5.789 }
+      - { level: 3, exp_to_next: 540, output: 9.737, interval: 5.579 }
+      - { level: 4, exp_to_next: 720, output: 12.105, interval: 5.368 }
+      - { level: 5, exp_to_next: 900, output: 14.474, interval: 5.158 }
+      - { level: 6, exp_to_next: 1080, output: 16.842, interval: 4.947 }
+      - { level: 7, exp_to_next: 1260, output: 19.211, interval: 4.737 }
+      - { level: 8, exp_to_next: 1440, output: 21.579, interval: 4.526 }
+      - { level: 9, exp_to_next: 1620, output: 23.947, interval: 4.316 }
+      - { level: 10, exp_to_next: 1800, output: 26.316, interval: 4.105 }
+      - { level: 11, exp_to_next: 1980, output: 28.684, interval: 3.895 }
+      - { level: 12, exp_to_next: 2160, output: 31.053, interval: 3.684 }
+      - { level: 13, exp_to_next: 2340, output: 33.421, interval: 3.474 }
+      - { level: 14, exp_to_next: 2520, output: 35.789, interval: 3.263 }
+      - { level: 15, exp_to_next: 2700, output: 38.158, interval: 3.053 }
+      - { level: 16, exp_to_next: 2880, output: 40.526, interval: 2.842 }
+      - { level: 17, exp_to_next: 3060, output: 42.895, interval: 2.632 }
+      - { level: 18, exp_to_next: 3240, output: 45.263, interval: 2.421 }
+      - { level: 19, exp_to_next: 3420, output: 47.632, interval: 2.211 }
+      - { level: 20, exp_to_next: 0, output: 50.000, interval: 2.000 }

@@ -1,3 +1,42 @@
+# 本文件用于定义“技能成长曲线”。
+# 作用：决定某个挂机/采集技能的等级上限、升级经验、每轮产出、每轮耗时。
+#
+# 顶层键说明：
+# skills: 技能列表。
+#
+# 单个技能支持的字段：
+# id:
+#   技能唯一 ID，例如 "skill_chopping"。
+# name_key:
+#   技能显示名称。
+# description_key:
+#   技能描述文本。
+# max_level:
+#   技能最大等级，建议填正整数。
+# level_table 的最高 level 通常应与它一致。
+# initial_level:
+#   新档开始时的初始等级，一般为 1。
+# max_total_exp:
+#   技能总经验上限。
+# required_tool_tag:
+#   执行该技能时所需的工具标签。
+#   当前常用：
+#   None = 不需要工具
+#   Axe = 需要背包里有带 Axe 标签的工具
+# primary_output_item_id:
+#   该技能的主要产出物 ID。
+#
+# level_table:
+#   等级表列表，每一条对应一个等级。
+#   level:
+#     当前等级，需从 1 递增到 max_level。
+#   exp_to_next:
+#     从该等级升到下一级所需经验；满级那条通常填 0。
+#   output:
+#     该等级每一轮的基础产出量，可以是小数。
+#   interval:
+#     该等级每一轮的基础耗时（秒），数值越小代表速度越快。
+#
 skills:
   - id: "skill_chopping"
     name_key: "砍树"

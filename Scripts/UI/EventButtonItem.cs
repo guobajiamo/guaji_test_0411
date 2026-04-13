@@ -4,51 +4,149 @@ using System;
 namespace Test00_0410.UI;
 
 /// <summary>
-/// 单个事件按钮 UI。
-/// 如果是挂机事件，它还可以额外显示一个进度条。
+/// 单个事件按钮组件。
+/// 统一封装“上方进度条槽位 + 下方按钮”这套结构，
+/// 这样无论一次性事件、点击事件还是挂机事件，都复用同一套布局。
 /// </summary>
-public partial class EventButtonItem : Button
+public partial class EventButtonItem : Control
 {
-    public string EventId { get; set; } = string.Empty;
+    public string EventId { get; private set; } = string.Empty;
+
     private Action<string>? _onPressed;
     private bool _isBound;
+    private MainUiLayoutSettings _layoutSettings = new();
+    private int _progressBarHeight = 10;
 
-    public void BindEvent(EventButtonViewData data, Action<string> onPressed, MainUiLayoutSettings layoutSettings)
+    private MarginContainer? _progressSlot;
+    private ProgressBar? _progressBar;
+    private Button? _button;
+
+    public Button? ActionButton => _button;
+
+    public Control? ProgressSlot => _progressSlot;
+
+    public override void _Ready()
+    {
+        EnsureStructure();
+    }
+
+    public void BindEvent(
+        EventButtonViewData data,
+        Action<string> onPressed,
+        MainUiLayoutSettings layoutSettings,
+        int progressBarHeight = 10)
     {
         _onPressed = onPressed;
-        if (!_isBound)
+        _layoutSettings = layoutSettings;
+        _progressBarHeight = progressBarHeight;
+
+        EnsureStructure();
+        if (!_isBound && _button != null)
         {
-            Pressed += OnPressedInternal;
+            _button.Pressed += OnPressedInternal;
             _isBound = true;
         }
 
-        UpdateView(data, layoutSettings);
+        UpdateView(data, layoutSettings, progressBarHeight);
     }
 
-    public void UpdateView(EventButtonViewData data, MainUiLayoutSettings layoutSettings)
+    public void UpdateView(EventButtonViewData data, MainUiLayoutSettings layoutSettings, int progressBarHeight = 10)
     {
+        _layoutSettings = layoutSettings;
+        _progressBarHeight = progressBarHeight;
+        EnsureStructure();
+
         EventId = data.EventId;
-        Text = BuildDisplayText(data);
         TooltipText = string.IsNullOrWhiteSpace(data.TooltipText) ? data.Description : data.TooltipText;
-        Disabled = data.IsDisabled;
-        CustomMinimumSize = new Vector2(0, layoutSettings.EventButtonMinHeight);
-        AddThemeFontSizeOverride("font_size", layoutSettings.BodyFontSize);
-    }
+        CustomMinimumSize = new Vector2(0, layoutSettings.EventButtonMinHeight + progressBarHeight + 4);
 
-    public void SetProgress(double progress)
-    {
-        // 这一版先把进度直接显示在按钮文本里，避免额外的复杂 UI 依赖。
-        // 后续如果你想换成真正的 ProgressBar，可以在这里继续扩展。
-    }
-
-    private static string BuildDisplayText(EventButtonViewData data)
-    {
-        if (data.ProgressRatio > 0.0)
+        if (_progressSlot != null)
         {
-            return $"{data.DisplayName} ({data.ProgressRatio:P0})";
+            _progressSlot.CustomMinimumSize = new Vector2(0, progressBarHeight);
         }
 
-        return data.DisplayName;
+        if (_progressBar != null)
+        {
+            _progressBar.Visible = data.ShowProgressBar;
+            _progressBar.Value = Math.Max(0.0, Math.Min(100.0, data.ProgressRatio * 100.0));
+            _progressBar.CustomMinimumSize = new Vector2(0, progressBarHeight);
+            _progressBar.AddThemeColorOverride("fill", new Color("#d6a34a"));
+            _progressBar.AddThemeColorOverride("background", new Color("#2d2419"));
+        }
+
+        if (_button != null)
+        {
+            _button.Text = data.DisplayName;
+            _button.TooltipText = TooltipText;
+            _button.Disabled = data.IsDisabled;
+            _button.CustomMinimumSize = new Vector2(0, layoutSettings.EventButtonMinHeight);
+            _button.AddThemeFontSizeOverride("font_size", layoutSettings.BodyFontSize);
+            UiImageThemeManager.ApplyButtonStyle(_button, data.StyleVariant);
+        }
+    }
+
+    public void SetLiveProgress(double progressRatio, bool isVisible)
+    {
+        EnsureStructure();
+        if (_progressBar == null)
+        {
+            return;
+        }
+
+        _progressBar.Visible = isVisible;
+        _progressBar.Value = Math.Max(0.0, Math.Min(100.0, progressRatio * 100.0));
+    }
+
+    private void EnsureStructure()
+    {
+        if (_progressSlot != null && _progressBar != null && _button != null)
+        {
+            return;
+        }
+
+        SetAnchorsPreset(LayoutPreset.FullRect);
+        SizeFlagsHorizontal = SizeFlags.ExpandFill;
+
+        VBoxContainer root = new()
+        {
+            Name = "Root",
+            SizeFlagsHorizontal = SizeFlags.ExpandFill
+        };
+        root.SetAnchorsPreset(LayoutPreset.FullRect);
+        root.AddThemeConstantOverride("separation", 4);
+        AddChild(root);
+
+        _progressSlot = new MarginContainer
+        {
+            Name = "ProgressSlot",
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+            CustomMinimumSize = new Vector2(0, _progressBarHeight),
+            MouseFilter = MouseFilterEnum.Stop
+        };
+        root.AddChild(_progressSlot);
+
+        _progressBar = new ProgressBar
+        {
+            Name = "ProgressBar",
+            MinValue = 0,
+            MaxValue = 100,
+            Value = 0,
+            ShowPercentage = false,
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+            CustomMinimumSize = new Vector2(0, _progressBarHeight),
+            Visible = false,
+            MouseFilter = MouseFilterEnum.Ignore
+        };
+        _progressBar.SetAnchorsPreset(LayoutPreset.FullRect);
+        _progressSlot.AddChild(_progressBar);
+
+        _button = new Button
+        {
+            Name = "ActionButton",
+            SizeFlagsHorizontal = SizeFlags.ExpandFill
+        };
+        _button.Alignment = HorizontalAlignment.Center;
+        root.AddChild(_button);
     }
 
     private void OnPressedInternal()

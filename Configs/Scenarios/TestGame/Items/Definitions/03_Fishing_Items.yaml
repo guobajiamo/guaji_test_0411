@@ -1,0 +1,23 @@
+# Fishing-related items can be isolated into their own file.
+# This is the recommended pattern for later regional content packs.
+items:
+  - id: "tool_fishing_rod"
+    parent_id: "tool"
+    name_key: "鱼竿"
+    description_key: "基础钓鱼工具，用于测试钓鱼事件的互动条件"
+    definition_order: 150
+    base_rarity: "Common"
+    base_max_stack: 1
+    sell_price: 0
+    tags: ["Tool"]
+    has_durability: false
+
+  - id: "bait_worm"
+    parent_id: "consumable_ingredient"
+    name_key: "鱼饵·蚯蚓"
+    description_key: "最基础的钓鱼鱼饵，每次挂机钓鱼会消耗一个"
+    definition_order: 120
+    base_rarity: "Common"
+    base_max_stack: 999
+    sell_price: 1
+    tags: ["Consumable", "Material"]

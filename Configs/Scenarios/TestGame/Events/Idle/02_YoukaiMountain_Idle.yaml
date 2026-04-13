@@ -1,0 +1,19 @@
+# Youkai Mountain idle events.
+events:
+  - id: "evt_idle_fishing"
+    name_key: "挂机钓鱼"
+    description_key: "自动持续钓鱼，获得鲤鱼和钓鱼经验。"
+    hover_info_key: "按钮从一开始就显示，但只有同时持有鱼竿和鱼饵·蚯蚓时才会点亮。每次结算会消耗 1 个鱼饵。"
+    type: "IdleLoop"
+    display_condition_count: 0
+    display_conditions: []
+    interaction_condition_count: 2
+    interaction_conditions:
+      - { condition_type: "HasItem", target_id: "tool_fishing_rod", required_value: 1 }
+      - { condition_type: "HasItem", target_id: "bait_worm", required_value: 1 }
+    hide_condition_count: 0
+    hide_conditions: []
+    costs:
+      - { item_id: "bait_worm", amount: 1 }
+    linked_skill_id: "skill_fishing"
+    button_list_group: "MainIdle"

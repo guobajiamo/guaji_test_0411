@@ -72,6 +72,25 @@ public partial class SkillPanel : Control
             {
                 SizeFlagsHorizontal = SizeFlags.ExpandFill
             };
+            skillCard.AddThemeStyleboxOverride("panel", new StyleBoxFlat
+            {
+                BgColor = new Color(0.10f, 0.13f, 0.12f, 0.88f),
+                BorderColor = new Color("#7f6a4d"),
+                BorderWidthLeft = 1,
+                BorderWidthTop = 1,
+                BorderWidthRight = 1,
+                BorderWidthBottom = 1,
+                CornerRadiusTopLeft = 12,
+                CornerRadiusTopRight = 12,
+                CornerRadiusBottomLeft = 12,
+                CornerRadiusBottomRight = 12,
+                ShadowColor = new Color(0, 0, 0, 0.18f),
+                ShadowSize = 6,
+                ContentMarginLeft = 12,
+                ContentMarginTop = 10,
+                ContentMarginRight = 12,
+                ContentMarginBottom = 10
+            });
             _skillListContainer!.AddChild(skillCard);
 
             VBoxContainer content = new()
@@ -85,6 +104,8 @@ public partial class SkillPanel : Control
             {
                 Text = $"{_gameManager.TranslateText(definition.NameKey)}  Lv.{state.Level}/{definition.MaxLevel}"
             };
+            nameLabel.AddThemeColorOverride("font_color", new Color("#f7eed9"));
+            nameLabel.AddThemeFontSizeOverride("font_size", 17);
             content.AddChild(nameLabel);
 
             string progressText = levelEntry == null
@@ -94,6 +115,7 @@ public partial class SkillPanel : Control
             {
                 Text = progressText
             };
+            expLabel.AddThemeColorOverride("font_color", new Color("#c7d7c0"));
             content.AddChild(expLabel);
 
             Label descriptionLabel = new()
@@ -101,6 +123,7 @@ public partial class SkillPanel : Control
                 Text = _gameManager.TranslateText(definition.DescriptionKey),
                 AutowrapMode = TextServer.AutowrapMode.WordSmart
             };
+            descriptionLabel.AddThemeColorOverride("font_color", new Color("#d8dee5"));
             content.AddChild(descriptionLabel);
 
             Button levelUpButton = new()
@@ -108,6 +131,7 @@ public partial class SkillPanel : Control
                 Text = state.Level >= definition.MaxLevel ? "已满级" : "手动升级",
                 Disabled = state.Level >= definition.MaxLevel || !state.CanLevelUp
             };
+            UiImageThemeManager.ApplyButtonStyle(levelUpButton, "special_action");
             levelUpButton.Pressed += () => _onUpgradeRequested?.Invoke(definition.Id);
             content.AddChild(levelUpButton);
         }
@@ -137,13 +161,17 @@ public partial class SkillPanel : Control
             Name = "SummaryLabel",
             Text = "技能列表"
         };
+        _summaryLabel.AddThemeColorOverride("font_color", new Color("#f0e0b8"));
+        _summaryLabel.AddThemeFontSizeOverride("font_size", 18);
         root.AddChild(_summaryLabel);
 
         _scrollContainer = new ScrollContainer
         {
             Name = "ScrollContainer",
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
-            SizeFlagsVertical = SizeFlags.ExpandFill
+            SizeFlagsVertical = SizeFlags.ExpandFill,
+            HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled,
+            VerticalScrollMode = ScrollContainer.ScrollMode.Auto
         };
         root.AddChild(_scrollContainer);
 

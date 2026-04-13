@@ -1,3 +1,18 @@
+# 本文件用于配置“英文翻译词条”。
+# 它和 locale_zh.yaml 结构相同，只是 locale 改为 en。
+#
+# 顶层键说明：
+# locale:
+#   当前语言代号，英文一般写 "en"。
+# translations:
+#   翻译表。
+#   左侧 key 应与中文表/配置里使用的 key 对应。
+#   右侧是英文显示文本。
+#
+# 使用建议：
+# - 新增中文 key 后，如需英文显示，记得在这里同步补一条。
+# - key 与 value 尽量都加双引号，减少特殊字符解析风险。
+#
 locale: "en"
 translations:
   "采集素材": "Gathering Materials"

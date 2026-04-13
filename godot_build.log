@@ -16,7 +16,6 @@ TextServer: Primary interface set to: "ICU / HarfBuzz / Graphite (Built-in)".
 Found hostfxr: C:/Program Files/dotnet/host/fxr/10.0.5/hostfxr.dll
 .NET: hostfxr initialized
 .NET: GodotPlugins initialized
-.NET: Failed to load project assembly
 CORE API HASH: 1976921970
 EDITOR API HASH: 555353998
 SceneTreeFTI: traversal method DEFAULT
@@ -27,38 +26,274 @@ EditorTheme: Generating new icons.
 EditorTheme: Generating new fonts.
 EditorTheme: Generating new styles.
 Loading resource: C:/Users/AA/AppData/Local/Godot/editor_doc_cache-4.6.res
-Loaded system CA certificates
-Failed to bind socket. Error: 3.
+ERROR: Failed to read the root certificate store.
+   at: get_system_ca_certificates (platform/windows/os_windows.cpp:2570)
+Loaded builtin CA certificates
 [   0% ] first_scan_filesystem | Started 项目初始化 (5 steps)
 [   0% ] first_scan_filesystem | 正在扫描文件结构……
 [  16% ] first_scan_filesystem | 正在加载全局类名……
 [  33% ] first_scan_filesystem | 正在校验 GDExtension……
 [  50% ] first_scan_filesystem | 正在创建自动加载脚本……
 Loading resource: res://Scripts/Autoload/GameManager.cs
-ERROR: Failed to create an autoload, script 'res://Scripts/Autoload/GameManager.cs' is not compiling.
-   at: _create_autoload (editor/settings/editor_autoload_settings.cpp:409)
 Loading resource: res://Scripts/Autoload/SignalBus.cs
-ERROR: Failed to create an autoload, script 'res://Scripts/Autoload/SignalBus.cs' is not compiling.
-   at: _create_autoload (editor/settings/editor_autoload_settings.cpp:409)
 [  66% ] first_scan_filesystem | 正在初始化插件……
 [  83% ] first_scan_filesystem | 正在启动文件扫描……
 [ DONE ] first_scan_filesystem
 
-[   0% ] loading_editor_layout | Started 正在加载编辑器 (5 steps)
-[   0% ] loading_editor_layout | 正在加载编辑器布局……
-[  16% ] loading_editor_layout | 正在加载停靠面板……
-[  33% ] loading_editor_layout | 正在重新打开场景……
-Loading resource: res://Scenes/Main.tscn
-Loading resource: res://Scenes/UI/MainUI.tscn
-Loading resource: res://Scripts/UI/MainUI.cs
-[  50% ] loading_editor_layout | 正在加载中央编辑器布局……
-[  66% ] loading_editor_layout | 正在加载插件窗口布局……
-[  83% ] loading_editor_layout | 编辑器布局就绪。
-[ DONE ] loading_editor_layout
+[   0% ] dotnet_publish_project | Started Publishing .NET project... (1 steps)
+[   0% ] dotnet_publish_project | Running dotnet publish
+dotnet publish exited with code: 1. Log file: C:/Users/AA/AppData/Roaming/Godot/mono/build_logs\8ed836c5e67d96264c56d1aae5c634cd_ExportDebug\msbuild_log.txt
+[ DONE ] dotnet_publish_project
 
-Failed to bind socket. Error: 3.
+ERROR: Export .NET Project: Failed to build project. Check MSBuild panel for details.
+   at: add_message (./editor/export/editor_export_platform.h:255)
+   C# backtrace (most recent call first):
+       [0] void Godot.EditorNativeCalls.godot_icall_3_478(nint, nint, int, string, string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharpEditor/Generated/EditorNativeCalls.cs:134)
+       [1] void Godot.EditorExportPlatform.AddMessage(Godot.EditorExportPlatform+ExportMessageType, string, string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharpEditor/Generated/GodotObjects/EditorExportPlatform.cs:295)
+       [2] void GodotTools.Export.ExportPlugin.AddExceptionMessage(Godot.EditorExportPlatform, System.Exception) (/root/godot/modules/mono/editor/GodotTools/GodotTools/Export/ExportPlugin.cs:113)
+       [3] void GodotTools.Export.ExportPlugin._ExportBegin(System.String[], bool, string, uint) (/root/godot/modules/mono/editor/GodotTools/GodotTools/Export/ExportPlugin.cs:162)
+       [4] bool Godot.EditorExportPlugin.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharpEditor/Generated/GodotObjects/EditorExportPlugin.cs:702)
+       [5] bool GodotTools.Export.ExportPlugin.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/editor/GodotTools/GodotTools/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/GodotTools.Export.ExportPlugin_ScriptMethods.generated.cs:140)
+       [6] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+Loading resource: res://icon.svg
+Loading resource: res://.godot/imported/icon.svg-218a8f2b3041327d8a5756f3a245f83b.ctex
+Loading resource: res://icon.svg
+Loading resource: res://.godot/imported/icon.svg-218a8f2b3041327d8a5756f3a245f83b.ctex
+[   0% ] savepack | Started 打包中 (102 steps)
+[   1% ] savepack | 保存文件：res://.godot/exported/133200997/export-5da400bc6c66a2979a2f2c5345437c7c-main_story_scenario.res
+[   1% ] savepack | 保存文件：res://.godot/exported/133200997/export-bb56db8940e6021488f1a49d640c065f-test_game_scenario.res
+[   2% ] savepack | 保存文件：res://.godot/exported/133200997/export-698754c1cec2ab122aacd7f585d896a8-default_theme.res
+[   2% ] savepack | 保存文件：res://.godot/exported/133200997/export-a68de40eb2f763143ca57aa5c8e1df70-main_ui_layout.res
+[   3% ] savepack | 保存文件：res://.godot/exported/133200997/export-c442b589c4c26a4ccf42d06206fec382-EventButton.scn
+[   3% ] savepack | 保存文件：res://.godot/exported/133200997/export-4bc4272aa7ac3b75b61eb85a747760f8-ItemSlot.scn
+[   4% ] savepack | 保存文件：res://.godot/exported/133200997/export-f5aae34e66b2125e214ce2202a758e46-ProgressBarOverlay.scn
+[   4% ] savepack | 保存文件：res://.godot/exported/133200997/export-f679ecdd6e27cf1acbd3a3b4e98c5454-SaveLoadSmokeTest.scn
+[   5% ] savepack | 保存文件：res://.godot/exported/133200997/export-7e51e3a2587b3a0c9adb4863422b7d74-UiFeatureSmokeTest.scn
+[   5% ] savepack | 保存文件：res://.godot/exported/133200997/export-102e2ee099ec233ef1ac0539f6297a81-ButtonListPanel.scn
+[   6% ] savepack | 保存文件：res://.godot/exported/133200997/export-eba913a9fc9538953aa3f1b1db5a5631-CharacterStatusPanel.scn
+[   6% ] savepack | 保存文件：res://.godot/exported/133200997/export-7a1669254451b9eac7c5cdbbaf3e4b3b-InventoryPanel.scn
+[   7% ] savepack | 保存文件：res://.godot/exported/133200997/export-3ccb58aec9c1de0a01530193ffd8a3f7-LogPanel.scn
+[   7% ] savepack | 保存文件：res://.godot/exported/133200997/export-6f7caacab43e96fa7e38dc6b7c793907-MainMenuUI.scn
+[   8% ] savepack | 保存文件：res://.godot/exported/133200997/export-8fc240e6eb8d06dcf088828399ec0a45-MainUI.scn
+[   8% ] savepack | 保存文件：res://.godot/exported/133200997/export-7e3672fa633a5396b527e684684d0746-ShopPanel.scn
+[   9% ] savepack | 保存文件：res://.godot/exported/133200997/export-481adafdecfffc4edff8b3455956cbc6-TabPages.scn
+[   9% ] savepack | 保存文件：res://.godot/exported/133200997/export-a8e1520d83f25710dd4e3da8c6f32601-Main.scn
+[  10% ] savepack | 保存文件：res://Scripts/Autoload/GameManager.cs
+[  10% ] savepack | 保存文件：res://Scripts/Autoload/SignalBus.cs
+[  11% ] savepack | 保存文件：res://Scripts/Core/Definitions/CategoryDefinition.cs
+[  11% ] savepack | 保存文件：res://Scripts/Core/Definitions/EventDefinition.cs
+[  12% ] savepack | 保存文件：res://Scripts/Core/Definitions/EventDialogDefinition.cs
+[  12% ] savepack | 保存文件：res://Scripts/Core/Definitions/FactionDefinition.cs
+[  13% ] savepack | 保存文件：res://Scripts/Core/Definitions/ItemDefinition.cs
+[  13% ] savepack | 保存文件：res://Scripts/Core/Definitions/NodeDefinitionBase.cs
+[  14% ] savepack | 保存文件：res://Scripts/Core/Definitions/NpcDefinition.cs
+[  14% ] savepack | 保存文件：res://Scripts/Core/Definitions/RarityDefinition.cs
+[  15% ] savepack | 保存文件：res://Scripts/Core/Definitions/ShopItemEntry.cs
+[  15% ] savepack | 保存文件：res://Scripts/Core/Definitions/SkillDefinition.cs
+[  16% ] savepack | 保存文件：res://Scripts/Core/Definitions/SkillLevelEntry.cs
+[  16% ] savepack | 保存文件：res://Scripts/Core/Definitions/ToolBonusDefinition.cs
+[  17% ] savepack | 保存文件：res://Scripts/Core/Definitions/ZoneDefinition.cs
+[  17% ] savepack | 保存文件：res://Scripts/Core/Enums/ButtonListGroup.cs
+[  18% ] savepack | 保存文件：res://Scripts/Core/Enums/ConditionType.cs
+[  18% ] savepack | 保存文件：res://Scripts/Core/Enums/CurrencyType.cs
+[  19% ] savepack | 保存文件：res://Scripts/Core/Enums/EventEffectType.cs
+[  19% ] savepack | 保存文件：res://Scripts/Core/Enums/EventType.cs
+[  20% ] savepack | 保存文件：res://Scripts/Core/Enums/ItemTag.cs
+[  20% ] savepack | 保存文件：res://Scripts/Core/Enums/Rarity.cs
+[  21% ] savepack | 保存文件：res://Scripts/Core/Helpers/ConditionEvaluator.cs
+[  21% ] savepack | 保存文件：res://Scripts/Core/Helpers/EventAvailabilityEvaluator.cs
+[  22% ] savepack | 保存文件：res://Scripts/Core/Helpers/LocalizationManager.cs
+[  22% ] savepack | 保存文件：res://Scripts/Core/Helpers/RuntimePathHelper.cs
+[  23% ] savepack | 保存文件：res://Scripts/Core/Helpers/SortingHelper.cs
+[  23% ] savepack | 保存文件：res://Scripts/Core/Helpers/TransactionHelper.cs
+[  24% ] savepack | 保存文件：res://Scripts/Core/Helpers/TreePrinter.cs
+[  24% ] savepack | 保存文件：res://Scripts/Core/Helpers/TreeValidator.cs
+[  25% ] savepack | 保存文件：res://Scripts/Core/Helpers/YamlConfigLoader.cs
+[  25% ] savepack | 保存文件：res://Scripts/Core/Registry/EventRegistry.cs
+[  26% ] savepack | 保存文件：res://Scripts/Core/Registry/FactionRegistry.cs
+[  26% ] savepack | 保存文件：res://Scripts/Core/Registry/ItemRegistry.cs
+[  27% ] savepack | 保存文件：res://Scripts/Core/Registry/SkillRegistry.cs
+[  27% ] savepack | 保存文件：res://Scripts/Core/Registry/ZoneRegistry.cs
+[  28% ] savepack | 保存文件：res://Scripts/Core/Runtime/ItemStack.cs
+[  28% ] savepack | 保存文件：res://Scripts/Core/Runtime/PlayerEconomyState.cs
+[  29% ] savepack | 保存文件：res://Scripts/Core/Runtime/PlayerFactionState.cs
+[  29% ] savepack | 保存文件：res://Scripts/Core/Runtime/PlayerIdleState.cs
+[  30% ] savepack | 保存文件：res://Scripts/Core/Runtime/PlayerInventory.cs
+[  30% ] savepack | 保存文件：res://Scripts/Core/Runtime/PlayerItemState.cs
+[  31% ] savepack | 保存文件：res://Scripts/Core/Runtime/PlayerProfile.cs
+[  31% ] savepack | 保存文件：res://Scripts/Core/Runtime/PlayerShopState.cs
+[  32% ] savepack | 保存文件：res://Scripts/Core/Runtime/PlayerSkillState.cs
+[  32% ] savepack | 保存文件：res://Scripts/Core/Runtime/PlayerUiState.cs
+[  33% ] savepack | 保存文件：res://Scripts/Core/Runtime/PlayerZoneState.cs
+[  33% ] savepack | 保存文件：res://Scripts/Core/SaveLoad/MigrationRunner.cs
+[  33% ] savepack | 保存文件：res://Scripts/Core/SaveLoad/SaveData.cs
+[  33% ] savepack | 保存文件：res://Scripts/Core/SaveLoad/SaveManager.cs
+[  34% ] savepack | 保存文件：res://Scripts/Core/SaveLoad/SaveMetadata.cs
+[  34% ] savepack | 保存文件：res://Scripts/Core/SaveLoad/SaveSlotSummary.cs
+[  35% ] savepack | 保存文件：res://Scripts/Core/SaveLoad/SemanticVersion.cs
+[  35% ] savepack | 保存文件：res://Scripts/Core/Scenario/GameScenarioDefinition.cs
+[  36% ] savepack | 保存文件：res://Scripts/Debug/SaveLoadSmokeTest.gdc
+[  36% ] savepack | 保存文件：res://Scripts/Debug/UiFeatureSmokeTest.cs
+[  37% ] savepack | 保存文件：res://Scripts/Systems/AchievementSystem.cs
+[  37% ] savepack | 保存文件：res://Scripts/Systems/BattleSystem.cs
+[  38% ] savepack | 保存文件：res://Scripts/Systems/BuffSystem.cs
+[  38% ] savepack | 保存文件：res://Scripts/Systems/ClickEventSystem.cs
+[  39% ] savepack | 保存文件：res://Scripts/Systems/CraftingSystem.cs
+[  39% ] savepack | 保存文件：res://Scripts/Systems/EquipmentSystem.cs
+[  40% ] savepack | 保存文件：res://Scripts/Systems/FactionSystem.cs
+[  40% ] savepack | 保存文件：res://Scripts/Systems/IdleSystem.cs
+[  41% ] savepack | 保存文件：res://Scripts/Systems/QuestSystem.cs
+[  41% ] savepack | 保存文件：res://Scripts/Systems/SellSystem.cs
+[  42% ] savepack | 保存文件：res://Scripts/Systems/ShopSystem.cs
+[  42% ] savepack | 保存文件：res://Scripts/Systems/SkillSystem.cs
+[  43% ] savepack | 保存文件：res://Scripts/Systems/ZoneSystem.cs
+[  43% ] savepack | 保存文件：res://Scripts/UI/Placeholder/AchievementPanel.cs
+[  44% ] savepack | 保存文件：res://Scripts/UI/Placeholder/BattlePanel.cs
+[  44% ] savepack | 保存文件：res://Scripts/UI/Placeholder/QuestPanel.cs
+[  45% ] savepack | 保存文件：res://Scripts/UI/AppRoot.cs
+[  45% ] savepack | 保存文件：res://Scripts/UI/ButtonListPanel.cs
+[  46% ] savepack | 保存文件：res://Scripts/UI/CharacterStatusPanel.cs
+[  46% ] savepack | 保存文件：res://Scripts/UI/ConfigurableInfoPanel.cs
+[  47% ] savepack | 保存文件：res://Scripts/UI/ConfirmActionDialog.cs
+[  47% ] savepack | 保存文件：res://Scripts/UI/DictionaryPanel.cs
+[  48% ] savepack | 保存文件：res://Scripts/UI/EventButtonItem.cs
+[  48% ] savepack | 保存文件：res://Scripts/UI/EventButtonViewData.cs
+[  49% ] savepack | 保存文件：res://Scripts/UI/EventDialogPanel.cs
+[  49% ] savepack | 保存文件：res://Scripts/UI/FactionPanel.cs
+[  50% ] savepack | 保存文件：res://Scripts/UI/GamePlayUI.Actions.cs
+[  50% ] savepack | 保存文件：res://Scripts/UI/GamePlayUI.cs
+[  51% ] savepack | 保存文件：res://Scripts/UI/GamePlayUI.Layout.cs
+[  51% ] savepack | 保存文件：res://Scripts/UI/GameplayUiConfig.cs
+[  52% ] savepack | 保存文件：res://Scripts/UI/InventoryPanel.cs
+[  52% ] savepack | 保存文件：res://Scripts/UI/ItemSlotUI.cs
+[  53% ] savepack | 保存文件：res://Scripts/UI/ItemTooltipUI.cs
+[  53% ] savepack | 保存文件：res://Scripts/UI/LogPanel.cs
+[  54% ] savepack | 保存文件：res://Scripts/UI/MainMenuUI.cs
+[  54% ] savepack | 保存文件：res://Scripts/UI/MainUI.cs
+[  55% ] savepack | 保存文件：res://Scripts/UI/MainUiLayoutSettings.cs
+[  55% ] savepack | 保存文件：res://Scripts/UI/SaveSlotDialog.cs
+[  56% ] savepack | 保存文件：res://Scripts/UI/ShopPanel.cs
+[  56% ] savepack | 保存文件：res://Scripts/UI/SkillPanel.cs
+[  57% ] savepack | 保存文件：res://Scripts/UI/SystemPanel.cs
+[  57% ] savepack | 保存文件：res://Scripts/UI/TabContainer.cs
+[  58% ] savepack | 保存文件：res://Scripts/UI/UiImageThemeManager.cs
+[  58% ] savepack | 保存文件：res://Scripts/UI/ZoneSelectPanel.cs
+[  59% ] savepack | 保存文件：res://.godot/imported/27_新UI界面_透明底无背景版本.png-af36583ec97bc76dcca20b25e0363397.ctex
+[  59% ] savepack | 保存文件：res://user_define_file/27_新UI界面_透明底无背景版本.png.import
+[  59% ] savepack | 保存文件：res://.godot/imported/27_新UI界面_黑色背景版本.png-4f8ef27f16d7c6b3e929cedb66955e43.ctex
+[  59% ] savepack | 保存文件：res://user_define_file/27_新UI界面_黑色背景版本.png.import
+[  60% ] savepack | 保存文件：res://.godot/imported/icon.svg-218a8f2b3041327d8a5756f3a245f83b.ctex
+[  60% ] savepack | 保存文件：res://icon.svg.import
+[  60% ] savepack | 保存文件：res://Configs/Items/categories.yaml
+[  61% ] savepack | 保存文件：res://Configs/Items/items.yaml
+[  61% ] savepack | 保存文件：res://Configs/Skills/skills.yaml
+[  62% ] savepack | 保存文件：res://Configs/Events/oneshot_events.yaml
+[  62% ] savepack | 保存文件：res://Configs/Events/click_events.yaml
+[  63% ] savepack | 保存文件：res://Configs/Events/idle_events.yaml
+[  63% ] savepack | 保存文件：res://Configs/Factions/factions.yaml
+[  64% ] savepack | 保存文件：res://Configs/Zones/zones.yaml
+[  64% ] savepack | 保存文件：res://Configs/Localization/locale_zh.yaml
+[  65% ] savepack | 保存文件：res://Configs/Localization/locale_en.yaml
+[  65% ] savepack | 保存文件：res://Configs/Migration/migration_rules.yaml
+[  66% ] savepack | 保存文件：res://Configs/UI/ui_image_theme.yaml
+[  66% ] savepack | 保存文件：res://Configs/UI/gameplay_ui_theme.yaml
+[  66% ] savepack | 保存文件：res://Configs/Scenarios/MainStory/Items/categories.yaml
+[  66% ] savepack | 保存文件：res://Configs/Scenarios/MainStory/Items/items.yaml
+[  67% ] savepack | 保存文件：res://Configs/Scenarios/MainStory/Items/Categories/00_MainStory_Categories.yaml
+[  67% ] savepack | 保存文件：res://Configs/Scenarios/MainStory/Items/Definitions/00_MainStory_Items.yaml
+[  68% ] savepack | 保存文件：res://Configs/Scenarios/MainStory/Skills/skills.yaml
+[  68% ] savepack | 保存文件：res://Configs/Scenarios/MainStory/Skills/Definitions/00_MainStory_Skills.yaml
+[  69% ] savepack | 保存文件：res://Configs/Scenarios/MainStory/Events/oneshot_events.yaml
+[  69% ] savepack | 保存文件：res://Configs/Scenarios/MainStory/Events/click_events.yaml
+[  70% ] savepack | 保存文件：res://Configs/Scenarios/MainStory/Events/idle_events.yaml
+[  70% ] savepack | 保存文件：res://Configs/Scenarios/MainStory/Events/Oneshot/00_MainStory_Oneshot.yaml
+[  71% ] savepack | 保存文件：res://Configs/Scenarios/MainStory/Events/Click/00_MainStory_Click.yaml
+[  71% ] savepack | 保存文件：res://Configs/Scenarios/MainStory/Events/Idle/00_MainStory_Idle.yaml
+[  72% ] savepack | 保存文件：res://Configs/Scenarios/MainStory/Factions/factions.yaml
+[  72% ] savepack | 保存文件：res://Configs/Scenarios/MainStory/Factions/Definitions/00_MainStory_Factions.yaml
+[  73% ] savepack | 保存文件：res://Configs/Scenarios/MainStory/Zones/zones.yaml
+[  73% ] savepack | 保存文件：res://Configs/Scenarios/MainStory/Zones/Definitions/00_MainStory_Zones.yaml
+[  74% ] savepack | 保存文件：res://Configs/Scenarios/MainStory/Localization/locale_zh.yaml
+[  74% ] savepack | 保存文件：res://Configs/Scenarios/MainStory/Localization/Bundle/00_MainStory_zh.yaml
+[  75% ] savepack | 保存文件：res://Configs/Scenarios/MainStory/UI/info_panel.yaml
+[  75% ] savepack | 保存文件：res://Configs/Scenarios/MainStory/UI/gameplay_layout.yaml
+[  76% ] savepack | 保存文件：res://Configs/Scenarios/MainStory/UI/InfoPanel/00_MainStory_InfoPanel.yaml
+[  76% ] savepack | 保存文件：res://Configs/Scenarios/MainStory/UI/GameplayLayout/00_MainStory_GameplayLayout.yaml
+[  77% ] savepack | 保存文件：res://Configs/Scenarios/TestGame/Items/categories.yaml
+[  77% ] savepack | 保存文件：res://Configs/Scenarios/TestGame/Items/items.yaml
+[  78% ] savepack | 保存文件：res://Configs/Scenarios/TestGame/Items/Categories/00_TestGame_Categories.yaml
+[  78% ] savepack | 保存文件：res://Configs/Scenarios/TestGame/Items/Definitions/00_Gathering_Items.yaml
+[  79% ] savepack | 保存文件：res://Configs/Scenarios/TestGame/Items/Definitions/01_HumanVillage_Items.yaml
+[  79% ] savepack | 保存文件：res://Configs/Scenarios/TestGame/Items/Definitions/02_Tool_Items.yaml
+[  80% ] savepack | 保存文件：res://Configs/Scenarios/TestGame/Items/Definitions/03_Fishing_Items.yaml
+[  80% ] savepack | 保存文件：res://Configs/Scenarios/TestGame/Skills/skills.yaml
+[  81% ] savepack | 保存文件：res://Configs/Scenarios/TestGame/Skills/Definitions/00_Chopping_Skill.yaml
+[  81% ] savepack | 保存文件：res://Configs/Scenarios/TestGame/Skills/Definitions/01_Fishing_Skill.yaml
+[  82% ] savepack | 保存文件：res://Configs/Scenarios/TestGame/Events/oneshot_events.yaml
+[  82% ] savepack | 保存文件：res://Configs/Scenarios/TestGame/Events/click_events.yaml
+[  83% ] savepack | 保存文件：res://Configs/Scenarios/TestGame/Events/idle_events.yaml
+[  83% ] savepack | 保存文件：res://Configs/Scenarios/TestGame/Events/Oneshot/01_HumanVillage_Oneshot.yaml
+[  84% ] savepack | 保存文件：res://Configs/Scenarios/TestGame/Events/Oneshot/02_YoukaiMountain_Oneshot.yaml
+[  84% ] savepack | 保存文件：res://Configs/Scenarios/TestGame/Events/Click/01_MagicForest_Click.yaml
+[  85% ] savepack | 保存文件：res://Configs/Scenarios/TestGame/Events/Click/02_HumanVillage_Click.yaml
+[  85% ] savepack | 保存文件：res://Configs/Scenarios/TestGame/Events/Click/03_YoukaiMountain_Click.yaml
+[  86% ] savepack | 保存文件：res://Configs/Scenarios/TestGame/Events/Idle/01_MagicForest_Idle.yaml
+[  86% ] savepack | 保存文件：res://Configs/Scenarios/TestGame/Events/Idle/02_YoukaiMountain_Idle.yaml
+[  87% ] savepack | 保存文件：res://Configs/Scenarios/TestGame/Factions/factions.yaml
+[  87% ] savepack | 保存文件：res://Configs/Scenarios/TestGame/Factions/Definitions/01_ScarletMansion_Factions.yaml
+[  88% ] savepack | 保存文件：res://Configs/Scenarios/TestGame/Factions/Definitions/02_YoukaiMountain_Factions.yaml
+[  88% ] savepack | 保存文件：res://Configs/Scenarios/TestGame/Factions/Definitions/03_Eientei_Factions.yaml
+[  89% ] savepack | 保存文件：res://Configs/Scenarios/TestGame/Zones/zones.yaml
+[  89% ] savepack | 保存文件：res://Configs/Scenarios/TestGame/Zones/Definitions/01_MagicForest_Zones.yaml
+[  90% ] savepack | 保存文件：res://Configs/Scenarios/TestGame/Zones/Definitions/02_MistyLake_Zones.yaml
+[  90% ] savepack | 保存文件：res://Configs/Scenarios/TestGame/Zones/Definitions/03_YoukaiTrail_Zones.yaml
+[  91% ] savepack | 保存文件：res://Configs/Scenarios/TestGame/Localization/locale_zh.yaml
+[  91% ] savepack | 保存文件：res://Configs/Scenarios/TestGame/Localization/Bundle/00_TestGame_zh.yaml
+[  92% ] savepack | 保存文件：res://Configs/Scenarios/TestGame/UI/info_panel.yaml
+[  92% ] savepack | 保存文件：res://Configs/Scenarios/TestGame/UI/gameplay_layout.yaml
+[  93% ] savepack | 保存文件：res://Configs/Scenarios/TestGame/UI/InfoPanel/00_Summary.yaml
+[  93% ] savepack | 保存文件：res://Configs/Scenarios/TestGame/UI/InfoPanel/01_NoScenario_And_Story.yaml
+[  94% ] savepack | 保存文件：res://Configs/Scenarios/TestGame/UI/InfoPanel/02_TestScenario.yaml
+[  94% ] savepack | 保存文件：res://Configs/Scenarios/TestGame/UI/GameplayLayout/00_Settings.yaml
+[  95% ] savepack | 保存文件：res://Configs/Scenarios/TestGame/UI/GameplayLayout/01_HumanVillage_Zone.yaml
+[  95% ] savepack | 保存文件：res://Configs/Scenarios/TestGame/UI/GameplayLayout/02_MagicForest_Zone.yaml
+[  96% ] savepack | 保存文件：res://Configs/Scenarios/TestGame/UI/GameplayLayout/03_Hakurei_Zone.yaml
+[  96% ] savepack | 保存文件：res://Configs/Scenarios/TestGame/UI/GameplayLayout/04_YoukaiMountain_Zone.yaml
+[  97% ] savepack | 保存文件：res://Configs/Scenarios/TestGame/UI/GameplayLayout/05_ScarletMansion_Zone.yaml
+[  97% ] savepack | 保存文件：res://Configs/Scenarios/TestGame/UI/GameplayLayout/06_OldHell_Zone.yaml
+[  98% ] savepack | 保存文件：res://Configs/Scenarios/TestGame/UI/GameplayLayout/07_BambooForest_Zone.yaml
+[  98% ] savepack | 保存文件：res://Resources/Scenarios/main_story_scenario.tres.remap
+[  98% ] savepack | 保存文件：res://Resources/Scenarios/test_game_scenario.tres.remap
+[  98% ] savepack | 保存文件：res://Resources/Themes/default_theme.tres.remap
+[  98% ] savepack | 保存文件：res://Resources/UI/main_ui_layout.tres.remap
+[  98% ] savepack | 保存文件：res://Scenes/Components/EventButton.tscn.remap
+[  98% ] savepack | 保存文件：res://Scenes/Components/ItemSlot.tscn.remap
+[  98% ] savepack | 保存文件：res://Scenes/Components/ProgressBarOverlay.tscn.remap
+[  98% ] savepack | 保存文件：res://Scenes/Debug/SaveLoadSmokeTest.tscn.remap
+[  98% ] savepack | 保存文件：res://Scenes/Debug/UiFeatureSmokeTest.tscn.remap
+[  98% ] savepack | 保存文件：res://Scenes/UI/ButtonListPanel.tscn.remap
+[  98% ] savepack | 保存文件：res://Scenes/UI/CharacterStatusPanel.tscn.remap
+[  98% ] savepack | 保存文件：res://Scenes/UI/InventoryPanel.tscn.remap
+[  98% ] savepack | 保存文件：res://Scenes/UI/LogPanel.tscn.remap
+[  98% ] savepack | 保存文件：res://Scenes/UI/MainMenuUI.tscn.remap
+[  98% ] savepack | 保存文件：res://Scenes/UI/MainUI.tscn.remap
+[  98% ] savepack | 保存文件：res://Scenes/UI/ShopPanel.tscn.remap
+[  98% ] savepack | 保存文件：res://Scenes/UI/TabPages.tscn.remap
+[  98% ] savepack | 保存文件：res://Scenes/Main.tscn.remap
+[  98% ] savepack | 保存文件：res://Scripts/Debug/SaveLoadSmokeTest.gd.remap
+[  98% ] savepack | 保存文件：res://.godot/global_script_class_cache.cfg
+[  98% ] savepack | 保存文件：res://icon.svg
+[  98% ] savepack | 保存文件：res://.godot/uid_cache.bin
+[  98% ] savepack | 保存文件：res://project.binary
+[ DONE ] savepack
+
+WARNING: Project export for preset "Windows Desktop" completed with warnings.
+   at: _fs_changed (editor/editor_node.cpp:1353)
 Script docs haven't been properly loaded or regenerated, so don't save them to disk.
-EditorSettings: Save OK!
+ERROR: Cannot save file 'C:/Users/AA/AppData/Roaming/Godot/editor_settings-4.6.tres'.
+   at: save (scene/resources/resource_format_text.cpp:1756)
+ERROR: Error saving editor settings to C:/Users/AA/AppData/Roaming/Godot/editor_settings-4.6.tres
+   at: save (editor/settings/editor_settings.cpp:1404)
 Unloading: Disposing tracked instances...
 Unloading: Finished disposing tracked instances.
 XR: Clearing primary interface

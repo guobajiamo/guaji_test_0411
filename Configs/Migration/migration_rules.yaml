@@ -2,6 +2,36 @@
 # 这个文件的意义是：以后改了物品 ID、删了物品、补了新系统时，
 # 老玩家的存档仍然可以被安全迁移。
 
+# 本文件用于定义“旧存档迁移规则”。
+# 当你以后改了物品 ID、删除物品、增加新系统默认状态时，可以在这里补迁移说明。
+#
+# 顶层键说明：
+# migrations: 迁移步骤列表。
+#
+# 单个迁移步骤字段：
+# from_version:
+#   旧版本号。
+# to_version:
+#   迁移后的新版本号。
+# actions:
+#   迁移动作列表。
+#
+# 单个 action 常用字段：
+# type:
+#   迁移动作类型。
+#   当前示例里出现：
+#   rename_item / remove_item / add_default_state
+# old_id:
+#   旧物品 ID（rename_item 时使用）。
+# new_id:
+#   新物品 ID（rename_item 时使用）。
+# item_id:
+#   要删除或处理的物品 ID（remove_item 时使用）。
+# replacement_id:
+#   替代物品 ID。
+# description:
+#   说明文本，便于你自己回看。
+#
 migrations:
   - from_version: "0.1.0"
     to_version: "0.2.0"

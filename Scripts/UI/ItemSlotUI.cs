@@ -15,7 +15,9 @@ public partial class ItemSlotUI : Button
         ItemId = itemId;
         Text = $"{displayName} x{quantity}";
         SizeFlagsHorizontal = SizeFlags.ExpandFill;
-        CustomMinimumSize = new Vector2(0, 40);
+        CustomMinimumSize = new Vector2(0, 44);
         Alignment = HorizontalAlignment.Left;
+        AddThemeFontSizeOverride("font_size", 15);
+        UiImageThemeManager.ApplyButtonStyle(this, "special_action");
     }
 }

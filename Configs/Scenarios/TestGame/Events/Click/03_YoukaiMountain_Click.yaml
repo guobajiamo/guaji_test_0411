@@ -1,0 +1,20 @@
+# Youkai Mountain repeatable click events.
+events:
+  - id: "evt_empty_hook_fishing"
+    name_key: "姜太公钓鱼"
+    description_key: "空钩试手，演示“满足显示条件后才出现按钮”的事件。"
+    hover_info_key: "需要先持有鱼竿，并完成一次性事件“与太公望对话”，按钮才会显示。"
+    type: "RepeatableClick"
+    display_condition_count: 2
+    display_conditions:
+      - { condition_type: "HasItem", target_id: "tool_fishing_rod", required_value: 1 }
+      - { condition_type: "EventCompleted", target_id: "evt_talk_to_taigongwang", required_value: 1 }
+    interaction_condition_count: 0
+    interaction_conditions: []
+    hide_condition_count: 0
+    hide_conditions: []
+    costs: []
+    effects:
+      - { effect_type: "GrantItem", target_id: "mat_carp", int_value: 1 }
+      - { effect_type: "GrantSkillExp", target_id: "skill_fishing", int_value: 6 }
+    button_list_group: "MainClick"

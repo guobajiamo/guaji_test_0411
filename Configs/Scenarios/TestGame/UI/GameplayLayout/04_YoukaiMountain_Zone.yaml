@@ -1,0 +1,35 @@
+regions:
+  - id: "youkai_mountain"
+    title: "妖怪之山"
+    accent: "primary_story"
+    expanded_by_default: false
+    visibility_condition_count: 0
+    visibility_conditions: []
+    areas:
+      - id: "mountain_foothill"
+        title: "山脚小道"
+        accent: "secondary_battle"
+        visibility_condition_count: 0
+        visibility_conditions: []
+        scenes:
+          - id: "slope_trail"
+            title: "山路入口"
+            description: "预留给后续区域。"
+            visibility_condition_count: 0
+            visibility_conditions: []
+            event_ids: []
+      - id: "genbu_glen"
+        title: "玄武涧"
+        accent: "secondary_battle"
+        visibility_condition_count: 0
+        visibility_conditions: []
+        scenes:
+          - id: "small_stone_pool"
+            title: "小石潭"
+            description: "用于测试钓鱼事件的显示、置灰与自动停机逻辑。"
+            visibility_condition_count: 0
+            visibility_conditions: []
+            event_ids:
+              - "evt_talk_to_taigongwang"
+              - "evt_empty_hook_fishing"
+              - "evt_idle_fishing"

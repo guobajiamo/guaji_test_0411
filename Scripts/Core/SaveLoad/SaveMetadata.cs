@@ -24,4 +24,16 @@ public class SaveMetadata
     /// 以后如果要做语言恢复，可以参考这个值。
     /// </summary>
     public string Locale { get; set; } = "zh";
+
+    /// <summary>
+    /// 当前存档所属的剧本 ID。
+    /// 这样读档时就知道应该先加载哪一套配置。
+    /// </summary>
+    public string ScenarioId { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 当前存档所属的剧本显示名。
+    /// 主要给存档列表界面展示用。
+    /// </summary>
+    public string ScenarioDisplayName { get; set; } = string.Empty;
 }

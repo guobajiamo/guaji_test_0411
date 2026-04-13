@@ -1,0 +1,7 @@
+# 本文件是“正式剧本专用 zone 配置”。
+# 当前为空，表示正式剧本还没开始录入 zone / 副本链。
+#
+# 后续新增时常用字段：
+# id / name_key / description_key / max_clear_count / unlocks_zone_id / unlocks_faction_id / unlock_conditions
+#
+zones: []

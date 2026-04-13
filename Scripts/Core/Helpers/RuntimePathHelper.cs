@@ -10,13 +10,25 @@ namespace Test00_0410.Core.Helpers;
 /// </summary>
 public static class RuntimePathHelper
 {
-    public static string SaveFilePath => Path.Combine(
+    public static string SaveDirectoryPath => Path.Combine(
         System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData),
-        "Test00_0410",
-        "save_data.json");
+        "Test00_0410");
+
+    public static string SaveFilePath => GetTestSavePath();
 
     public const string RuntimeLogDirectory = "user://logs";
     public const string ItemTreeDumpPath = "user://logs/item_tree_dump.txt";
+
+    public static string GetTestSavePath()
+    {
+        return Path.Combine(SaveDirectoryPath, "save_data.json");
+    }
+
+    public static string GetStorySaveSlotPath(int slotIndex)
+    {
+        int safeSlotIndex = Math.Clamp(slotIndex, 1, 10);
+        return Path.Combine(SaveDirectoryPath, $"save_{safeSlotIndex:00}.json");
+    }
 
     public static string ToGlobalPath(string path)
     {

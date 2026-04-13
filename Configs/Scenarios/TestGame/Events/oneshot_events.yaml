@@ -1,0 +1,115 @@
+# 本文件是“测试剧本专用一次性事件表”的说明模板。
+# 更新时间：2025-04-13
+# 维护建议：
+# 1. 这个根文件主要用于阅读注释与抄模板。
+# 2. 真实的一次性事件实例，建议继续写到 `Events/Oneshot/` 子目录下。
+# 3. 程序会把 `Oneshot/` 目录里的多个 yaml 自动合并成同一份事件表处理。
+#
+# 顶层键说明：
+# events:
+#   一次性事件列表。
+#
+# 单个事件常用字段：
+# id:
+#   事件唯一 ID。必须全剧本唯一。
+# name_key:
+#   按钮标题。
+# description_key:
+#   按钮简介。
+# hover_info_key:
+#   鼠标悬浮说明。若留空，通常回退到 description_key。
+# type:
+#   一次性事件通常写 "OneshotClick"。
+#
+# 三段条件字段：
+# display_condition_count:
+#   “显示条件”的数量声明。
+#   必须与 display_conditions 里的条目数一致。
+#   0 表示开局就显示按钮。
+# display_conditions:
+#   控制按钮“是否显示”的条件列表。
+#
+# interaction_condition_count:
+#   “互动条件”的数量声明。
+#   必须与 interaction_conditions 里的条目数一致。
+# interaction_conditions:
+#   控制按钮“显示出来后是否可点击”的条件列表。
+#   不满足时，按钮会显示但置灰。
+#
+# hide_condition_count:
+#   “隐藏条件”的数量声明。
+#   必须与 hide_conditions 里的条目数一致。
+# hide_conditions:
+#   控制按钮在后期是否彻底隐藏。
+#
+# 条件条目统一格式：
+# - condition_type: 条件类型
+# - target_id: 目标 ID
+# - required_value: 需求值
+#
+# 当前常用 condition_type：
+# None / HasItem / HasGold / SkillLevel / FactionReputation / ZoneCleared / EventCompleted / QuestCompleted
+#
+# costs:
+#   点击事件前立即扣除的成本列表。
+# effects:
+#   事件执行成功后生效的效果列表。
+#   常用 effect_type：
+#   GrantItem / RemoveItem / GrantGold / RemoveGold / GrantSkillExp / AddFactionReputation / UnlockZone / CompleteEvent / CompleteQuest / StartBattle
+# button_list_group:
+#   按钮归属分组。
+#   常见：
+#   MainOneshot / MainClick / MainIdle / None
+#   None 常用于隐藏分支事件，不直接显示成普通按钮。
+#
+# dialog:
+#   一次性事件弹窗配置。
+#   body_text:
+#     弹窗正文。
+#   confirm_button_text:
+#     单确认按钮弹窗时，确认按钮上的文字。
+#   show_cancel_button:
+#     是否显示“我再想想”按钮。
+#     true = 显示取消按钮，玩家可先关闭弹窗不处理。
+#     false = 不显示取消按钮，适合紧急事态、强制确认、必须二选一的剧情。
+#     这个开关同时适用于：
+#     1. 单确认按钮弹窗
+#     2. 双选项分支弹窗
+#   consume_source_event_on_choice:
+#     双选项弹窗做出选择后，是否把源事件本身记为已完成。
+#   choices:
+#     双选项或多选项列表。
+#     button_text = 选项按钮文案
+#     target_event_id = 该选项真正触发的目标事件 ID
+#
+# 推荐写法示例 1：单按钮，允许取消
+# dialog:
+#   body_text: "这里是一段说明。"
+#   confirm_button_text: "确认"
+#   show_cancel_button: true
+#
+# 推荐写法示例 2：单按钮，不允许取消
+# dialog:
+#   body_text: "敌袭已至，你必须立刻决定。"
+#   confirm_button_text: "迎战"
+#   show_cancel_button: false
+#
+# 推荐写法示例 3：双选项，允许取消
+# dialog:
+#   body_text: "你打算如何回应？"
+#   show_cancel_button: true
+#   consume_source_event_on_choice: true
+#   choices:
+#     - { button_text: "接受", target_event_id: "evt_accept_xxx" }
+#     - { button_text: "拒绝", target_event_id: "evt_reject_xxx" }
+#
+# 推荐写法示例 4：双选项，不允许取消
+# dialog:
+#   body_text: "事态紧急，你必须立刻二选一。"
+#   show_cancel_button: false
+#   consume_source_event_on_choice: true
+#   choices:
+#     - { button_text: "方案A", target_event_id: "evt_branch_a" }
+#     - { button_text: "方案B", target_event_id: "evt_branch_b" }
+#
+events: []

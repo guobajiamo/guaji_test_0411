@@ -1,0 +1,145 @@
+# 本文件用于配置“图片主题按钮”和“主菜单背景图”。
+# 它既支持直接引用图片，也支持在图片缺失时使用纯色回退。
+#
+# 顶层分组说明：
+# menu_background:
+#   主菜单背景图配置。
+# buttons:
+#   各类按钮样式配置。
+#
+# menu_background 字段：
+# fallback_color:
+#   当背景图无法加载时使用的纯色背景。
+# image_path:
+#   背景图资源路径。
+#   建议使用 Godot 资源路径格式，如：
+#   res://Assets/UI/Images/MainMenu/main_menu_background.png
+#
+# buttons 下每个按钮样式键都代表一类按钮，例如：
+# menu_primary / menu_test_entry / event_oneshot / event_click / event_idle / system_action
+#
+# 单个按钮样式支持的字段：
+# normal_image / hover_image / pressed_image / disabled_image:
+#   四种状态下的图片资源路径。
+#   如果路径为空或图片不存在，系统会自动使用下面的 fallback 颜色。
+# fallback_normal_color / fallback_hover_color / fallback_pressed_color / fallback_disabled_color:
+#   四种状态的纯色回退色。
+# text_color:
+#   普通状态文字颜色。
+# disabled_text_color:
+#   禁用状态文字颜色。
+# border_color:
+#   纯色回退按钮的边框色。
+#
+# 使用建议：
+# - 想快速试布局时，只改 fallback 颜色也能正常显示。
+# - 正式美术资源齐全后，再把四张状态图都补上。
+#
+menu_background:
+  fallback_color: "#11161d"
+  image_path: "res://Assets/UI/Images/MainMenu/main_menu_background.png"
+
+buttons:
+  menu_primary:
+    normal_image: "res://Assets/UI/Images/Buttons/menu_primary_normal.png"
+    hover_image: "res://Assets/UI/Images/Buttons/menu_primary_hover.png"
+    pressed_image: "res://Assets/UI/Images/Buttons/menu_primary_pressed.png"
+    disabled_image: "res://Assets/UI/Images/Buttons/menu_primary_disabled.png"
+    fallback_normal_color: "#314235"
+    fallback_hover_color: "#405847"
+    fallback_pressed_color: "#243128"
+    fallback_disabled_color: "#616d63"
+    text_color: "#f5efdf"
+    disabled_text_color: "#d8d0c0"
+    border_color: "#152018"
+
+  menu_test_entry:
+    normal_image: "res://Assets/UI/Images/Buttons/menu_test_entry_normal.png"
+    hover_image: "res://Assets/UI/Images/Buttons/menu_test_entry_hover.png"
+    pressed_image: "res://Assets/UI/Images/Buttons/menu_test_entry_pressed.png"
+    disabled_image: "res://Assets/UI/Images/Buttons/menu_test_entry_disabled.png"
+    fallback_normal_color: "#416037"
+    fallback_hover_color: "#557c47"
+    fallback_pressed_color: "#2c4126"
+    fallback_disabled_color: "#65715e"
+    text_color: "#f6f1e1"
+    disabled_text_color: "#d6d0c1"
+    border_color: "#1b2717"
+
+  event_oneshot:
+    normal_image: "res://Assets/UI/Images/Buttons/event_oneshot_normal.png"
+    hover_image: "res://Assets/UI/Images/Buttons/event_oneshot_hover.png"
+    pressed_image: "res://Assets/UI/Images/Buttons/event_oneshot_pressed.png"
+    disabled_image: "res://Assets/UI/Images/Buttons/event_oneshot_disabled.png"
+    fallback_normal_color: "#714135"
+    fallback_hover_color: "#8a5243"
+    fallback_pressed_color: "#563028"
+    fallback_disabled_color: "#756663"
+    text_color: "#fff1e9"
+    disabled_text_color: "#dfd1cb"
+    border_color: "#341d17"
+
+  event_click:
+    normal_image: "res://Assets/UI/Images/Buttons/event_click_normal.png"
+    hover_image: "res://Assets/UI/Images/Buttons/event_click_hover.png"
+    pressed_image: "res://Assets/UI/Images/Buttons/event_click_pressed.png"
+    disabled_image: "res://Assets/UI/Images/Buttons/event_click_disabled.png"
+    fallback_normal_color: "#315945"
+    fallback_hover_color: "#42755a"
+    fallback_pressed_color: "#254235"
+    fallback_disabled_color: "#657168"
+    text_color: "#f3f1e6"
+    disabled_text_color: "#d8d3c7"
+    border_color: "#1a2a21"
+
+  event_idle:
+    normal_image: "res://Assets/UI/Images/Buttons/event_idle_normal.png"
+    hover_image: "res://Assets/UI/Images/Buttons/event_idle_hover.png"
+    pressed_image: "res://Assets/UI/Images/Buttons/event_idle_pressed.png"
+    disabled_image: "res://Assets/UI/Images/Buttons/event_idle_disabled.png"
+    fallback_normal_color: "#8a6131"
+    fallback_hover_color: "#a9773f"
+    fallback_pressed_color: "#684823"
+    fallback_disabled_color: "#8a7a68"
+    text_color: "#fff4df"
+    disabled_text_color: "#e6d7c1"
+    border_color: "#41301b"
+
+  system_action:
+    normal_image: "res://Assets/UI/Images/Buttons/system_action_normal.png"
+    hover_image: "res://Assets/UI/Images/Buttons/system_action_hover.png"
+    pressed_image: "res://Assets/UI/Images/Buttons/system_action_pressed.png"
+    disabled_image: "res://Assets/UI/Images/Buttons/system_action_disabled.png"
+    fallback_normal_color: "#3b433f"
+    fallback_hover_color: "#4a564f"
+    fallback_pressed_color: "#2c332f"
+    fallback_disabled_color: "#6d746f"
+    text_color: "#f3edde"
+    disabled_text_color: "#d5d0c4"
+    border_color: "#1b211e"
+
+  system_return_menu:
+    normal_image: "res://Assets/UI/Images/Buttons/system_return_menu_normal.png"
+    hover_image: "res://Assets/UI/Images/Buttons/system_return_menu_hover.png"
+    pressed_image: "res://Assets/UI/Images/Buttons/system_return_menu_pressed.png"
+    disabled_image: "res://Assets/UI/Images/Buttons/system_return_menu_disabled.png"
+    fallback_normal_color: "#6f4a35"
+    fallback_hover_color: "#885b43"
+    fallback_pressed_color: "#543729"
+    fallback_disabled_color: "#7a6c64"
+    text_color: "#fff0e5"
+    disabled_text_color: "#dbcfc7"
+    border_color: "#2f1f17"
+
+  special_action:
+    normal_image: "res://Assets/UI/Images/Buttons/special_action_normal.png"
+    hover_image: "res://Assets/UI/Images/Buttons/special_action_hover.png"
+    pressed_image: "res://Assets/UI/Images/Buttons/special_action_pressed.png"
+    disabled_image: "res://Assets/UI/Images/Buttons/special_action_disabled.png"
+    fallback_normal_color: "#556447"
+    fallback_hover_color: "#6a7d56"
+    fallback_pressed_color: "#404b35"
+    fallback_disabled_color: "#73786f"
+    text_color: "#f8f1de"
+    disabled_text_color: "#ddd6c6"
+    border_color: "#283122"
