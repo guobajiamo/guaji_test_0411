@@ -1,0 +1,9 @@
+# 图鉴接口仍然保留，但当前版本不显示这个页签。
+# 如果以后要重新启用，只需要把 visible 改回 true，并补齐实际内容即可。
+tabs:
+  - id: "dictionary"
+    title: "图鉴"
+    visible: false
+    placeholder_title: "图鉴页已暂时隐藏"
+    content_lines:
+      - "当前版本暂不显示图鉴页签。"

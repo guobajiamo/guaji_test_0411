@@ -356,6 +356,90 @@ public class YamlConfigLoader
         return events;
     }
 
+    public List<QuestDefinition> LoadQuests(string path)
+    {
+        List<QuestDefinition> quests = new();
+        Dictionary<string, string> idSources = new(StringComparer.Ordinal);
+        IReadOnlyList<string> files = ResolveYamlFileBundle(path, "quests");
+
+        for (int fileIndex = 0; fileIndex < files.Count; fileIndex++)
+        {
+            List<Dictionary<string, object?>> entries = GetRootListEntriesFromFile(files[fileIndex], "quests");
+            for (int entryIndex = 0; entryIndex < entries.Count; entryIndex++)
+            {
+                Dictionary<string, object?> entry = entries[entryIndex];
+                QuestDefinition definition = new()
+                {
+                    Id = GetString(entry, "id"),
+                    Category = GetEnum(entry, "category", QuestCategory.Main),
+                    ChainId = GetString(entry, "chain_id"),
+                    ChainOrder = GetInt(entry, "chain_order", 0),
+                    Title = GetString(entry, "title"),
+                    Description = GetString(entry, "description"),
+                    SourceFilePath = files[fileIndex],
+                    SourceFileOrder = fileIndex,
+                    SourceEntryOrder = entryIndex
+                };
+
+                List<EventConditionEntry> unlockConditions = ParseEventConditions(entry, "unlock_conditions");
+                bool hasUnlockCount = entry.ContainsKey("unlock_condition_count");
+                bool hasUnlockList = entry.ContainsKey("unlock_conditions");
+                definition.UnlockConditionCount = hasUnlockCount
+                    ? GetInt(entry, "unlock_condition_count", 0)
+                    : unlockConditions.Count;
+                definition.UnlockConditions.AddRange(unlockConditions);
+                if (hasUnlockCount || hasUnlockList)
+                {
+                    ValidateConditionCount(files[fileIndex], definition.Id, "unlock", definition.UnlockConditionCount, definition.UnlockConditions.Count);
+                }
+
+                definition.RequiredCompletedQuestIds.AddRange(GetStringList(entry, "required_completed_quest_ids"));
+
+                List<Dictionary<string, object?>> stepMaps = GetListOfMaps(entry, "steps");
+                bool hasStepCount = entry.ContainsKey("step_count");
+                bool hasStepList = entry.ContainsKey("steps");
+                definition.StepCount = hasStepCount
+                    ? GetInt(entry, "step_count", 0)
+                    : stepMaps.Count;
+
+                for (int stepIndex = 0; stepIndex < stepMaps.Count; stepIndex++)
+                {
+                    Dictionary<string, object?> stepMap = stepMaps[stepIndex];
+                    string eventId = GetString(stepMap, "event_id");
+                    definition.Steps.Add(new QuestStepDefinition
+                    {
+                        Id = GetString(stepMap, "id", string.IsNullOrWhiteSpace(eventId) ? $"step_{stepIndex + 1:00}" : eventId),
+                        EventId = eventId,
+                        Title = GetString(stepMap, "title"),
+                        Description = GetString(stepMap, "description")
+                    });
+                }
+
+                if (hasStepCount || hasStepList)
+                {
+                    ValidateConditionCount(files[fileIndex], definition.Id, "step", definition.StepCount, definition.Steps.Count);
+                }
+
+                foreach (Dictionary<string, object?> reward in GetListOfMaps(entry, "rewards"))
+                {
+                    definition.RewardEffects.Add(new EventEffectEntry
+                    {
+                        EffectType = GetEnum(reward, "effect_type", EventEffectType.None),
+                        TargetId = GetString(reward, "target_id"),
+                        IntValue = GetInt(reward, "int_value", 0),
+                        DoubleValue = GetDouble(reward, "double_value", 0.0),
+                        TextValue = GetString(reward, "text_value")
+                    });
+                }
+
+                WarnIfDuplicateId(idSources, "任务", definition.Id, files[fileIndex]);
+                quests.Add(definition);
+            }
+        }
+
+        return quests;
+    }
+
     public FactionConfigSet LoadFactions(string path)
     {
         FactionConfigSet result = new();

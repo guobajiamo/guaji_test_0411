@@ -1,0 +1,15 @@
+# 正式主线剧本任务入口占位。
+# 你可以继续在这个目录下拆分多个 YAML 文件来维护主线与支线。
+quests:
+  - id: "quest_main_story_prologue"
+    category: "Main"
+    chain_id: "main_story"
+    chain_order: 10
+    title: "主线序章"
+    description: "正式主线剧本的第一阶段任务。后续请在这里补充关键事件链。"
+    unlock_condition_count: 0
+    unlock_conditions: []
+    required_completed_quest_ids: []
+    step_count: 0
+    steps: []
+    rewards: []

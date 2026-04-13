@@ -13,5 +13,7 @@ public enum ConditionType
     FactionReputation = 4,
     ZoneCleared = 5,
     EventCompleted = 6,
-    QuestCompleted = 7
+    QuestCompleted = 7,
+    ItemAcquired = 8,
+    BattleStatReached = 9
 }

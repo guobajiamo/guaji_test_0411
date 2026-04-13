@@ -38,7 +38,21 @@ public partial class UiFeatureSmokeTest : Node
                 ?? throw new InvalidOperationException("主标签内容容器不存在。");
             Assert(mainTabs.GetChildren().All(child => child.Name != "日志"), "日志页不应该存在于中间区域。");
             Assert(mainTabs.GetChildren().Any(child => child.Name == "系统"), "测试剧本应该显示系统页。");
-            Assert(mainTabs.GetChildren().Any(child => child.Name == "当前区域"), "中间区域应该存在“当前区域”页。");
+            Assert(mainTabs.GetChildren().Any(child => child.Name == "当前场景"), "中间区域应该存在“当前场景”页。");
+            Assert(mainTabs.GetChildren().Any(child => child.Name == "战斗"), "中间区域应该存在“战斗”页。");
+            Assert(mainTabs.GetChildren().Any(child => child.Name == "任务"), "中间区域应该存在“任务”页。");
+            Assert(mainTabs.GetChildren().Any(child => child.Name == "教学"), "中间区域应该存在“教学”页。");
+            Assert(mainTabs.GetChildren().Any(child => child.Name == "成就"), "中间区域应该存在“成就”页。");
+            Assert(!HasButtonContaining(mainUi, "图鉴"), "图鉴页签当前不应显示。");
+            Assert(HasButtonContaining(mainUi, "当前场景"), "当前场景页签未显示。");
+            Assert(HasButtonContaining(mainUi, "战斗"), "战斗页签未显示。");
+            Assert(HasButtonContaining(mainUi, "任务"), "任务页签未显示。");
+            Assert(HasButtonContaining(mainUi, "教学"), "教学页签未显示。");
+            Assert(HasButtonContaining(mainUi, "成就"), "成就页签未显示。");
+
+            Label topBarLabel = mainUi.FindChild("TopBarScenarioLabel", true, false) as Label
+                ?? throw new InvalidOperationException("顶部主线任务标签未创建。");
+            Assert(topBarLabel.Text.Contains("初入人间之里", StringComparison.Ordinal), "顶部栏没有显示当前主线任务。");
 
             Assert(HasButtonContaining(mainUi, "人间之里"), "默认可见的一级区域“人间之里”未显示。");
             Assert(HasButtonContaining(mainUi, "魔法之森"), "默认可见的一级区域“魔法之森”未显示。");
@@ -87,28 +101,31 @@ public partial class UiFeatureSmokeTest : Node
             Assert(gameManager.PlayerProfile.Economy.Gold >= 30, "接受馈赠后未获得金币。");
             Assert(gameManager.PlayerProfile.CompletedEventIds.Contains("evt_stranger_reward_offer"), "弹窗源事件未被标记为已完成。");
 
-            EmitPressOnButton(mainUi, "妖怪之山");
+            typedMainUi.RefreshAllPanels();
+            EmitPressOnButton(mainUi, "任务");
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-            EmitPressOnButton(mainUi, "玄武涧");
+            Button claimRewardButton = mainUi.FindChild("ClaimRewardButton", true, false) as Button
+                ?? throw new InvalidOperationException("任务领奖按钮未创建。");
+            Assert(claimRewardButton.Visible && !claimRewardButton.Disabled, "完成首个主线任务后，任务页没有出现可领取奖励按钮。");
+            int goldBeforeQuestReward = gameManager.PlayerProfile.Economy.Gold;
+            claimRewardButton.EmitSignal(Button.SignalName.Pressed);
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-            await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-
-            Label currentRegionTitleLabel = mainUi.FindChild("CurrentRegionTitleLabel", true, false) as Label
-                ?? throw new InvalidOperationException("当前区域标题未创建。");
-            Assert(currentRegionTitleLabel.Text.Contains("玄武涧", StringComparison.Ordinal), "切换到“玄武涧”后，中间区域标题未同步更新。");
+            Assert(gameManager.PlayerProfile.Economy.Gold == goldBeforeQuestReward + 20, "领取主线任务奖励后金币没有增加。");
+            Assert(gameManager.PlayerProfile.UnlockedAchievementIds.Contains("ach_testgame_story_intro"), "领取主线任务奖励后没有解锁对应成就占位。");
 
             Assert(gameManager.IdleSystem?.ShouldShowEvent("evt_idle_fishing") == true, "挂机钓鱼按钮应当默认显示。");
             Assert(gameManager.IdleSystem?.CanStartIdleEvent("evt_idle_fishing") != true, "挂机钓鱼在没有鱼竿和鱼饵时不应可点击。");
             Assert(gameManager.ClickEventSystem?.ShouldShowEvent("evt_empty_hook_fishing") != true, "姜太公钓鱼在前置显示条件未满足前不应显示。");
 
             typedMainUi.RefreshAllPanels();
-            Button idleFishingButton = FindButtonContaining(mainUi, "挂机钓鱼");
-            Assert(idleFishingButton.Disabled, "挂机钓鱼在条件未满足时应显示为置灰按钮。");
+            Assert(!HasButtonContaining(mainUi, "挂机钓鱼"), "当前不在玄武涧时，不应在中间区域看到挂机钓鱼按钮。");
             Assert(!HasButtonContaining(mainUi, "姜太公钓鱼"), "姜太公钓鱼在前置显示条件未满足前不应显示按钮。");
 
             bool getRodOk = gameManager.ClickEventSystem?.TryTriggerEvent("evt_claim_fishing_rod") ?? false;
             Assert(getRodOk, "领取鱼竿事件执行失败。");
             Assert(gameManager.PlayerProfile.Inventory.HasItem("tool_fishing_rod"), "领取鱼竿后背包中没有鱼竿。");
+            typedMainUi.RefreshAllPanels();
+            Assert(topBarLabel.Text.Contains("山涧钓手", StringComparison.Ordinal), "拿到鱼竿并完成前序任务后，顶部主线任务没有切换到下一阶段。");
             Assert(gameManager.IdleSystem?.CanStartIdleEvent("evt_idle_fishing") != true, "只有鱼竿没有鱼饵时，挂机钓鱼仍应保持置灰。");
             Assert(gameManager.ClickEventSystem?.ShouldShowEvent("evt_empty_hook_fishing") != true, "只拿到鱼竿还没有对话时，姜太公钓鱼仍不应显示。");
 
@@ -116,16 +133,30 @@ public partial class UiFeatureSmokeTest : Node
             Assert(getBaitOk, "获取蚯蚓鱼饵事件执行失败。");
             Assert(gameManager.PlayerProfile.Inventory.GetItemAmount("bait_worm") == 3, "获取蚯蚓鱼饵后数量不正确。");
             Assert(gameManager.IdleSystem?.CanStartIdleEvent("evt_idle_fishing") == true, "同时拥有鱼竿和鱼饵后，挂机钓鱼应可点击。");
+            typedMainUi.RefreshAllPanels();
+            Assert(gameManager.PlayerProfile.UiState.HasNewMarker("genbu_glen"), "非当前区域首次出现可互动按钮后，没有给对应二级区域挂上 New 提示。");
+            Assert(HasRegionEntryText(mainUi, "玄武涧"), "当折叠的一级区域下出现 New 时，没有自动展开对应一级区域。");
+            Assert(HasAreaNewMarker(mainUi, "玄武涧"), "左侧区域栏没有在“玄武涧”右侧显示 New 提示。");
+
+            EmitPressOnButton(mainUi, "玄武涧");
+            await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+            await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+
+            Label currentRegionTitleLabel = mainUi.FindChild("CurrentRegionTitleLabel", true, false) as Label
+                ?? throw new InvalidOperationException("当前区域标题未创建。");
+            Assert(currentRegionTitleLabel.Text.Contains("玄武涧", StringComparison.Ordinal), "切换到“玄武涧”后，中间区域标题未同步更新。");
+            Assert(!gameManager.PlayerProfile.UiState.HasNewMarker("genbu_glen"), "切换到带有 New 的区域后，提示没有自动清除。");
 
             bool talkOk = gameManager.ClickEventSystem?.TryTriggerEvent("evt_talk_to_taigongwang") ?? false;
             Assert(talkOk, "与太公望对话事件执行失败。");
             Assert(gameManager.PlayerProfile.CompletedEventIds.Contains("evt_talk_to_taigongwang"), "与太公望对话未写入已完成事件历史。");
             Assert(gameManager.ClickEventSystem?.ShouldShowEvent("evt_empty_hook_fishing") == true, "完成对话后，姜太公钓鱼应当显示。");
             Assert(gameManager.ClickEventSystem?.CanTriggerEvent("evt_empty_hook_fishing") == true, "完成对话并持有鱼竿后，姜太公钓鱼应可点击。");
+            Assert(!gameManager.PlayerProfile.UiState.HasNewMarker("genbu_glen"), "如果按钮是在当前区域首次可互动，不应再次出现 New 提示。");
 
             typedMainUi.RefreshAllPanels();
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-            idleFishingButton = FindButtonContaining(mainUi, "挂机钓鱼");
+            Button idleFishingButton = FindButtonContaining(mainUi, "挂机钓鱼");
             Assert(!idleFishingButton.Disabled, "同时拥有鱼竿和鱼饵后，挂机钓鱼按钮应点亮。");
             Assert(HasButtonContaining(mainUi, "姜太公钓鱼"), "完成显示前置条件后，姜太公钓鱼按钮应出现。");
 
@@ -201,7 +232,19 @@ public partial class UiFeatureSmokeTest : Node
 
     private static void EmitPressOnButton(Node root, string displayText)
     {
-        FindButtonContaining(root, displayText).EmitSignal(Button.SignalName.Pressed);
+        Control clickableControl = FindClickableControl(root, displayText);
+        if (clickableControl is Button button)
+        {
+            button.EmitSignal(Button.SignalName.Pressed);
+            return;
+        }
+
+        InputEventMouseButton clickEvent = new()
+        {
+            ButtonIndex = MouseButton.Left,
+            Pressed = true
+        };
+        clickableControl.EmitSignal(Control.SignalName.GuiInput, clickEvent);
     }
 
     private static Button FindDialogButtonByExactText(Node root, string displayText)
@@ -230,6 +273,33 @@ public partial class UiFeatureSmokeTest : Node
         throw new InvalidOperationException($"未找到按钮：{displayText}");
     }
 
+    private static Control FindClickableControl(Node root, string displayText)
+    {
+        foreach (Node child in root.FindChildren("*", "", true, false))
+        {
+            if (child is Button button && button.Text.Contains(displayText, StringComparison.Ordinal))
+            {
+                return button;
+            }
+
+            if (child is Label label && label.Text.Contains(displayText, StringComparison.Ordinal))
+            {
+                Node? current = label;
+                while (current != null)
+                {
+                    if (current is Control control && control.MouseFilter == Control.MouseFilterEnum.Stop)
+                    {
+                        return control;
+                    }
+
+                    current = current.GetParent();
+                }
+            }
+        }
+
+        throw new InvalidOperationException($"未找到可点击控件：{displayText}");
+    }
+
     private static bool HasButtonContaining(Node root, string displayText)
     {
         foreach (Node child in root.FindChildren("*", "Button", true, false))
@@ -248,5 +318,45 @@ public partial class UiFeatureSmokeTest : Node
         return root.FindChildren("*", "ProgressBar", true, false)
             .OfType<ProgressBar>()
             .Any(bar => bar.Visible);
+    }
+
+    private static bool HasAreaNewMarker(Node root, string areaDisplayText)
+    {
+        Node? areaNode = FindRegionEntryNode(root, areaDisplayText);
+        if (areaNode == null)
+        {
+            return false;
+        }
+
+        Node? row = areaNode.GetParent();
+        if (row == null)
+        {
+            return false;
+        }
+
+        return row.GetChildren()
+            .OfType<Label>()
+            .Any(label => string.Equals(label.Text, "New", StringComparison.Ordinal));
+    }
+
+    private static bool HasRegionEntryText(Node root, string displayText)
+    {
+        return FindRegionEntryNode(root, displayText) != null;
+    }
+
+    private static Node? FindRegionEntryNode(Node root, string displayText)
+    {
+        foreach (Node child in root.FindChildren("*", "", true, false))
+        {
+            switch (child)
+            {
+                case Button button when button.Text.Contains(displayText, StringComparison.Ordinal):
+                    return button;
+                case Label label when label.Text.Contains(displayText, StringComparison.Ordinal):
+                    return label;
+            }
+        }
+
+        return null;
     }
 }

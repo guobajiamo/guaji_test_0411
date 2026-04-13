@@ -1,0 +1,8 @@
+# 图鉴页签当前不显示，但接口仍保留，方便后续继续补图鉴系统。
+tabs:
+  - id: "dictionary"
+    title: "图鉴"
+    visible: false
+    placeholder_title: "图鉴页已暂时隐藏"
+    content_lines:
+      - "当前版本暂不显示图鉴页签。"

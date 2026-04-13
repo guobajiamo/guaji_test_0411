@@ -36,6 +36,8 @@ public static class ConditionEvaluator
             ConditionType.ZoneCleared => profile.GetOrCreateZoneState(condition.TargetId).ClearCount >= requiredValue,
             ConditionType.EventCompleted => profile.CompletedEventIds.Contains(condition.TargetId),
             ConditionType.QuestCompleted => profile.CompletedQuestIds.Contains(condition.TargetId),
+            ConditionType.ItemAcquired => profile.Inventory.HasEverAcquired(condition.TargetId),
+            ConditionType.BattleStatReached => profile.GetBattleStatValue(condition.TargetId) >= condition.RequiredValue,
             _ => false
         };
     }

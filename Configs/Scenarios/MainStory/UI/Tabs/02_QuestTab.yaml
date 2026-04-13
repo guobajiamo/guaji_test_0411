@@ -1,0 +1,8 @@
+tabs:
+  - id: "quest"
+    title: "任务"
+    visible: true
+    placeholder_title: "任务总览"
+    content_lines:
+      - "这里会显示当前主线与支线任务。"
+      - "当前主线剧本任务链已支持拆分到多个 YAML 文件维护。"

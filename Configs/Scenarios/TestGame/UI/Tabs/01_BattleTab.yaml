@@ -1,0 +1,9 @@
+# 战斗页签当前只做内容预留。
+tabs:
+  - id: "battle"
+    title: "战斗"
+    visible: true
+    placeholder_title: "战斗页预留"
+    content_lines:
+      - "这里将来用于承接正式战斗系统。"
+      - "任务系统已经预留了 BattleStatReached 解锁条件，后续战斗属性达到阈值后可直接触发任务解锁。"

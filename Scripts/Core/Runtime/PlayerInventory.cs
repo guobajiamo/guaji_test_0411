@@ -23,6 +23,11 @@ public class PlayerInventory
         return Stacks.TryGetValue(itemId, out ItemStack? stack) ? stack.Quantity : 0;
     }
 
+    public bool HasEverAcquired(string itemId)
+    {
+        return ItemStates.TryGetValue(itemId, out PlayerItemState? state) && state.IsAcquired;
+    }
+
     public ItemStack GetOrCreateStack(string itemId)
     {
         if (!Stacks.TryGetValue(itemId, out ItemStack? stack))

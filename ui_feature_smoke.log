@@ -27,7 +27,7 @@ Loading resource: res://Scripts/Debug/UiFeatureSmokeTest.cs
 Loading resource: res://Resources/Scenarios/main_story_scenario.tres
 Loading resource: res://Scripts/Core/Scenario/GameScenarioDefinition.cs
 Loading resource: res://Resources/Scenarios/test_game_scenario.tres
-[GameLog] [20:27:53] 已发现剧本数量：2
+[GameLog] [23:29:31] 已发现剧本数量：2
 Loading resource: res://Scripts/Systems/IdleSystem.cs
 Loading resource: res://Scripts/Systems/ClickEventSystem.cs
 Loading resource: res://Scripts/Systems/SkillSystem.cs
@@ -41,7 +41,7 @@ Loading resource: res://Scripts/Systems/BattleSystem.cs
 Loading resource: res://Scripts/Systems/AchievementSystem.cs
 Loading resource: res://Scripts/Systems/EquipmentSystem.cs
 Loading resource: res://Scripts/Systems/BuffSystem.cs
-[GameLog] [20:27:53] 游戏主菜单入口已准备完成。
+[GameLog] [23:29:31] 游戏主菜单入口已准备完成。
 Loading resource: res://Scenes/Main.tscn
 Loading resource: res://Scripts/UI/AppRoot.cs
 Loading resource: res://Scripts/UI/MainUiLayoutSettings.cs
@@ -53,19 +53,26 @@ Loading resource: res://Scripts/UI/ConfirmActionDialog.cs
 [YamlConfigLoader] bundle=categories path=res://Configs/Scenarios/TestGame/Items/Categories 已解析 1 个 yaml 文件。
 [YamlConfigLoader] bundle=items path=res://Configs/Scenarios/TestGame/Items/Definitions 已解析 4 个 yaml 文件。
 [YamlConfigLoader] bundle=skills path=res://Configs/Scenarios/TestGame/Skills/Definitions 已解析 2 个 yaml 文件。
+[YamlConfigLoader] bundle=quests path=res://Configs/Scenarios/TestGame/Quests/Definitions 已解析 1 个 yaml 文件。
 [YamlConfigLoader] bundle=events path=res://Configs/Scenarios/TestGame/Events/Oneshot 已解析 2 个 yaml 文件。
 [YamlConfigLoader] bundle=events path=res://Configs/Scenarios/TestGame/Events/Click 已解析 3 个 yaml 文件。
 [YamlConfigLoader] bundle=events path=res://Configs/Scenarios/TestGame/Events/Idle 已解析 2 个 yaml 文件。
 [YamlConfigLoader] bundle=factions path=res://Configs/Scenarios/TestGame/Factions/Definitions 已解析 3 个 yaml 文件。
 [YamlConfigLoader] bundle=zones path=res://Configs/Scenarios/TestGame/Zones/Definitions 已解析 3 个 yaml 文件。
 [YamlConfigLoader] bundle=localization path=res://Configs/Scenarios/TestGame/Localization/Bundle 已解析 1 个 yaml 文件。
-[GameLog] [20:27:53] 静态配置加载完成：剧本 游戏测试剧本，分类 7，物品 14，技能 2，事件 13。
-[GameLog] [20:27:53] 已载入剧本：游戏测试剧本
+[GameLog] [23:29:31] 静态配置加载完成：剧本 游戏测试剧本，分类 7，物品 14，技能 2，事件 13，任务 3。
+[GameLog] [23:29:31] 任务已解锁：初入人间之里
+[GameLog] [23:29:31] 已载入剧本：游戏测试剧本
 Loading resource: res://Scenes/UI/MainUI.tscn
 Loading resource: res://Scripts/UI/MainUI.cs
 Loading resource: res://Scripts/UI/GamePlayUI.cs
 Loading resource: res://Scripts/UI/InventoryPanel.cs
 Loading resource: res://Scripts/UI/SkillPanel.cs
+Loading resource: res://Scripts/UI/Placeholder/BattlePanel.cs
+Loading resource: res://Scripts/UI/Placeholder/ScenarioPlaceholderPanel.cs
+Loading resource: res://Scripts/UI/Placeholder/QuestPanel.cs
+Loading resource: res://Scripts/UI/Placeholder/TutorialPanel.cs
+Loading resource: res://Scripts/UI/Placeholder/AchievementPanel.cs
 Loading resource: res://Scripts/UI/DictionaryPanel.cs
 Loading resource: res://Scripts/UI/LogPanel.cs
 Loading resource: res://Scripts/UI/ConfigurableInfoPanel.cs
@@ -73,11 +80,17 @@ Loading resource: res://Scripts/UI/CharacterStatusPanel.cs
 Loading resource: res://Scripts/UI/EventDialogPanel.cs
 [YamlConfigLoader] bundle=gameplay_layout path=res://Configs/Scenarios/TestGame/UI/GameplayLayout 已解析 8 个 yaml 文件。
 [YamlConfigLoader] bundle=gameplay_layout path=res://Configs/Scenarios/TestGame/UI/GameplayLayout 已解析 8 个 yaml 文件。
+[YamlConfigLoader] bundle=ui_tabs path=res://Configs/Scenarios/TestGame/UI/Tabs 已解析 6 个 yaml 文件。
+[YamlConfigLoader] bundle=ui_tabs path=res://Configs/Scenarios/TestGame/UI/Tabs 已解析 6 个 yaml 文件。
 Loading resource: res://Scripts/UI/SystemPanel.cs
 Loading resource: res://Scripts/UI/EventButtonItem.cs
 [YamlConfigLoader] bundle=info_panel path=res://Configs/Scenarios/TestGame/UI/InfoPanel 已解析 3 个 yaml 文件。
 [YamlConfigLoader] bundle=info_panel path=res://Configs/Scenarios/TestGame/UI/InfoPanel 已解析 3 个 yaml 文件。
 Loading resource: res://Scripts/UI/ItemSlotUI.cs
+[GameLog] [23:29:31] 任务已完成：初入人间之里
+[GameLog] [23:29:31] 已领取任务奖励：初入人间之里
+[GameLog] [23:29:32] 任务已解锁：山涧钓手
+[GameLog] [23:29:32] 任务已解锁：渔具屋的备用货
 Unloading: Disposing tracked instances...
 Unloading: Finished disposing tracked instances.
 XR: Clearing primary interface

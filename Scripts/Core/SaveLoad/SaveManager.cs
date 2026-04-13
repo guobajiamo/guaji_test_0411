@@ -180,7 +180,9 @@ public class SaveManager
                 {
                     SelectedAreaId = profile.UiState.SelectedAreaId,
                     SelectedTabId = profile.UiState.SelectedTabId,
-                    FavoriteSceneIds = profile.UiState.FavoriteSceneIds.ToList()
+                    FavoriteSceneIds = profile.UiState.FavoriteSceneIds.ToList(),
+                    ProcessedInteractableEventIds = profile.UiState.GetSortedProcessedInteractableEventIds(),
+                    AreaIdsWithNewMarker = profile.UiState.GetSortedAreaIdsWithNewMarker()
                 },
                 SkillStates = profile.SkillStates.Values
                     .OrderBy(state => state.SkillId)
@@ -220,6 +222,18 @@ public class SaveManager
                         RemainingStockByItemId = state.RemainingStockByItemId.ToDictionary(entry => entry.Key, entry => entry.Value)
                     })
                     .ToList(),
+                QuestStates = profile.QuestStates.Values
+                    .OrderBy(state => state.QuestId)
+                    .Select(state => new QuestStateSnapshot
+                    {
+                        QuestId = state.QuestId,
+                        IsUnlocked = state.IsUnlocked,
+                        IsCompleted = state.IsCompleted,
+                        IsRewardClaimed = state.IsRewardClaimed
+                    })
+                    .ToList(),
+                BattleStats = profile.BattleStats.ToDictionary(entry => entry.Key, entry => entry.Value),
+                UnlockedAchievementIds = profile.UnlockedAchievementIds.OrderBy(id => id).ToList(),
                 CompletedEventIds = profile.CompletedEventIds.OrderBy(id => id).ToList(),
                 CompletedQuestIds = profile.CompletedQuestIds.OrderBy(id => id).ToList()
             }
@@ -272,6 +286,22 @@ public class SaveManager
             }
         }
 
+        foreach (string eventId in document.Profile.UiState.ProcessedInteractableEventIds)
+        {
+            if (!string.IsNullOrWhiteSpace(eventId))
+            {
+                profile.UiState.ProcessedInteractableEventIds.Add(eventId);
+            }
+        }
+
+        foreach (string areaId in document.Profile.UiState.AreaIdsWithNewMarker)
+        {
+            if (!string.IsNullOrWhiteSpace(areaId))
+            {
+                profile.UiState.AreaIdsWithNewMarker.Add(areaId);
+            }
+        }
+
         foreach (SkillStateSnapshot skill in document.Profile.SkillStates)
         {
             PlayerSkillState state = profile.GetOrCreateSkillState(skill.SkillId);
@@ -303,6 +333,24 @@ public class SaveManager
             {
                 state.SetRemainingStock(itemId, remainingStock);
             }
+        }
+
+        foreach (QuestStateSnapshot quest in document.Profile.QuestStates)
+        {
+            PlayerQuestState state = profile.GetOrCreateQuestState(quest.QuestId);
+            state.IsUnlocked = quest.IsUnlocked;
+            state.IsCompleted = quest.IsCompleted;
+            state.IsRewardClaimed = quest.IsRewardClaimed;
+        }
+
+        foreach ((string statId, double value) in document.Profile.BattleStats)
+        {
+            profile.BattleStats[statId] = value;
+        }
+
+        foreach (string achievementId in document.Profile.UnlockedAchievementIds)
+        {
+            profile.UnlockedAchievementIds.Add(achievementId);
         }
 
         foreach (string eventId in document.Profile.CompletedEventIds)
@@ -378,6 +426,12 @@ public class SaveManager
 
         public List<ShopStateSnapshot> ShopStates { get; set; } = new();
 
+        public List<QuestStateSnapshot> QuestStates { get; set; } = new();
+
+        public Dictionary<string, double> BattleStats { get; set; } = new();
+
+        public List<string> UnlockedAchievementIds { get; set; } = new();
+
         public List<string> CompletedEventIds { get; set; } = new();
 
         public List<string> CompletedQuestIds { get; set; } = new();
@@ -431,6 +485,10 @@ public class SaveManager
         public string SelectedTabId { get; set; } = "current_region";
 
         public List<string> FavoriteSceneIds { get; set; } = new();
+
+        public List<string> ProcessedInteractableEventIds { get; set; } = new();
+
+        public List<string> AreaIdsWithNewMarker { get; set; } = new();
     }
 
     private sealed class SkillStateSnapshot
@@ -471,5 +529,16 @@ public class SaveManager
         public string NpcId { get; set; } = string.Empty;
 
         public Dictionary<string, int> RemainingStockByItemId { get; set; } = new();
+    }
+
+    private sealed class QuestStateSnapshot
+    {
+        public string QuestId { get; set; } = string.Empty;
+
+        public bool IsUnlocked { get; set; }
+
+        public bool IsCompleted { get; set; }
+
+        public bool IsRewardClaimed { get; set; }
     }
 }

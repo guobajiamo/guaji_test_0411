@@ -1,3 +1,25 @@
 # Godot 4+ specific ignores
 .godot/
 /android/
+
+# Local build caches and package caches
+/.dotnet_cli/
+/.nuget/
+/.gradle/
+/.gradle-user-home/
+
+# Export/build artifacts
+/Build/
+/*.apk
+/*.aab
+
+# Local logs and debug output
+/Logs/
+/*.log
+
+# Temporary backup files created during local troubleshooting
+/*.old
+/*.old.*
+
+# Office temp files
+/user_define_file/~$*.docx

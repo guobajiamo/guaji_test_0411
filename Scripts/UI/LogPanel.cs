@@ -11,10 +11,11 @@ namespace Test00_0410.UI;
 /// </summary>
 public partial class LogPanel : Control
 {
-    private const int CollapsedLineCount = 5;
+    private const int DefaultCollapsedLineCount = 5;
 
     private TextEdit? _textEdit;
     private bool _isExpanded;
+    private int _collapsedLineCount = DefaultCollapsedLineCount;
     private string _lastMessageSignature = string.Empty;
 
     public override void _Ready()
@@ -22,9 +23,10 @@ public partial class LogPanel : Control
         EnsureStructure();
     }
 
-    public void SetDisplayMode(bool isExpanded)
+    public void SetDisplayMode(bool isExpanded, int collapsedLineCount = DefaultCollapsedLineCount)
     {
         _isExpanded = isExpanded;
+        _collapsedLineCount = Math.Max(1, collapsedLineCount);
         _lastMessageSignature = string.Empty;
     }
 
@@ -33,9 +35,9 @@ public partial class LogPanel : Control
         EnsureStructure();
 
         List<string> messageList = messages.ToList();
-        if (!_isExpanded && messageList.Count > CollapsedLineCount)
+        if (!_isExpanded && messageList.Count > _collapsedLineCount)
         {
-            messageList = messageList.Skip(messageList.Count - CollapsedLineCount).ToList();
+            messageList = messageList.Skip(messageList.Count - _collapsedLineCount).ToList();
         }
 
         string nextText = string.Join("\n", messageList);
@@ -64,10 +66,10 @@ public partial class LogPanel : Control
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
             SizeFlagsVertical = SizeFlags.ExpandFill
         };
-        _textEdit.AddThemeColorOverride("background_color", new Color("#10161a"));
-        _textEdit.AddThemeColorOverride("font_readonly_color", new Color("#dae2e8"));
-        _textEdit.AddThemeColorOverride("font_color", new Color("#dae2e8"));
-        _textEdit.AddThemeColorOverride("caret_color", new Color("#d6a34a"));
+        _textEdit.AddThemeColorOverride("background_color", new Color("#081722"));
+        _textEdit.AddThemeColorOverride("font_readonly_color", new Color("#d7f6ff"));
+        _textEdit.AddThemeColorOverride("font_color", new Color("#d7f6ff"));
+        _textEdit.AddThemeColorOverride("caret_color", new Color("#34c3ff"));
         _textEdit.SetAnchorsPreset(LayoutPreset.FullRect);
         AddChild(_textEdit);
     }

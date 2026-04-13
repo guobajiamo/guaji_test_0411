@@ -84,7 +84,7 @@
 #   空状态或默认状态文案。
 #
 # labels 下常用字段：
-# top_bar_scenario_format / top_bar_area_format:
+# top_bar_main_quest_format / top_bar_area_format:
 #   顶部信息格式字符串，通常带 {0} 占位符。
 # interaction_count_format:
 #   左侧区域可互动数量显示格式。
@@ -100,11 +100,11 @@
 #   可在 gameplay_layout.yaml 中通过 accent: "xxx" 引用。
 #
 general:
-  background_color: "#0b0f12"
-  outer_margin: 20
-  section_gap: 16
-  inner_gap: 12
-  left_right_column_width: 336
+  background_color: "#05070d"
+  outer_margin: 4
+  section_gap: 8
+  inner_gap: 8
+  left_right_column_width: 320
   top_bar_height: 54
   bottom_log_height: 196
   info_panel_min_height: 240
@@ -125,61 +125,61 @@ general:
 
 panels:
   top_bar:
-    color: "#223329"
-    alpha: 0.88
-    border_color: "#91af87"
-    border_alpha: 0.75
+    color: "#19131a"
+    alpha: 0.94
+    border_color: "#d39b33"
+    border_alpha: 0.82
   left_column:
-    color: "#162028"
-    alpha: 0.9
-    border_color: "#597283"
-    border_alpha: 0.62
+    color: "#0b1630"
+    alpha: 0.95
+    border_color: "#3f7cff"
+    border_alpha: 0.78
   center_column:
-    color: "#201a15"
-    alpha: 0.92
-    border_color: "#a98b60"
-    border_alpha: 0.7
+    color: "#26101d"
+    alpha: 0.95
+    border_color: "#e04f7a"
+    border_alpha: 0.78
   bottom_log:
-    color: "#151a20"
-    alpha: 0.9
-    border_color: "#738090"
-    border_alpha: 0.58
+    color: "#0b2030"
+    alpha: 0.94
+    border_color: "#34c3ff"
+    border_alpha: 0.72
   right_info:
-    color: "#19231f"
-    alpha: 0.92
-    border_color: "#8ea67f"
-    border_alpha: 0.64
+    color: "#0d241b"
+    alpha: 0.95
+    border_color: "#3ddc97"
+    border_alpha: 0.8
   right_status:
-    color: "#221b16"
-    alpha: 0.92
-    border_color: "#b5905f"
-    border_alpha: 0.64
+    color: "#1a122d"
+    alpha: 0.95
+    border_color: "#9b6bff"
+    border_alpha: 0.8
   scene_card:
-    color: "#13181c"
-    alpha: 0.96
-    border_color: "#8b7858"
-    border_alpha: 0.62
+    color: "#121829"
+    alpha: 0.98
+    border_color: "#5273d7"
+    border_alpha: 0.8
 
 tabs:
-  current_region_text: "当前区域"
+  current_region_text: "当前场景"
   inventory_text: "背包"
   skills_text: "技能"
   dictionary_text: "图鉴"
   system_text: "系统"
-  normal_color: "#14191d"
-  normal_alpha: 0.88
-  active_color: "#445743"
+  normal_color: "#121827"
+  normal_alpha: 0.92
+  active_color: "#8f2b56"
   active_alpha: 0.96
-  normal_text_color: "#d7d8cf"
-  active_text_color: "#f7f0df"
-  border_color: "#9eaf88"
+  normal_text_color: "#dfe7fb"
+  active_text_color: "#fff1f5"
+  border_color: "#d14b77"
 
 status:
-  header_text_color: "#f7f0df"
-  body_text_color: "#d8d8ce"
-  accent_text_color: "#dcb86e"
-  progress_fill_color: "#c9973f"
-  progress_background_color: "#32261a"
+  header_text_color: "#f4f7ff"
+  body_text_color: "#ddd8f6"
+  accent_text_color: "#c79dff"
+  progress_fill_color: "#8a63ff"
+  progress_background_color: "#271b43"
   target_title: "目标"
   skills_title: "技能"
   status_title: "状态"
@@ -190,7 +190,7 @@ status:
   empty_reputation_text: "暂无已解锁声望"
 
 labels:
-  top_bar_scenario_format: "当前剧本：{0}"
+  top_bar_main_quest_format: "当前主线任务：{0}"
   top_bar_area_format: "当前区域：{0}"
   interaction_count_format: "({0})"
   idle_marker_text: "★"
@@ -200,14 +200,14 @@ labels:
 
 region_accents:
   primary_story:
-    text_color: "#8fcb7f"
+    text_color: "#78b7ff"
     font_size: 24
   primary_faction:
-    text_color: "#d97a63"
+    text_color: "#ff9c66"
     font_size: 24
   secondary_peace:
-    text_color: "#dfbf79"
-    font_size: 18
+    text_color: "#63e1c4"
+    font_size: 24
   secondary_battle:
-    text_color: "#d9876a"
-    font_size: 18
+    text_color: "#ff7da8"
+    font_size: 24

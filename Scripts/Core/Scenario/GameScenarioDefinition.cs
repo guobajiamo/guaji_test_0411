@@ -59,4 +59,10 @@ public partial class GameScenarioDefinition : Resource
 
     [Export]
     public string InfoPanelConfigPath { get; set; } = string.Empty;
+
+    [Export]
+    public string UiTabsConfigPath { get; set; } = string.Empty;
+
+    [Export]
+    public string QuestsConfigPath { get; set; } = string.Empty;
 }

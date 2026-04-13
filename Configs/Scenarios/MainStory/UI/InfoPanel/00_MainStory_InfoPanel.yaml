@@ -4,7 +4,7 @@
 # 顶层键说明：
 # summary_lines:
 #   面板顶部摘要行列表，支持占位符：
-#   {{scenario_display_name}} / {{scenario_id}} / {{scenario_description}} / {{event_count}} / {{is_test_scenario}} / {{system_tab_enabled}}
+#   {{scenario_display_name}} / {{scenario_id}} / {{scenario_description}} / {{event_count}} / {{is_test_scenario}} / {{system_tab_enabled}} / {{current_main_quest}}
 # states:
 #   当前支持 no_scenario / test_scenario / story_empty / story_default
 # content_lines:
@@ -12,7 +12,7 @@
 #
 summary_lines:
   - "当前剧本：{{scenario_display_name}}"
-  - "事件总数：{{event_count}}"
+  - "当前主线：{{current_main_quest}}"
 
 states:
   no_scenario:

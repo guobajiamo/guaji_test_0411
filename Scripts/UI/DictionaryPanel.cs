@@ -72,7 +72,7 @@ public partial class DictionaryPanel : Control
                 ? description
                 : _gameManager.TranslateText(item.DetailDescriptionKey);
 
-            _contentLabel.AppendText($"[color=#f1dfb5]{name}[/color]\n[color=#d7dee4]{detail}[/color]\n\n");
+            _contentLabel.AppendText($"[color=#dff6ff]{name}[/color]\n[color=#d3eef9]{detail}[/color]\n\n");
         }
     }
 
@@ -93,7 +93,7 @@ public partial class DictionaryPanel : Control
             SizeFlagsVertical = SizeFlags.ExpandFill
         };
         _contentLabel.AddThemeFontSizeOverride("normal_font_size", 16);
-        _contentLabel.AddThemeColorOverride("default_color", new Color("#d7dee4"));
+        _contentLabel.AddThemeColorOverride("default_color", new Color("#d3eef9"));
         _contentLabel.AddThemeConstantOverride("line_separation", 6);
         _contentLabel.SetAnchorsPreset(LayoutPreset.FullRect);
         AddChild(_contentLabel);

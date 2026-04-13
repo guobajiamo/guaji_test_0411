@@ -80,7 +80,7 @@ public sealed class GameplayUiTheme
 
     public Dictionary<string, AccentVisual> RegionAccents { get; } = new(StringComparer.OrdinalIgnoreCase);
 
-    public string CurrentRegionTabText { get; set; } = "当前区域";
+    public string CurrentRegionTabText { get; set; } = "当前场景";
 
     public string InventoryTabText { get; set; } = "背包";
 
@@ -90,7 +90,7 @@ public sealed class GameplayUiTheme
 
     public string SystemTabText { get; set; } = "系统";
 
-    public string TopBarScenarioFormat { get; set; } = "当前剧本：{0}";
+    public string TopBarMainQuestFormat { get; set; } = "当前主线任务：{0}";
 
     public string TopBarAreaFormat { get; set; } = "当前区域：{0}";
 
@@ -280,6 +280,19 @@ public sealed class SceneLayout
     public List<string> EventIds { get; } = new();
 }
 
+public sealed class ScenarioTabDefinition
+{
+    public string Id { get; set; } = string.Empty;
+
+    public string Title { get; set; } = string.Empty;
+
+    public bool Visible { get; set; } = true;
+
+    public string PlaceholderTitle { get; set; } = string.Empty;
+
+    public List<string> ContentLines { get; } = new();
+}
+
 public static class GameplayUiConfigLoader
 {
     private const string ThemeConfigPath = "res://Configs/UI/gameplay_ui_theme.yaml";
@@ -362,7 +375,10 @@ public static class GameplayUiConfigLoader
 
         if (root.TryGetValue("labels", out object? labelsValue) && labelsValue is Dictionary<string, object?> labelsMap)
         {
-            theme.TopBarScenarioFormat = GetString(labelsMap, "top_bar_scenario_format", theme.TopBarScenarioFormat);
+            theme.TopBarMainQuestFormat = GetString(
+                labelsMap,
+                "top_bar_main_quest_format",
+                GetString(labelsMap, "top_bar_scenario_format", theme.TopBarMainQuestFormat));
             theme.TopBarAreaFormat = GetString(labelsMap, "top_bar_area_format", theme.TopBarAreaFormat);
             theme.InteractionCountFormat = GetString(labelsMap, "interaction_count_format", theme.InteractionCountFormat);
             theme.IdleMarkerText = GetString(labelsMap, "idle_marker_text", theme.IdleMarkerText);
@@ -488,6 +504,50 @@ public static class GameplayUiConfigLoader
         return layout;
     }
 
+    public static Dictionary<string, ScenarioTabDefinition> LoadScenarioTabs(GameScenarioDefinition? scenario)
+    {
+        Dictionary<string, ScenarioTabDefinition> tabs = new(StringComparer.Ordinal);
+        string path = ResolveScenarioTabsPath(scenario);
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return tabs;
+        }
+
+        YamlConfigLoader loader = new();
+        IReadOnlyList<string> bundleFiles = loader.ResolveYamlFileBundle(path, "ui_tabs");
+        if (bundleFiles.Count == 0)
+        {
+            return tabs;
+        }
+
+        Dictionary<string, object?> root = loader.LoadMergedMap(path, "ui_tabs");
+        if (!root.TryGetValue("tabs", out object? tabsValue) || tabsValue is not List<object?> tabList)
+        {
+            return tabs;
+        }
+
+        foreach (Dictionary<string, object?> tabMap in tabList.OfType<Dictionary<string, object?>>())
+        {
+            string id = GetString(tabMap, "id");
+            if (string.IsNullOrWhiteSpace(id))
+            {
+                continue;
+            }
+
+            ScenarioTabDefinition definition = new()
+            {
+                Id = id,
+                Title = GetString(tabMap, "title"),
+                Visible = GetBool(tabMap, "visible", true),
+                PlaceholderTitle = GetString(tabMap, "placeholder_title")
+            };
+            definition.ContentLines.AddRange(GetStringList(tabMap, "content_lines"));
+            tabs[id] = definition;
+        }
+
+        return tabs;
+    }
+
     private static string ResolveScenarioLayoutPath(GameScenarioDefinition? scenario)
     {
         string infoPath = scenario?.InfoPanelConfigPath ?? string.Empty;
@@ -514,6 +574,34 @@ public static class GameplayUiConfigLoader
         }
 
         return $"{infoPath[..slashIndex]}/gameplay_layout.yaml";
+    }
+
+    private static string ResolveScenarioTabsPath(GameScenarioDefinition? scenario)
+    {
+        string configuredPath = scenario?.UiTabsConfigPath ?? string.Empty;
+        if (!string.IsNullOrWhiteSpace(configuredPath))
+        {
+            return configuredPath;
+        }
+
+        string infoPath = scenario?.InfoPanelConfigPath ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(infoPath))
+        {
+            return string.Empty;
+        }
+
+        if (DirAccess.Open(infoPath) != null)
+        {
+            return $"{infoPath.TrimEnd('/')}/Tabs";
+        }
+
+        int slashIndex = infoPath.LastIndexOf('/');
+        if (slashIndex < 0)
+        {
+            return string.Empty;
+        }
+
+        return $"{infoPath[..slashIndex]}/Tabs";
     }
 
     private static List<EventConditionEntry> ParseConditions(Dictionary<string, object?> map, string key)

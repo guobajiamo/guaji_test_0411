@@ -87,7 +87,7 @@ public partial class CharacterStatusPanel : Control
             {
                 $"{section.SectionId}:{_expandedStates.GetValueOrDefault(section.SectionId, true)}",
                 $"{section.Title}:{section.ProgressRatio:0.###}"
-            }.Concat(section.Items.Select(item => $"{item.Text}:{item.TooltipText}"))));
+            }.Concat(section.Items.Select(item => $"{item.Text}:{item.TrailingText}:{item.BadgeText}:{item.TooltipText}"))));
         if (signature == _lastSignature)
         {
             return;
@@ -189,6 +189,8 @@ public partial class CharacterStatusPanel : Control
             items.Add(new StatusItemData
             {
                 Text = _gameManager.TranslateText(skill.NameKey),
+                TrailingText = $"Lv.{state.Level}",
+                BadgeText = state.CanLevelUp && state.Level < skill.MaxLevel ? "(可升级)" : string.Empty,
                 TooltipText = tooltip
             });
         }
@@ -320,7 +322,7 @@ public partial class CharacterStatusPanel : Control
             {
                 SizeFlagsHorizontal = SizeFlags.ExpandFill
             };
-            sectionPanel.AddThemeStyleboxOverride("panel", CreatePanelStyle(new Color("#0f1720"), 0.55f));
+            sectionPanel.AddThemeStyleboxOverride("panel", CreatePanelStyle(new Color("#17142a"), 0.82f));
             _rootContainer.AddChild(sectionPanel);
 
             VBoxContainer content = new()
@@ -381,6 +383,62 @@ public partial class CharacterStatusPanel : Control
 
             foreach (StatusItemData item in section.Items)
             {
+                if (!string.IsNullOrWhiteSpace(item.TrailingText) || !string.IsNullOrWhiteSpace(item.BadgeText))
+                {
+                    HBoxContainer row = new()
+                    {
+                        SizeFlagsHorizontal = SizeFlags.ExpandFill
+                    };
+                    row.AddThemeConstantOverride("separation", 6);
+
+                    Label textLabel = new()
+                    {
+                        Text = item.Text,
+                        AutowrapMode = TextServer.AutowrapMode.WordSmart,
+                        SizeFlagsHorizontal = SizeFlags.ExpandFill,
+                        TooltipText = item.TooltipText
+                    };
+                    textLabel.AddThemeFontSizeOverride("font_size", _theme.StatusBodyFontSize);
+                    textLabel.AddThemeColorOverride("font_color", item.IsAccent ? _theme.Status.AccentTextColor : _theme.Status.BodyTextColor);
+                    row.AddChild(textLabel);
+
+                    HBoxContainer rightGroup = new()
+                    {
+                        SizeFlagsHorizontal = SizeFlags.ShrinkEnd
+                    };
+                    rightGroup.AddThemeConstantOverride("separation", 4);
+
+                    if (!string.IsNullOrWhiteSpace(item.TrailingText))
+                    {
+                        Label trailingLabel = new()
+                        {
+                            Text = item.TrailingText,
+                            HorizontalAlignment = HorizontalAlignment.Right,
+                            TooltipText = item.TooltipText
+                        };
+                        trailingLabel.AddThemeFontSizeOverride("font_size", _theme.StatusBodyFontSize);
+                        trailingLabel.AddThemeColorOverride("font_color", _theme.Status.HeaderTextColor);
+                        rightGroup.AddChild(trailingLabel);
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(item.BadgeText))
+                    {
+                        Label badgeLabel = new()
+                        {
+                            Text = item.BadgeText,
+                            HorizontalAlignment = HorizontalAlignment.Right,
+                            TooltipText = item.TooltipText
+                        };
+                        badgeLabel.AddThemeFontSizeOverride("font_size", 10);
+                        badgeLabel.AddThemeColorOverride("font_color", new Color("#ff0000"));
+                        rightGroup.AddChild(badgeLabel);
+                    }
+
+                    row.AddChild(rightGroup);
+                    itemList.AddChild(row);
+                    continue;
+                }
+
                 Label label = new()
                 {
                     Text = item.Text,
@@ -406,8 +464,8 @@ public partial class CharacterStatusPanel : Control
     {
         return new StyleBoxFlat
         {
-            BgColor = hovered ? new Color(0.27f, 0.32f, 0.24f, 0.78f) : new Color(0.17f, 0.21f, 0.18f, 0.54f),
-            BorderColor = hovered ? new Color("#c5a86a") : new Color("#66735f"),
+            BgColor = hovered ? new Color("#5a224f") { A = 0.86f } : new Color("#25194a") { A = 0.78f },
+            BorderColor = hovered ? new Color("#d454a2") : new Color("#7f6cff"),
             BorderWidthLeft = 1,
             BorderWidthTop = 1,
             BorderWidthRight = 1,
@@ -431,7 +489,7 @@ public partial class CharacterStatusPanel : Control
         return new StyleBoxFlat
         {
             BgColor = finalColor,
-            BorderColor = new Color("#7f6a4d"),
+            BorderColor = new Color("#6d5ac7"),
             BorderWidthLeft = 1,
             BorderWidthTop = 1,
             BorderWidthRight = 1,
@@ -487,5 +545,9 @@ public partial class CharacterStatusPanel : Control
         public string TooltipText { get; set; } = string.Empty;
 
         public bool IsAccent { get; set; }
+
+        public string TrailingText { get; set; } = string.Empty;
+
+        public string BadgeText { get; set; } = string.Empty;
     }
 }

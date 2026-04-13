@@ -27,7 +27,7 @@ Loading resource: res://Scripts/Debug/SaveLoadSmokeTest.gd
 Loading resource: res://Resources/Scenarios/main_story_scenario.tres
 Loading resource: res://Scripts/Core/Scenario/GameScenarioDefinition.cs
 Loading resource: res://Resources/Scenarios/test_game_scenario.tres
-[GameLog] [15:23:55] 已发现剧本数量：2
+[GameLog] [23:15:13] 已发现剧本数量：2
 Loading resource: res://Scripts/Systems/IdleSystem.cs
 Loading resource: res://Scripts/Systems/ClickEventSystem.cs
 Loading resource: res://Scripts/Systems/SkillSystem.cs
@@ -41,7 +41,7 @@ Loading resource: res://Scripts/Systems/BattleSystem.cs
 Loading resource: res://Scripts/Systems/AchievementSystem.cs
 Loading resource: res://Scripts/Systems/EquipmentSystem.cs
 Loading resource: res://Scripts/Systems/BuffSystem.cs
-[GameLog] [15:23:55] 游戏主菜单入口已准备完成。
+[GameLog] [23:15:13] 游戏主菜单入口已准备完成。
 Loading resource: res://Scenes/Main.tscn
 Loading resource: res://Scripts/UI/AppRoot.cs
 Loading resource: res://Scripts/UI/MainUiLayoutSettings.cs
@@ -53,20 +53,27 @@ Loading resource: res://Scripts/UI/ConfirmActionDialog.cs
 [YamlConfigLoader] bundle=categories path=res://Configs/Scenarios/MainStory/Items/Categories 已解析 1 个 yaml 文件。
 [YamlConfigLoader] bundle=items path=res://Configs/Scenarios/MainStory/Items/Definitions 已解析 1 个 yaml 文件。
 [YamlConfigLoader] bundle=skills path=res://Configs/Scenarios/MainStory/Skills/Definitions 已解析 1 个 yaml 文件。
+[YamlConfigLoader] bundle=quests path=res://Configs/Scenarios/MainStory/Quests/Definitions 已解析 1 个 yaml 文件。
 [YamlConfigLoader] bundle=events path=res://Configs/Scenarios/MainStory/Events/Oneshot 已解析 1 个 yaml 文件。
 [YamlConfigLoader] bundle=events path=res://Configs/Scenarios/MainStory/Events/Click 已解析 1 个 yaml 文件。
 [YamlConfigLoader] bundle=events path=res://Configs/Scenarios/MainStory/Events/Idle 已解析 1 个 yaml 文件。
 [YamlConfigLoader] bundle=factions path=res://Configs/Scenarios/MainStory/Factions/Definitions 已解析 1 个 yaml 文件。
 [YamlConfigLoader] bundle=zones path=res://Configs/Scenarios/MainStory/Zones/Definitions 已解析 1 个 yaml 文件。
 [YamlConfigLoader] bundle=localization path=res://Configs/Scenarios/MainStory/Localization/Bundle 已解析 1 个 yaml 文件。
-[GameLog] [15:23:55] 警告：有核心配置未成功加载，请优先检查 YAML 格式和路径。
-[GameLog] [15:23:55] 静态配置加载完成：剧本 默认主线剧本，分类 0，物品 0，技能 0，事件 0。
-[GameLog] [15:23:55] 已载入剧本：默认主线剧本
+[GameLog] [23:15:13] 警告：有核心配置未成功加载，请优先检查 YAML 格式和路径。
+[GameLog] [23:15:13] 静态配置加载完成：剧本 默认主线剧本，分类 0，物品 0，技能 0，事件 0，任务 1。
+[GameLog] [23:15:13] 任务已解锁：主线序章
+[GameLog] [23:15:13] 已载入剧本：默认主线剧本
 Loading resource: res://Scenes/UI/MainUI.tscn
 Loading resource: res://Scripts/UI/MainUI.cs
 Loading resource: res://Scripts/UI/GamePlayUI.cs
 Loading resource: res://Scripts/UI/InventoryPanel.cs
 Loading resource: res://Scripts/UI/SkillPanel.cs
+Loading resource: res://Scripts/UI/Placeholder/BattlePanel.cs
+Loading resource: res://Scripts/UI/Placeholder/ScenarioPlaceholderPanel.cs
+Loading resource: res://Scripts/UI/Placeholder/QuestPanel.cs
+Loading resource: res://Scripts/UI/Placeholder/TutorialPanel.cs
+Loading resource: res://Scripts/UI/Placeholder/AchievementPanel.cs
 Loading resource: res://Scripts/UI/DictionaryPanel.cs
 Loading resource: res://Scripts/UI/LogPanel.cs
 Loading resource: res://Scripts/UI/ConfigurableInfoPanel.cs
@@ -74,42 +81,50 @@ Loading resource: res://Scripts/UI/CharacterStatusPanel.cs
 Loading resource: res://Scripts/UI/EventDialogPanel.cs
 [YamlConfigLoader] bundle=gameplay_layout path=res://Configs/Scenarios/MainStory/UI/GameplayLayout 已解析 1 个 yaml 文件。
 [YamlConfigLoader] bundle=gameplay_layout path=res://Configs/Scenarios/MainStory/UI/GameplayLayout 已解析 1 个 yaml 文件。
+[YamlConfigLoader] bundle=ui_tabs path=res://Configs/Scenarios/MainStory/UI/Tabs 已解析 6 个 yaml 文件。
+[YamlConfigLoader] bundle=ui_tabs path=res://Configs/Scenarios/MainStory/UI/Tabs 已解析 6 个 yaml 文件。
 Loading resource: res://Scripts/UI/SystemPanel.cs
 [YamlConfigLoader] bundle=info_panel path=res://Configs/Scenarios/MainStory/UI/InfoPanel 已解析 1 个 yaml 文件。
 [YamlConfigLoader] bundle=info_panel path=res://Configs/Scenarios/MainStory/UI/InfoPanel 已解析 1 个 yaml 文件。
 [SaveManager] 存档保存成功：C:\Users\AA\AppData\Local\Test00_0410\save_01.json
-[GameLog] [15:23:55] 已保存到存档位：C:\Users\AA\AppData\Local\Test00_0410\save_01.json
+[GameLog] [23:15:13] 已保存到存档位：C:\Users\AA\AppData\Local\Test00_0410\save_01.json
 [YamlConfigLoader] bundle=categories path=res://Configs/Scenarios/MainStory/Items/Categories 已解析 1 个 yaml 文件。
 [YamlConfigLoader] bundle=items path=res://Configs/Scenarios/MainStory/Items/Definitions 已解析 1 个 yaml 文件。
 [YamlConfigLoader] bundle=skills path=res://Configs/Scenarios/MainStory/Skills/Definitions 已解析 1 个 yaml 文件。
+[YamlConfigLoader] bundle=quests path=res://Configs/Scenarios/MainStory/Quests/Definitions 已解析 1 个 yaml 文件。
 [YamlConfigLoader] bundle=events path=res://Configs/Scenarios/MainStory/Events/Oneshot 已解析 1 个 yaml 文件。
 [YamlConfigLoader] bundle=events path=res://Configs/Scenarios/MainStory/Events/Click 已解析 1 个 yaml 文件。
 [YamlConfigLoader] bundle=events path=res://Configs/Scenarios/MainStory/Events/Idle 已解析 1 个 yaml 文件。
 [YamlConfigLoader] bundle=factions path=res://Configs/Scenarios/MainStory/Factions/Definitions 已解析 1 个 yaml 文件。
 [YamlConfigLoader] bundle=zones path=res://Configs/Scenarios/MainStory/Zones/Definitions 已解析 1 个 yaml 文件。
 [YamlConfigLoader] bundle=localization path=res://Configs/Scenarios/MainStory/Localization/Bundle 已解析 1 个 yaml 文件。
-[GameLog] [15:23:55] 警告：有核心配置未成功加载，请优先检查 YAML 格式和路径。
-[GameLog] [15:23:55] 静态配置加载完成：剧本 默认主线剧本，分类 0，物品 0，技能 0，事件 0。
-[GameLog] [15:23:55] 已载入剧本：默认主线剧本
+[GameLog] [23:15:13] 警告：有核心配置未成功加载，请优先检查 YAML 格式和路径。
+[GameLog] [23:15:13] 静态配置加载完成：剧本 默认主线剧本，分类 0，物品 0，技能 0，事件 0，任务 1。
+[GameLog] [23:15:13] 任务已解锁：主线序章
+[GameLog] [23:15:13] 已载入剧本：默认主线剧本
 Loading resource: res://Scenes/UI/MainUI.tscn
 [YamlConfigLoader] bundle=gameplay_layout path=res://Configs/Scenarios/MainStory/UI/GameplayLayout 已解析 1 个 yaml 文件。
 [YamlConfigLoader] bundle=gameplay_layout path=res://Configs/Scenarios/MainStory/UI/GameplayLayout 已解析 1 个 yaml 文件。
+[YamlConfigLoader] bundle=ui_tabs path=res://Configs/Scenarios/MainStory/UI/Tabs 已解析 6 个 yaml 文件。
+[YamlConfigLoader] bundle=ui_tabs path=res://Configs/Scenarios/MainStory/UI/Tabs 已解析 6 个 yaml 文件。
 [YamlConfigLoader] bundle=info_panel path=res://Configs/Scenarios/MainStory/UI/InfoPanel 已解析 1 个 yaml 文件。
 [YamlConfigLoader] bundle=info_panel path=res://Configs/Scenarios/MainStory/UI/InfoPanel 已解析 1 个 yaml 文件。
 [YamlConfigLoader] bundle=categories path=res://Configs/Scenarios/MainStory/Items/Categories 已解析 1 个 yaml 文件。
 [YamlConfigLoader] bundle=items path=res://Configs/Scenarios/MainStory/Items/Definitions 已解析 1 个 yaml 文件。
 [YamlConfigLoader] bundle=skills path=res://Configs/Scenarios/MainStory/Skills/Definitions 已解析 1 个 yaml 文件。
+[YamlConfigLoader] bundle=quests path=res://Configs/Scenarios/MainStory/Quests/Definitions 已解析 1 个 yaml 文件。
 [YamlConfigLoader] bundle=events path=res://Configs/Scenarios/MainStory/Events/Oneshot 已解析 1 个 yaml 文件。
 [YamlConfigLoader] bundle=events path=res://Configs/Scenarios/MainStory/Events/Click 已解析 1 个 yaml 文件。
 [YamlConfigLoader] bundle=events path=res://Configs/Scenarios/MainStory/Events/Idle 已解析 1 个 yaml 文件。
 [YamlConfigLoader] bundle=factions path=res://Configs/Scenarios/MainStory/Factions/Definitions 已解析 1 个 yaml 文件。
 [YamlConfigLoader] bundle=zones path=res://Configs/Scenarios/MainStory/Zones/Definitions 已解析 1 个 yaml 文件。
 [YamlConfigLoader] bundle=localization path=res://Configs/Scenarios/MainStory/Localization/Bundle 已解析 1 个 yaml 文件。
-[GameLog] [15:23:55] 警告：有核心配置未成功加载，请优先检查 YAML 格式和路径。
-[GameLog] [15:23:55] 静态配置加载完成：剧本 默认主线剧本，分类 0，物品 0，技能 0，事件 0。
-[GameLog] [15:23:55] 已载入剧本：默认主线剧本
+[GameLog] [23:15:14] 警告：有核心配置未成功加载，请优先检查 YAML 格式和路径。
+[GameLog] [23:15:14] 静态配置加载完成：剧本 默认主线剧本，分类 0，物品 0，技能 0，事件 0，任务 1。
+[GameLog] [23:15:14] 任务已解锁：主线序章
+[GameLog] [23:15:14] 已载入剧本：默认主线剧本
 [MigrationRunner] 检查存档版本: 0.4.0
-[GameLog] [15:23:55] 已执行读档。路径：C:\Users\AA\AppData\Local\Test00_0410\save_01.json
+[GameLog] [23:15:14] 已执行读档。路径：C:\Users\AA\AppData\Local\Test00_0410\save_01.json
 [SaveLoadSmokeTest] has_system_tab=true story_event_count=0 save_ok=true load_ok=true
 Unloading: Disposing tracked instances...
 Unloading: Finished disposing tracked instances.

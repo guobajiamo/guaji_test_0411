@@ -10,9 +10,20 @@ namespace Test00_0410.Core.Helpers;
 /// </summary>
 public static class RuntimePathHelper
 {
-    public static string SaveDirectoryPath => Path.Combine(
-        System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData),
-        "Test00_0410");
+    public static string SaveDirectoryPath
+    {
+        get
+        {
+            if (OS.HasFeature("mobile") || OS.GetName().Equals("Android", StringComparison.OrdinalIgnoreCase))
+            {
+                return ProjectSettings.GlobalizePath("user://saves");
+            }
+
+            return Path.Combine(
+                System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData),
+                "Test00_0410");
+        }
+    }
 
     public static string SaveFilePath => GetTestSavePath();
 

@@ -1,5 +1,6 @@
 using Godot;
 using System;
+using Test00_0410.Autoload;
 using Test00_0410.Core.Definitions;
 using Test00_0410.Core.Enums;
 using Test00_0410.Core.Helpers;
@@ -288,6 +289,9 @@ public partial class ClickEventSystem : Node
                 break;
             case EventEffectType.StartBattle:
                 // 这里后续会转交给 BattleSystem。
+                break;
+            case EventEffectType.UnlockAchievement:
+                GameManager.Instance?.AchievementSystem?.UnlockAchievement(effect.TargetId);
                 break;
         }
     }

@@ -1,0 +1,70 @@
+# 填写说明：
+# 1. 以后安卓打包时，优先以本文件为准，不需要你去 Android Studio 里手工配置。
+# 2. 图标请使用 PNG，不要使用 .ico。
+# 3. main_192x192 建议使用 192x192 PNG。
+# 4. 自适应图标建议额外准备 432x432 PNG：
+#    - adaptive_foreground_432x432：前景图，建议透明底
+#    - adaptive_background_432x432：背景图，建议纯色或简单渐变
+#    - adaptive_monochrome_432x432：单色图，供系统主题适配
+# 5. 图标主体四周建议保留 10% 到 15% 安全边距，避免被系统裁切。
+# 6. 测试阶段建议继续使用 debug 签名；正式发版再切换 release 签名。
+
+android_export:
+  preset_name: "Android"
+  export_mode: "debug" # 可选：debug / release
+  output_apk_path: "../Android-DIR/test_00_0410-android-debug.apk"
+
+  package_name: "com.test00410.idletextgame"
+  application_name: "test_00_0410"
+
+  version_name: "1.0.0"
+  version_code: 1
+
+  min_sdk: 24
+  target_sdk: 35
+
+  abis:
+    - "arm64-v8a"
+
+  orientation: "landscape" # 可选：landscape / portrait / sensor
+  use_gradle_build: true
+  compress_native_libraries: false
+  dotnet_android_use_linux_bionic: false
+
+icons:
+  # 请把下面路径替换成你自己的真实 PNG 文件路径。
+  # 这些路径建议都放在项目目录内，方便我后续直接读取并写入导出参数。
+  main_192x192: "user_define_file/android_icons/replace_me_main_192x192.png"
+  adaptive_foreground_432x432: "user_define_file/android_icons/replace_me_adaptive_foreground_432x432.png"
+  adaptive_background_432x432: "user_define_file/android_icons/replace_me_adaptive_background_432x432.png"
+  adaptive_monochrome_432x432: "user_define_file/android_icons/replace_me_adaptive_monochrome_432x432.png"
+
+signing:
+  # 测试版建议 mode=debug
+  # 正式版请改为 release，并填写你自己的 release keystore
+  mode: "debug"
+
+  debug_keystore_file: "C:/Users/AA/AppData/Roaming/Godot/keystores/debug.keystore"
+  debug_keystore_alias: "androiddebugkey"
+  debug_keystore_password: "android"
+
+  release_keystore_file: ""
+  release_keystore_alias: ""
+  release_keystore_password: ""
+
+permissions:
+  # 没需求就先关掉，后续有需要再打开
+  internet: false
+  access_network_state: false
+  post_notifications: false
+  vibrate: false
+  wake_lock: false
+  read_external_storage: false
+  write_external_storage: false
+
+  # 如需自定义权限，可直接填完整 Android 权限名
+  custom_permissions: []
+
+notes:
+  distribution_channel: "local_test"
+  remark: "后续若替换正式图标、正式包名、正式签名，请同步更新本文件。"

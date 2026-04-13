@@ -1,0 +1,7 @@
+tabs:
+  - id: "achievement"
+    title: "成就"
+    visible: true
+    placeholder_title: "成就页预留"
+    content_lines:
+      - "成就系统 YAML 入口已经预留，当前先展示说明页。"

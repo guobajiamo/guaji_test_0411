@@ -1,0 +1,9 @@
+# 成就页签当前只预留接口与说明。
+tabs:
+  - id: "achievement"
+    title: "成就"
+    visible: true
+    placeholder_title: "成就页预留"
+    content_lines:
+      - "任务奖励已经支持 UnlockAchievement 效果。"
+      - "正式成就定义 YAML 可以后续独立补到 Achievements/Definitions/ 目录。"

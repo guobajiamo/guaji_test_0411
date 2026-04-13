@@ -1,0 +1,90 @@
+# 测试剧本任务示例。
+# 任务链支持拆分为多个 YAML 文件；后续只要继续往 Quests/Definitions/ 下追加即可。
+#
+# quests 字段说明：
+# id:
+#   任务唯一 ID。
+# category:
+#   Main 或 Side，决定显示到主线列还是支线列。
+# chain_id / chain_order:
+#   同一条任务链的分组与顺序。后一个任务默认会等待同链前序任务完成后再解锁。
+# title / description:
+#   任务标题与主要目的说明。
+# unlock_condition_count / unlock_conditions:
+#   解锁条件数量与明细。支持 EventCompleted / QuestCompleted / ItemAcquired / BattleStatReached 等通用条件。
+# required_completed_quest_ids:
+#   额外要求哪些任务先完成。
+# step_count / steps:
+#   任务推进步骤。当前每一步都对应一个关键事件 event_id。
+# rewards:
+#   任务完成后可手动领取的奖励，使用和事件 effects 相同的 effect_type 结构。
+quests:
+  - id: "quest_main_woodcutter_intro"
+    category: "Main"
+    chain_id: "main_story"
+    chain_order: 10
+    title: "初入人间之里"
+    description: "先拿到石斧，读完伐木心得，再处理路人的谢礼。"
+    unlock_condition_count: 0
+    unlock_conditions: []
+    required_completed_quest_ids: []
+    step_count: 3
+    steps:
+      - id: "pickup_axe"
+        event_id: "evt_pickup_stone_axe"
+        title: "捡起石斧"
+        description: "去人间之里的木匠屋拿到第一把石斧。"
+      - id: "read_notice"
+        event_id: "evt_read_chopping_notice"
+        title: "阅读伐木心得"
+        description: "继续阅读木匠屋里的伐木心得。"
+      - id: "stranger_offer"
+        event_id: "evt_stranger_reward_offer"
+        title: "回应路人的谢礼"
+        description: "处理完路人的谢礼事件，结束最初的新手阶段。"
+    rewards:
+      - { effect_type: "GrantGold", target_id: "", int_value: 20 }
+      - { effect_type: "UnlockAchievement", target_id: "ach_testgame_story_intro", int_value: 1 }
+
+  - id: "quest_main_fishing_contact"
+    category: "Main"
+    chain_id: "main_story"
+    chain_order: 20
+    title: "山涧钓手"
+    description: "拿到鱼竿后前往妖怪之山，与太公望对话，开启新的主线阶段。"
+    unlock_condition_count: 1
+    unlock_conditions:
+      - { condition_type: "ItemAcquired", target_id: "tool_fishing_rod", required_value: 1 }
+    required_completed_quest_ids: []
+    step_count: 2
+    steps:
+      - id: "claim_fishing_rod"
+        event_id: "evt_claim_fishing_rod"
+        title: "领取鱼竿"
+        description: "先去渔具屋拿到基础鱼竿。"
+      - id: "talk_to_taigongwang"
+        event_id: "evt_talk_to_taigongwang"
+        title: "与太公望对话"
+        description: "前往妖怪之山玄武涧，与湖边的太公望交谈。"
+    rewards:
+      - { effect_type: "GrantItem", target_id: "bait_worm", int_value: 2 }
+
+  - id: "quest_side_spare_rod"
+    category: "Side"
+    chain_id: "side_fishing"
+    chain_order: 10
+    title: "渔具屋的备用货"
+    description: "拿到第一根鱼竿后，再把店里的备用鱼竿也收起来。"
+    unlock_condition_count: 1
+    unlock_conditions:
+      - { condition_type: "ItemAcquired", target_id: "tool_fishing_rod", required_value: 1 }
+    required_completed_quest_ids: []
+    step_count: 1
+    steps:
+      - id: "claim_spare_rod"
+        event_id: "evt_claim_spare_fishing_rod"
+        title: "领取备用鱼竿"
+        description: "回到渔具屋，把角落里的备用鱼竿也拿走。"
+    rewards:
+      - { effect_type: "GrantItem", target_id: "food_baozi", int_value: 1 }
+      - { effect_type: "UnlockAchievement", target_id: "ach_testgame_spare_rod", int_value: 1 }

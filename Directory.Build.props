@@ -1,0 +1,7 @@
+<Project>
+  <PropertyGroup>
+    <CodexIsAndroidExport Condition="'$(GodotTargetPlatform)' == 'android'">true</CodexIsAndroidExport>
+    <CodexIsAndroidExport Condition="'$(CodexIsAndroidExport)' == '' and $([System.String]::Copy('$(RuntimeIdentifier)').StartsWith('android-'))">true</CodexIsAndroidExport>
+    <TargetFramework Condition="'$(CodexIsAndroidExport)' == 'true' and '$(TargetFramework)' == ''">net9.0</TargetFramework>
+  </PropertyGroup>
+</Project>

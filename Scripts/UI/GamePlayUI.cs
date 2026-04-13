@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Test00_0410.Autoload;
 using Test00_0410.Core.SaveLoad;
+using Test00_0410.UI.Placeholder;
 
 namespace Test00_0410.UI;
 
@@ -13,6 +14,10 @@ public partial class GamePlayUI : Control
     protected const string TabCurrentRegion = "current_region";
     protected const string TabInventory = "inventory";
     protected const string TabSkills = "skills";
+    protected const string TabBattle = "battle";
+    protected const string TabQuest = "quest";
+    protected const string TabTutorial = "tutorial";
+    protected const string TabAchievement = "achievement";
     protected const string TabDictionary = "dictionary";
     protected const string TabSystem = "system";
 
@@ -32,6 +37,10 @@ public partial class GamePlayUI : Control
     protected VBoxContainer? _currentRegionSceneList;
     protected InventoryPanel? _inventoryPanel;
     protected SkillPanel? _skillPanel;
+    protected BattlePanel? _battlePanel;
+    protected QuestPanel? _questPanel;
+    protected TutorialPanel? _tutorialPanel;
+    protected AchievementPanel? _achievementPanel;
     protected DictionaryPanel? _dictionaryPanel;
     protected SystemPanel? _systemPanel;
     protected ConfigurableInfoPanel? _infoPanel;
@@ -40,6 +49,7 @@ public partial class GamePlayUI : Control
     protected LogPanel? _expandedLogPanel;
     protected PanelContainer? _collapsedLogDock;
     protected Control? _expandedLogOverlay;
+    protected Button? _collapsedLogToggleButton;
 
     protected EventDialogPanel? _eventDialogPanel;
     protected SaveSlotDialog? _storySaveDialog;
@@ -48,11 +58,17 @@ public partial class GamePlayUI : Control
 
     protected readonly Dictionary<string, bool> _regionExpandedStates = new(StringComparer.Ordinal);
     protected readonly Dictionary<string, EventButtonItem> _eventButtonWidgets = new(StringComparer.Ordinal);
+    protected readonly Dictionary<string, ScenarioTabDefinition> _scenarioTabs = new(StringComparer.Ordinal);
+    protected readonly Dictionary<string, Control> _tabPagesById = new(StringComparer.Ordinal);
+    protected readonly List<Label> _newAreaMarkerLabels = new();
     protected string _loadedScenarioId = string.Empty;
     private bool _isLogExpanded;
+    private bool _isLogMinimized;
     private SignalBus? _signalBus;
     private bool _pendingDeferredFullRefresh;
     private double _progressVisualAccumulator;
+    private double _newAreaMarkerBlinkAccumulator;
+    private bool _newAreaMarkerVisible = true;
 
     public override void _Ready()
     {
@@ -73,8 +89,10 @@ public partial class GamePlayUI : Control
             return;
         }
 
+        _gameManager.QuestSystem?.RefreshQuestState();
         SyncScenarioSpecificUi();
         RefreshTopBar();
+        UpdateAreaNewMarkers();
         RefreshLeftRegionTree();
         RefreshTabBar();
         RefreshCurrentRegionPage();
@@ -90,6 +108,8 @@ public partial class GamePlayUI : Control
 
     public override void _Process(double delta)
     {
+        UpdateNewAreaMarkerBlink(delta);
+
         _progressVisualAccumulator += delta;
         if (_progressVisualAccumulator < 0.05)
         {
@@ -119,6 +139,10 @@ public partial class GamePlayUI : Control
             && _currentRegionSceneList != null
             && _inventoryPanel != null
             && _skillPanel != null
+            && _battlePanel != null
+            && _questPanel != null
+            && _tutorialPanel != null
+            && _achievementPanel != null
             && _dictionaryPanel != null
             && _infoPanel != null
             && _statusPanel != null
@@ -229,7 +253,7 @@ public partial class GamePlayUI : Control
             Name = "TopBarScenarioLabel",
             SizeFlagsHorizontal = SizeFlags.ExpandFill
         };
-        _topBarScenarioLabel.AddThemeColorOverride("font_color", new Color("#f7f3e8"));
+        _topBarScenarioLabel.AddThemeColorOverride("font_color", new Color("#fff6ea"));
         _topBarScenarioLabel.AddThemeFontSizeOverride("font_size", _theme.BodyFontSize + 2);
         content.AddChild(_topBarScenarioLabel);
 
@@ -238,7 +262,7 @@ public partial class GamePlayUI : Control
             Name = "TopBarAreaLabel",
             HorizontalAlignment = HorizontalAlignment.Right
         };
-        _topBarAreaLabel.AddThemeColorOverride("font_color", new Color("#d9e8bf"));
+        _topBarAreaLabel.AddThemeColorOverride("font_color", new Color("#ffd474"));
         _topBarAreaLabel.AddThemeFontSizeOverride("font_size", _theme.BodyFontSize + 1);
         content.AddChild(_topBarAreaLabel);
 
@@ -268,7 +292,7 @@ public partial class GamePlayUI : Control
             Text = "区域",
             HorizontalAlignment = HorizontalAlignment.Center
         };
-        title.AddThemeColorOverride("font_color", new Color("#f4e4bf"));
+        title.AddThemeColorOverride("font_color", new Color("#93bbff"));
         title.AddThemeFontSizeOverride("font_size", _theme.RegionHeaderFontSize);
         content.AddChild(title);
 
@@ -340,21 +364,56 @@ public partial class GamePlayUI : Control
         _currentRegionPage = BuildCurrentRegionPage();
         _currentRegionPage.Name = _theme.CurrentRegionTabText;
         _pageHost.AddChild(_currentRegionPage);
+        _tabPagesById[TabCurrentRegion] = _currentRegionPage;
 
         _inventoryPanel = new InventoryPanel { Name = _theme.InventoryTabText };
         _inventoryPanel.Configure(_gameManager!);
         _inventoryPanel.SetAnchorsPreset(LayoutPreset.FullRect);
         _pageHost.AddChild(_inventoryPanel);
+        _tabPagesById[TabInventory] = _inventoryPanel;
 
         _skillPanel = new SkillPanel { Name = _theme.SkillsTabText };
         _skillPanel.Configure(_gameManager!, TryLevelUpSkill);
         _skillPanel.SetAnchorsPreset(LayoutPreset.FullRect);
         _pageHost.AddChild(_skillPanel);
+        _tabPagesById[TabSkills] = _skillPanel;
+
+        _battlePanel = new BattlePanel { Name = "战斗" };
+        _battlePanel.SetAnchorsPreset(LayoutPreset.FullRect);
+        _pageHost.AddChild(_battlePanel);
+        _tabPagesById[TabBattle] = _battlePanel;
+
+        _questPanel = new QuestPanel { Name = "任务" };
+        _questPanel.Configure(
+            _gameManager!,
+            _theme,
+            FindActionContextByEventId,
+            (summary, content) => _infoPanel?.SetTransientContent(summary, content),
+            () =>
+            {
+                _infoPanel?.ClearTransientContent();
+                FlushDeferredRefreshIfNeeded();
+            },
+            RefreshAllPanels);
+        _questPanel.SetAnchorsPreset(LayoutPreset.FullRect);
+        _pageHost.AddChild(_questPanel);
+        _tabPagesById[TabQuest] = _questPanel;
+
+        _tutorialPanel = new TutorialPanel { Name = "教学" };
+        _tutorialPanel.SetAnchorsPreset(LayoutPreset.FullRect);
+        _pageHost.AddChild(_tutorialPanel);
+        _tabPagesById[TabTutorial] = _tutorialPanel;
+
+        _achievementPanel = new AchievementPanel { Name = "成就" };
+        _achievementPanel.SetAnchorsPreset(LayoutPreset.FullRect);
+        _pageHost.AddChild(_achievementPanel);
+        _tabPagesById[TabAchievement] = _achievementPanel;
 
         _dictionaryPanel = new DictionaryPanel { Name = _theme.DictionaryTabText };
         _dictionaryPanel.Configure(_gameManager!);
         _dictionaryPanel.SetAnchorsPreset(LayoutPreset.FullRect);
         _pageHost.AddChild(_dictionaryPanel);
+        _tabPagesById[TabDictionary] = _dictionaryPanel;
 
         _collapsedLogDock = BuildCollapsedLogDock();
         content.AddChild(_collapsedLogDock);
@@ -375,7 +434,7 @@ public partial class GamePlayUI : Control
 
         _currentRegionTitleLabel = new Label { Name = "CurrentRegionTitleLabel" };
         _currentRegionTitleLabel.HorizontalAlignment = HorizontalAlignment.Center;
-        _currentRegionTitleLabel.AddThemeColorOverride("font_color", new Color("#f7f0db"));
+        _currentRegionTitleLabel.AddThemeColorOverride("font_color", new Color("#fff0f6"));
         _currentRegionTitleLabel.AddThemeFontSizeOverride("font_size", _theme.SceneTitleFontSize + 2);
         root.AddChild(_currentRegionTitleLabel);
 
@@ -385,7 +444,7 @@ public partial class GamePlayUI : Control
             AutowrapMode = TextServer.AutowrapMode.WordSmart,
             HorizontalAlignment = HorizontalAlignment.Center
         };
-        _currentRegionHintLabel.AddThemeColorOverride("font_color", new Color("#c8d0cf"));
+        _currentRegionHintLabel.AddThemeColorOverride("font_color", new Color("#e5a7bf"));
         _currentRegionHintLabel.AddThemeFontSizeOverride("font_size", _theme.BodyFontSize - 1);
         root.AddChild(_currentRegionHintLabel);
 
@@ -404,7 +463,7 @@ public partial class GamePlayUI : Control
             Name = "CurrentRegionSceneList",
             SizeFlagsHorizontal = SizeFlags.ExpandFill
         };
-        _currentRegionSceneList.AddThemeConstantOverride("separation", _theme.InnerGap + 8);
+        _currentRegionSceneList.AddThemeConstantOverride("separation", _theme.InnerGap + 4);
         scroll.AddChild(_currentRegionSceneList);
 
         return root;
@@ -432,6 +491,7 @@ public partial class GamePlayUI : Control
         {
             SizeFlagsHorizontal = SizeFlags.ExpandFill
         };
+        logHeader.AddThemeConstantOverride("separation", 4);
         logContent.AddChild(logHeader);
 
         Label logTitle = new()
@@ -443,16 +503,29 @@ public partial class GamePlayUI : Control
         logTitle.AddThemeFontSizeOverride("font_size", _theme.BodyFontSize + 1);
         logHeader.AddChild(logTitle);
 
-        Button expandButton = new()
+        _collapsedLogToggleButton = new Button()
         {
-            Name = "ExpandLogButton",
-            Text = "展开",
+            Name = "ToggleLogHeightButton",
+            Text = "最小化",
             CustomMinimumSize = new Vector2(90, 34)
         };
-        expandButton.AddThemeStyleboxOverride("normal", CreateTabStyle(false));
-        expandButton.AddThemeStyleboxOverride("hover", CreateTabStyle(true));
-        expandButton.Pressed += () => SetLogExpanded(true);
-        logHeader.AddChild(expandButton);
+        _collapsedLogToggleButton.AddThemeStyleboxOverride("normal", CreateTabStyle(false));
+        _collapsedLogToggleButton.AddThemeStyleboxOverride("hover", CreateTabStyle(true));
+        _collapsedLogToggleButton.AddThemeStyleboxOverride("pressed", CreateTabStyle(true));
+        _collapsedLogToggleButton.Pressed += () => SetLogMinimized(!_isLogMinimized);
+        logHeader.AddChild(_collapsedLogToggleButton);
+
+        Button maximizeButton = new()
+        {
+            Name = "MaximizeLogButton",
+            Text = "最大化",
+            CustomMinimumSize = new Vector2(90, 34)
+        };
+        maximizeButton.AddThemeStyleboxOverride("normal", CreateTabStyle(false));
+        maximizeButton.AddThemeStyleboxOverride("hover", CreateTabStyle(true));
+        maximizeButton.AddThemeStyleboxOverride("pressed", CreateTabStyle(true));
+        maximizeButton.Pressed += () => SetLogExpanded(true);
+        logHeader.AddChild(maximizeButton);
 
         _collapsedLogPanel = new LogPanel
         {
@@ -460,8 +533,9 @@ public partial class GamePlayUI : Control
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
             SizeFlagsVertical = SizeFlags.ExpandFill
         };
-        _collapsedLogPanel.SetDisplayMode(false);
+        _collapsedLogPanel.SetDisplayMode(false, 5);
         logContent.AddChild(_collapsedLogPanel);
+        RefreshCollapsedLogDockState();
 
         return dock;
     }
@@ -604,7 +678,25 @@ public partial class GamePlayUI : Control
     private void SetLogExpanded(bool isExpanded)
     {
         _isLogExpanded = isExpanded;
+        if (!isExpanded)
+        {
+            _isLogMinimized = false;
+        }
+
         SyncLogVisibility();
+        RefreshCollapsedLogDockState();
+        RefreshStatusAndLogs();
+    }
+
+    private void SetLogMinimized(bool isMinimized)
+    {
+        if (_isLogExpanded)
+        {
+            return;
+        }
+
+        _isLogMinimized = isMinimized;
+        RefreshCollapsedLogDockState();
         RefreshStatusAndLogs();
     }
 
@@ -619,6 +711,26 @@ public partial class GamePlayUI : Control
         {
             _expandedLogOverlay.Visible = _isLogExpanded;
         }
+    }
+
+    private void RefreshCollapsedLogDockState()
+    {
+        if (_collapsedLogDock != null)
+        {
+            _collapsedLogDock.CustomMinimumSize = new Vector2(0, _isLogMinimized ? GetMinimizedLogHeight() : _theme.BottomLogHeight);
+        }
+
+        if (_collapsedLogToggleButton != null)
+        {
+            _collapsedLogToggleButton.Text = _isLogMinimized ? "展开" : "最小化";
+        }
+
+        _collapsedLogPanel?.SetDisplayMode(false, _isLogMinimized ? 1 : 5);
+    }
+
+    private int GetMinimizedLogHeight()
+    {
+        return Math.Max(108, (_theme.BodyFontSize * 2) + 72);
     }
 
     private void ConnectSignalBus()
@@ -696,5 +808,30 @@ public partial class GamePlayUI : Control
         bool isIdleRunning = _gameManager.PlayerProfile.IdleState.IsRunning && !string.IsNullOrWhiteSpace(activeEventId);
         double targetRatio = isIdleRunning ? _gameManager.IdleSystem.GetProgressRatio(activeEventId) : 0.0;
         _statusPanel?.UpdateTargetProgress(targetRatio, isIdleRunning);
+    }
+
+    private void UpdateNewAreaMarkerBlink(double delta)
+    {
+        _newAreaMarkerBlinkAccumulator += delta;
+        if (_newAreaMarkerBlinkAccumulator < 0.45)
+        {
+            return;
+        }
+
+        _newAreaMarkerBlinkAccumulator = 0.0;
+        _newAreaMarkerVisible = !_newAreaMarkerVisible;
+
+        foreach (Label label in _newAreaMarkerLabels.ToArray())
+        {
+            if (!IsInstanceValid(label))
+            {
+                _newAreaMarkerLabels.Remove(label);
+                continue;
+            }
+
+            Color modulate = label.SelfModulate;
+            modulate.A = _newAreaMarkerVisible ? 1.0f : 0.0f;
+            label.SelfModulate = modulate;
+        }
     }
 }

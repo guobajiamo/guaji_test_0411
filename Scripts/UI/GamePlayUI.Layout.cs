@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Linq;
 using Test00_0410.Core.Definitions;
 using Test00_0410.Core.Enums;
+using Test00_0410.Core.Runtime;
 
 namespace Test00_0410.UI;
 
@@ -24,6 +25,11 @@ public partial class GamePlayUI
         {
             _loadedScenarioId = scenarioId;
             _scenarioLayout = GameplayUiConfigLoader.LoadScenarioLayout(_gameManager.ActiveScenario);
+            _scenarioTabs.Clear();
+            foreach ((string tabId, ScenarioTabDefinition definition) in GameplayUiConfigLoader.LoadScenarioTabs(_gameManager.ActiveScenario))
+            {
+                _scenarioTabs[tabId] = definition;
+            }
             _regionExpandedStates.Clear();
             foreach (PrimaryRegionLayout region in _scenarioLayout.Regions)
             {
@@ -31,6 +37,7 @@ public partial class GamePlayUI
             }
         }
 
+        ApplyScenarioTabDefinitions();
         EnsureAreaSelection();
         EnsureSystemPage();
         EnsureTabSelection();
@@ -61,7 +68,7 @@ public partial class GamePlayUI
         }
 
         bool shouldShowSystemTab = _gameManager.ActiveScenario?.EnableSystemTab == true;
-        Control? existingPage = _pageHost.GetNodeOrNull<Control>(_theme.SystemTabText);
+        Control? existingPage = _tabPagesById.GetValueOrDefault(TabSystem);
 
         if (shouldShowSystemTab)
         {
@@ -73,6 +80,7 @@ public partial class GamePlayUI
                 };
                 _systemPanel.SetAnchorsPreset(LayoutPreset.FullRect);
                 _pageHost.AddChild(_systemPanel);
+                _tabPagesById[TabSystem] = _systemPanel;
             }
             else
             {
@@ -93,6 +101,7 @@ public partial class GamePlayUI
                     isTestScenario ? SaveQuickTestGame : ShowStorySaveDialog,
                     isTestScenario ? ConfirmQuickLoadTestGame : ShowStoryLoadDialog,
                     RequestReturnToMainMenu);
+                _systemPanel.Name = GetTabText(TabSystem);
             }
         }
         else if (existingPage != null)
@@ -100,6 +109,7 @@ public partial class GamePlayUI
             _pageHost.RemoveChild(existingPage);
             existingPage.QueueFree();
             _systemPanel = null;
+            _tabPagesById.Remove(TabSystem);
         }
     }
 
@@ -124,8 +134,8 @@ public partial class GamePlayUI
             return;
         }
 
-        string scenarioName = _gameManager.ActiveScenario?.DisplayName ?? "未载入剧本";
-        _topBarScenarioLabel.Text = string.Format(CultureInfo.InvariantCulture, _theme.TopBarScenarioFormat, scenarioName);
+        string mainQuestText = _gameManager.QuestSystem?.GetCurrentMainQuestLabel() ?? "暂无主线任务";
+        _topBarScenarioLabel.Text = string.Format(CultureInfo.InvariantCulture, _theme.TopBarMainQuestFormat, mainQuestText);
 
         SecondaryAreaLayout? area = GetSelectedArea();
         _topBarAreaLabel.Text = string.Format(
@@ -141,6 +151,7 @@ public partial class GamePlayUI
             return;
         }
 
+        _newAreaMarkerLabels.Clear();
         ClearContainer(_regionTreeContainer);
 
         foreach (PrimaryRegionLayout region in GetVisibleRegions())
@@ -182,6 +193,7 @@ public partial class GamePlayUI
             _regionExpandedStates[region.Id] = !_regionExpandedStates.GetValueOrDefault(region.Id, true);
             RefreshLeftRegionTree();
         };
+
         return button;
     }
 
@@ -198,12 +210,13 @@ public partial class GamePlayUI
             SizeFlagsHorizontal = SizeFlags.ExpandFill
         };
         panel.AddThemeStyleboxOverride("panel", CreateFlatStyle(isSelected
-            ? new Color("#ebe2c1") { A = 0.16f }
+            ? new Color("#22498d") { A = 0.34f }
             : new Color(1, 1, 1, 0.04f)));
 
         HBoxContainer row = new()
         {
-            SizeFlagsHorizontal = SizeFlags.ExpandFill
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+            MouseFilter = MouseFilterEnum.Ignore
         };
         row.AddThemeConstantOverride("separation", 6);
         panel.AddChild(row);
@@ -211,40 +224,82 @@ public partial class GamePlayUI
         Label marker = new()
         {
             Text = isRunning ? _theme.IdleMarkerText : " ",
-            CustomMinimumSize = new Vector2(18, 0)
+            CustomMinimumSize = new Vector2(18, 0),
+            MouseFilter = MouseFilterEnum.Ignore
         };
         marker.AddThemeFontSizeOverride("font_size", _theme.RegionItemFontSize);
-        marker.AddThemeColorOverride("font_color", new Color("#ef4444"));
+        marker.AddThemeColorOverride("font_color", new Color("#ff6b98"));
         row.AddChild(marker);
 
-        Button button = new()
+        HBoxContainer contentRow = new()
+        {
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+            MouseFilter = MouseFilterEnum.Ignore
+        };
+        contentRow.AddThemeConstantOverride("separation", 5);
+        row.AddChild(contentRow);
+
+        panel.TooltipText = tooltipText;
+        panel.MouseFilter = MouseFilterEnum.Stop;
+        BindHoverInfo(panel, area.Title, tooltipText);
+
+        Label titleLabel = new()
         {
             Text = area.Title,
-            Alignment = HorizontalAlignment.Left,
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+            VerticalAlignment = VerticalAlignment.Center,
             TooltipText = tooltipText,
-            CustomMinimumSize = new Vector2(0, 38)
+            MouseFilter = MouseFilterEnum.Ignore
         };
-        button.AddThemeFontSizeOverride("font_size", accent.FontSize);
-        button.AddThemeColorOverride("font_color", accent.TextColor);
-        button.AddThemeColorOverride("font_hover_color", accent.TextColor.Lightened(0.1f));
-        button.AddThemeStyleboxOverride("normal", CreateFlatStyle(Colors.Transparent));
-        button.AddThemeStyleboxOverride("hover", CreateFlatStyle(new Color(1, 1, 1, 0.04f)));
-        button.AddThemeStyleboxOverride("pressed", CreateFlatStyle(new Color(1, 1, 1, 0.07f)));
-        BindHoverInfo(button, area.Title, tooltipText);
-        button.Pressed += () => SelectArea(area.Id);
-        row.AddChild(button);
+        titleLabel.AddThemeFontSizeOverride("font_size", accent.FontSize);
+        titleLabel.AddThemeColorOverride("font_color", accent.TextColor);
+        contentRow.AddChild(titleLabel);
+
+        if (_gameManager?.PlayerProfile.UiState.HasNewMarker(area.Id) == true)
+        {
+            Label newLabel = new()
+            {
+                Text = "New",
+                VerticalAlignment = VerticalAlignment.Center,
+                MouseFilter = MouseFilterEnum.Ignore
+            };
+            newLabel.AddThemeFontSizeOverride("font_size", Math.Max(11, _theme.RegionCountFontSize));
+            newLabel.AddThemeColorOverride("font_color", new Color("#ff2d2d"));
+            newLabel.AddThemeColorOverride("font_shadow_color", new Color(0, 0, 0, 0.75f));
+            newLabel.AddThemeConstantOverride("shadow_offset_x", 1);
+            newLabel.AddThemeConstantOverride("shadow_offset_y", 1);
+            newLabel.SelfModulate = new Color(1, 1, 1, _newAreaMarkerVisible ? 1.0f : 0.0f);
+            contentRow.AddChild(newLabel);
+            _newAreaMarkerLabels.Add(newLabel);
+        }
 
         if (interactionCount > 0)
         {
             Label countLabel = new()
             {
-                Text = string.Format(CultureInfo.InvariantCulture, _theme.InteractionCountFormat, interactionCount)
+                Text = string.Format(CultureInfo.InvariantCulture, _theme.InteractionCountFormat, interactionCount),
+                MouseFilter = MouseFilterEnum.Ignore
             };
             countLabel.AddThemeFontSizeOverride("font_size", _theme.RegionCountFontSize);
-            countLabel.AddThemeColorOverride("font_color", new Color("#9ad9a4"));
-            row.AddChild(countLabel);
+            countLabel.AddThemeColorOverride("font_color", new Color("#63d8ff"));
+            contentRow.AddChild(countLabel);
         }
+
+        Control spacer = new()
+        {
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+            MouseFilter = MouseFilterEnum.Ignore
+        };
+        row.AddChild(spacer);
+
+        panel.GuiInput += @event =>
+        {
+            if (@event is InputEventMouseButton mouseButton
+                && mouseButton.ButtonIndex == MouseButton.Left
+                && mouseButton.Pressed)
+            {
+                SelectArea(area.Id);
+            }
+        };
 
         return panel;
     }
@@ -257,6 +312,7 @@ public partial class GamePlayUI
         }
 
         _gameManager.PlayerProfile.UiState.SelectedAreaId = areaId;
+        _gameManager.PlayerProfile.UiState.ClearNewMarker(areaId);
         _gameManager.PlayerProfile.UiState.SelectedTabId = TabCurrentRegion;
         RefreshAllPanels();
     }
@@ -303,17 +359,16 @@ public partial class GamePlayUI
 
     protected void UpdatePageVisibility()
     {
-        if (_pageHost == null || _gameManager == null)
+        if (_gameManager == null)
         {
             return;
         }
 
-        string activePageName = GetTabText(_gameManager.PlayerProfile.UiState.SelectedTabId);
-        foreach (Node child in _pageHost.GetChildren())
+        foreach ((string tabId, Control page) in _tabPagesById)
         {
-            if (child is Control page)
+            if (IsInstanceValid(page))
             {
-                page.Visible = string.Equals(page.Name, activePageName, StringComparison.Ordinal);
+                page.Visible = string.Equals(tabId, _gameManager.PlayerProfile.UiState.SelectedTabId, StringComparison.Ordinal);
             }
         }
     }
@@ -327,7 +382,8 @@ public partial class GamePlayUI
 
         SecondaryAreaLayout? area = GetSelectedArea();
         _currentRegionTitleLabel.Text = area?.Title ?? "当前区域";
-        _currentRegionHintLabel.Text = _theme.FavoriteHintText;
+        _currentRegionHintLabel.Text = string.Empty;
+        _currentRegionHintLabel.Visible = false;
 
         _eventButtonWidgets.Clear();
         ClearContainer(_currentRegionSceneList);
@@ -385,7 +441,7 @@ public partial class GamePlayUI
         {
             SizeFlagsHorizontal = SizeFlags.ExpandFill
         };
-        content.AddThemeConstantOverride("separation", 10);
+        content.AddThemeConstantOverride("separation", 8);
         card.AddChild(content);
 
         bool isFavorite = _gameManager?.PlayerProfile.UiState.IsSceneFavorited(scene.Id) == true;
@@ -397,7 +453,7 @@ public partial class GamePlayUI
             TooltipText = hoverDescription,
             MouseFilter = MouseFilterEnum.Stop
         };
-        headerPanel.AddThemeStyleboxOverride("panel", CreateFlatStyle(new Color(1, 1, 1, 0.30f)));
+        headerPanel.AddThemeStyleboxOverride("panel", CreateSceneHeaderStyle());
         BindHoverInfo(headerPanel, scene.Title, hoverDescription);
         headerPanel.GuiInput += @event =>
         {
@@ -409,25 +465,68 @@ public partial class GamePlayUI
             }
         };
 
+        VBoxContainer headerRoot = new()
+        {
+            SizeFlagsHorizontal = SizeFlags.ExpandFill
+        };
+        headerRoot.AddThemeConstantOverride("separation", 0);
+        headerPanel.AddChild(headerRoot);
+
+        ColorRect topHighlightLine = new()
+        {
+            CustomMinimumSize = new Vector2(0, 2),
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+            Color = isFavorite
+                ? new Color("#fff0b3")
+                : new Color(1, 1, 1, 0.62f),
+            MouseFilter = MouseFilterEnum.Ignore
+        };
+        headerRoot.AddChild(topHighlightLine);
+
         MarginContainer headerMargin = new()
         {
             SizeFlagsHorizontal = SizeFlags.ExpandFill
         };
         headerMargin.AddThemeConstantOverride("margin_left", 8);
-        headerMargin.AddThemeConstantOverride("margin_top", 6);
+        headerMargin.AddThemeConstantOverride("margin_top", 1);
         headerMargin.AddThemeConstantOverride("margin_right", 8);
-        headerMargin.AddThemeConstantOverride("margin_bottom", 6);
-        headerPanel.AddChild(headerMargin);
+        headerMargin.AddThemeConstantOverride("margin_bottom", 1);
+        headerRoot.AddChild(headerMargin);
 
-        Label header = new()
+        Control titleLayer = new()
         {
-            Text = isFavorite ? $"● {scene.Title}" : scene.Title,
-            HorizontalAlignment = HorizontalAlignment.Center,
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+            CustomMinimumSize = new Vector2(0, _theme.SceneTitleFontSize + 3),
             MouseFilter = MouseFilterEnum.Ignore
         };
-        header.AddThemeFontSizeOverride("font_size", _theme.SceneTitleFontSize);
-        header.AddThemeColorOverride("font_color", isFavorite ? new Color("#f6d77e") : new Color("#f7f2e6"));
-        headerMargin.AddChild(header);
+        headerMargin.AddChild(titleLayer);
+
+        string headerText = isFavorite ? $"● {scene.Title}" : scene.Title;
+        int headerFontSize = _theme.SceneTitleFontSize - 1;
+        Color topLightColor = isFavorite
+            ? new Color("#fff4cf")
+            : new Color(1, 1, 1, 0.68f);
+        Color baseTextColor = isFavorite
+            ? new Color("#ffe3a3")
+            : new Color("#f7f8fc");
+        Color bottomShadowColor = isFavorite
+            ? new Color("#8b6d35")
+            : new Color(0, 0, 0, 0.42f);
+
+        titleLayer.AddChild(CreateSceneHeaderTextLayer(headerText, bottomShadowColor, 1, 1, headerFontSize));
+        titleLayer.AddChild(CreateSceneHeaderTextLayer(headerText, topLightColor, -1, -1, headerFontSize));
+        titleLayer.AddChild(CreateSceneHeaderTextLayer(headerText, baseTextColor, 0, 0, headerFontSize));
+
+        ColorRect bottomShadeLine = new()
+        {
+            CustomMinimumSize = new Vector2(0, 2),
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+            Color = isFavorite
+                ? new Color("#92703c")
+                : new Color(0, 0, 0, 0.30f),
+            MouseFilter = MouseFilterEnum.Ignore
+        };
+        headerRoot.AddChild(bottomShadeLine);
         content.AddChild(headerPanel);
 
         List<EventDefinition> events = GetSceneEvents(scene);
@@ -525,6 +624,7 @@ public partial class GamePlayUI
     {
         _inventoryPanel?.RefreshInventory();
         _skillPanel?.RefreshSkills();
+        _questPanel?.RefreshQuests();
         _dictionaryPanel?.RefreshDictionary();
     }
 
@@ -591,5 +691,122 @@ public partial class GamePlayUI
         return string.IsNullOrWhiteSpace(scene.Description)
             ? HoverInfoFallbackText
             : scene.Description;
+    }
+
+    private void UpdateAreaNewMarkers()
+    {
+        if (_gameManager == null)
+        {
+            return;
+        }
+
+        PlayerUiState uiState = _gameManager.PlayerProfile.UiState;
+        string currentAreaId = _gameManager.PlayerProfile.UiState.SelectedAreaId;
+
+        if (!string.IsNullOrWhiteSpace(currentAreaId))
+        {
+            uiState.ClearNewMarker(currentAreaId);
+        }
+
+        foreach (SecondaryAreaLayout area in GetVisibleRegions().SelectMany(GetVisibleAreas))
+        {
+            foreach (SceneLayout scene in GetVisibleScenes(area))
+            {
+                foreach (string eventId in scene.EventIds)
+                {
+                    EventDefinition? definition = _gameManager.EventRegistry.GetEvent(eventId);
+                    if (definition == null || !ShouldShowEvent(definition) || IsEventDisabled(definition))
+                    {
+                        continue;
+                    }
+
+                    if (uiState.HasProcessedInteractableEvent(eventId))
+                    {
+                        continue;
+                    }
+
+                    uiState.MarkInteractableEventProcessed(eventId);
+                    if (!string.Equals(area.Id, currentAreaId, StringComparison.Ordinal))
+                    {
+                        uiState.AddNewMarker(area.Id);
+                        PrimaryRegionLayout? parentRegion = _scenarioLayout.Regions.FirstOrDefault(region => region.Areas.Contains(area));
+                        if (parentRegion != null && !_regionExpandedStates.GetValueOrDefault(parentRegion.Id, true))
+                        {
+                            _regionExpandedStates[parentRegion.Id] = true;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void ApplyScenarioTabDefinitions()
+    {
+        if (_battlePanel == null || _questPanel == null || _tutorialPanel == null || _achievementPanel == null)
+        {
+            return;
+        }
+
+        SyncTabPageTitle(TabCurrentRegion, _currentRegionPage);
+        SyncTabPageTitle(TabInventory, _inventoryPanel);
+        SyncTabPageTitle(TabSkills, _skillPanel);
+        SyncTabPageTitle(TabBattle, _battlePanel);
+        SyncTabPageTitle(TabQuest, _questPanel);
+        SyncTabPageTitle(TabTutorial, _tutorialPanel);
+        SyncTabPageTitle(TabAchievement, _achievementPanel);
+        SyncTabPageTitle(TabDictionary, _dictionaryPanel);
+        SyncTabPageTitle(TabSystem, _systemPanel);
+
+        _battlePanel.Configure(
+            GetPlaceholderTitle(TabBattle, "战斗"),
+            GetPlaceholderLines(TabBattle,
+                "战斗系统尚未正式实装。",
+                "这里已经预留了任务解锁所需的战斗属性接口，后续可以继续补战斗流程和数值规则。"),
+            new Color("#ff8f9e"));
+
+        _tutorialPanel.Configure(
+            GetPlaceholderTitle(TabTutorial, "教学"),
+            GetPlaceholderLines(TabTutorial,
+                "教学页暂时保留为配置入口。",
+                "后续可以把开局引导、快捷键提示和系统说明整理到这里。"),
+            new Color("#7ce0ff"));
+
+        _achievementPanel.Configure(
+            GetPlaceholderTitle(TabAchievement, "成就"),
+            GetPlaceholderLines(TabAchievement,
+                "成就页当前只预留接口。",
+                "任务奖励已经支持“解锁成就”效果，正式成就定义 YAML 可在后续继续补齐。"),
+            new Color("#ffe58a"));
+
+        _questPanel.ApplyTabDefinition(GetTabDefinition(TabQuest));
+    }
+
+    private void SyncTabPageTitle(string tabId, Control? page)
+    {
+        if (page != null)
+        {
+            page.Name = GetTabText(tabId);
+        }
+    }
+
+    private ScenarioTabDefinition? GetTabDefinition(string tabId)
+    {
+        return _scenarioTabs.GetValueOrDefault(tabId);
+    }
+
+    private string GetPlaceholderTitle(string tabId, string fallback)
+    {
+        ScenarioTabDefinition? definition = GetTabDefinition(tabId);
+        return string.IsNullOrWhiteSpace(definition?.PlaceholderTitle)
+            ? fallback
+            : definition.PlaceholderTitle;
+    }
+
+    private IReadOnlyList<string> GetPlaceholderLines(string tabId, params string[] fallback)
+    {
+        ScenarioTabDefinition? definition = GetTabDefinition(tabId);
+        return definition?.ContentLines?.Count > 0
+            ? definition.ContentLines
+            : fallback;
     }
 }

@@ -34,6 +34,8 @@ public class PlayerProfile
 
     public Dictionary<string, PlayerZoneState> ZoneStates { get; } = new();
 
+    public Dictionary<string, PlayerQuestState> QuestStates { get; } = new();
+
     /// <summary>
     /// 已完成事件集合。
     /// 用于一次性事件、解锁链和前置条件判断。
@@ -51,6 +53,10 @@ public class PlayerProfile
     /// 这里会记录限量商品是否已经卖掉、还剩多少库存等信息。
     /// </summary>
     public Dictionary<string, PlayerShopState> ShopStates { get; } = new();
+
+    public Dictionary<string, double> BattleStats { get; } = new();
+
+    public HashSet<string> UnlockedAchievementIds { get; } = new();
 
     public PlayerSkillState GetOrCreateSkillState(string skillId)
     {
@@ -85,6 +91,17 @@ public class PlayerProfile
         return state;
     }
 
+    public PlayerQuestState GetOrCreateQuestState(string questId)
+    {
+        if (!QuestStates.TryGetValue(questId, out PlayerQuestState? state))
+        {
+            state = new PlayerQuestState { QuestId = questId };
+            QuestStates[questId] = state;
+        }
+
+        return state;
+    }
+
     public PlayerShopState GetOrCreateShopState(string npcId)
     {
         if (!ShopStates.TryGetValue(npcId, out PlayerShopState? state))
@@ -94,5 +111,10 @@ public class PlayerProfile
         }
 
         return state;
+    }
+
+    public double GetBattleStatValue(string statId)
+    {
+        return BattleStats.TryGetValue(statId, out double value) ? value : 0.0;
     }
 }

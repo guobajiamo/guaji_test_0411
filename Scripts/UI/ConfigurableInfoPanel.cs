@@ -119,7 +119,7 @@ public partial class ConfigurableInfoPanel : Control
             AutowrapMode = TextServer.AutowrapMode.WordSmart
         };
         _summaryLabel.AddThemeFontSizeOverride("font_size", _layoutSettings.SectionHeaderFontSize);
-        _summaryLabel.AddThemeColorOverride("font_color", new Color("#f4e6bf"));
+        _summaryLabel.AddThemeColorOverride("font_color", new Color("#c9ffe6"));
         root.AddChild(_summaryLabel);
 
         _contentLabel = new RichTextLabel
@@ -133,7 +133,7 @@ public partial class ConfigurableInfoPanel : Control
             SizeFlagsVertical = SizeFlags.ExpandFill
         };
         _contentLabel.AddThemeFontSizeOverride("normal_font_size", _layoutSettings.BodyFontSize);
-        _contentLabel.AddThemeColorOverride("default_color", new Color("#dde5dc"));
+        _contentLabel.AddThemeColorOverride("default_color", new Color("#d8f8ea"));
         _contentLabel.AddThemeConstantOverride("line_separation", 6);
         root.AddChild(_contentLabel);
 
@@ -247,7 +247,8 @@ public partial class ConfigurableInfoPanel : Control
             ["scenario_description"] = scenario?.Description ?? string.Empty,
             ["event_count"] = gameManager.GetRegisteredEventCount().ToString(),
             ["is_test_scenario"] = (scenario?.IsTestScenario ?? false) ? "true" : "false",
-            ["system_tab_enabled"] = (scenario?.EnableSystemTab ?? false) ? "true" : "false"
+            ["system_tab_enabled"] = (scenario?.EnableSystemTab ?? false) ? "true" : "false",
+            ["current_main_quest"] = gameManager.QuestSystem?.GetCurrentMainQuestLabel() ?? "暂无主线任务"
         };
     }
 
@@ -281,7 +282,7 @@ public partial class ConfigurableInfoPanel : Control
                 SummaryLines = new List<string>
                 {
                     "当前剧本：{{scenario_display_name}}",
-                    "事件总数：{{event_count}}"
+                    "当前主线：{{current_main_quest}}"
                 },
                 NoScenarioLines = new List<string>
                 {

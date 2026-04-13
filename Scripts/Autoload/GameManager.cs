@@ -24,6 +24,7 @@ public partial class GameManager : Node
     private readonly YamlConfigLoader _configLoader = new();
     private readonly List<string> _runtimeLogs = new();
     private readonly Dictionary<string, GameScenarioDefinition> _scenarioDefinitions = new(StringComparer.Ordinal);
+    private readonly List<QuestDefinition> _questDefinitions = new();
 
     public static GameManager? Instance { get; private set; }
 
@@ -195,6 +196,8 @@ public partial class GameManager : Node
             return false;
         }
 
+        QuestSystem?.RefreshQuestState();
+
         SaveData saveData = SaveManager.CreateFromProfile(PlayerProfile);
         PopulateSaveMetadata(saveData.Metadata);
 
@@ -239,6 +242,7 @@ public partial class GameManager : Node
         InitializeProfileFromDefinitions();
         ConfigureSystems();
         IdleSystem?.ApplyOfflineProgress(DateTimeOffset.UtcNow.ToUnixTimeSeconds());
+        QuestSystem?.RefreshQuestState();
         AddGameLog($"已执行读档。路径：{path}");
         return true;
     }
@@ -348,6 +352,10 @@ public partial class GameManager : Node
         SellSystem?.Configure(PlayerProfile, ItemRegistry);
         FactionSystem?.Configure(PlayerProfile, FactionRegistry);
         ZoneSystem?.Configure(PlayerProfile, ZoneRegistry);
+        BattleSystem?.Configure(PlayerProfile);
+        AchievementSystem?.Configure(PlayerProfile);
+        QuestSystem?.Configure(this, PlayerProfile, _questDefinitions);
+        QuestSystem?.RefreshQuestState();
     }
 
     private T AddSystemNode<T>(string nodeName) where T : Node, new()
@@ -367,10 +375,12 @@ public partial class GameManager : Node
             FactionRegistry = new FactionRegistry();
             ZoneRegistry = new ZoneRegistry();
             LocalizationManager = new LocalizationManager();
+            _questDefinitions.Clear();
 
             List<CategoryDefinition> categories = _configLoader.LoadCategories(scenario.CategoriesConfigPath);
             List<ItemDefinition> items = _configLoader.LoadItems(scenario.ItemsConfigPath);
             List<SkillDefinition> skills = _configLoader.LoadSkills(scenario.SkillsConfigPath);
+            _questDefinitions.AddRange(_configLoader.LoadQuests(scenario.QuestsConfigPath));
 
             List<EventDefinition> events = new();
             events.AddRange(_configLoader.LoadEvents(scenario.OneshotEventsConfigPath));
@@ -401,7 +411,7 @@ public partial class GameManager : Node
             }
 
             ItemRegistry.DumpTreeToDefaultRuntimeFile();
-            AddGameLog($"静态配置加载完成：剧本 {scenario.DisplayName}，分类 {categories.Count}，物品 {items.Count}，技能 {skills.Count}，事件 {events.Count}。");
+            AddGameLog($"静态配置加载完成：剧本 {scenario.DisplayName}，分类 {categories.Count}，物品 {items.Count}，技能 {skills.Count}，事件 {events.Count}，任务 {_questDefinitions.Count}。");
         }
         catch (Exception exception)
         {
@@ -515,6 +525,8 @@ public partial class GameManager : Node
         {
             SaveManager.SavePath = RuntimePathHelper.GetTestSavePath();
         }
+
+        QuestSystem?.RefreshQuestState();
 
         SaveData saveData = SaveManager.CreateFromProfile(PlayerProfile);
         PopulateSaveMetadata(saveData.Metadata);

@@ -97,6 +97,19 @@ public partial class AppRoot : Control
     private void ConfigureAdaptiveWindow()
     {
         _rootWindow = GetWindow();
+        if (_rootWindow == null)
+        {
+            return;
+        }
+
+        if (OS.HasFeature("mobile") || OS.GetName().Equals("Android", StringComparison.OrdinalIgnoreCase))
+        {
+            _rootWindow.ContentScaleMode = Window.ContentScaleModeEnum.CanvasItems;
+            _rootWindow.ContentScaleAspect = Window.ContentScaleAspectEnum.Keep;
+            _rootWindow.ContentScaleFactor = 1.0f;
+            return;
+        }
+
         Vector2I designSize = new(_layoutSettings.WindowBaseWidth, _layoutSettings.WindowBaseHeight);
 
         _rootWindow.Unresizable = false;
@@ -116,7 +129,7 @@ public partial class AppRoot : Control
     /// </summary>
     private void UpdateAdaptiveScale()
     {
-        if (_rootWindow == null)
+        if (_rootWindow == null || OS.HasFeature("mobile") || OS.GetName().Equals("Android", StringComparison.OrdinalIgnoreCase))
         {
             return;
         }

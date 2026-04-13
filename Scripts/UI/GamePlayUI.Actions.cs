@@ -126,32 +126,64 @@ public partial class GamePlayUI
 
     protected List<string> GetAvailableTabIds()
     {
-        List<string> tabs = new()
+        List<string> orderedTabs = new()
         {
             TabCurrentRegion,
             TabInventory,
             TabSkills,
-            TabDictionary
+            TabBattle,
+            TabQuest,
+            TabTutorial,
+            TabAchievement,
+            TabDictionary,
+            TabSystem
         };
 
-        if (_gameManager?.ActiveScenario?.EnableSystemTab == true)
-        {
-            tabs.Add(TabSystem);
-        }
-
-        return tabs;
+        return orderedTabs.Where(IsTabVisible).ToList();
     }
 
     protected string GetTabText(string tabId)
     {
+        if (_scenarioTabs.TryGetValue(tabId, out ScenarioTabDefinition? tabDefinition)
+            && !string.IsNullOrWhiteSpace(tabDefinition.Title))
+        {
+            return tabDefinition.Title;
+        }
+
         return tabId switch
         {
             TabCurrentRegion => _theme.CurrentRegionTabText,
             TabInventory => _theme.InventoryTabText,
             TabSkills => _theme.SkillsTabText,
+            TabBattle => "战斗",
+            TabQuest => "任务",
+            TabTutorial => "教学",
+            TabAchievement => "成就",
             TabDictionary => _theme.DictionaryTabText,
             TabSystem => _theme.SystemTabText,
             _ => tabId
+        };
+    }
+
+    protected bool IsTabVisible(string tabId)
+    {
+        if (string.Equals(tabId, TabSystem, StringComparison.Ordinal))
+        {
+            return _gameManager?.ActiveScenario?.EnableSystemTab == true;
+        }
+
+        if (_scenarioTabs.TryGetValue(tabId, out ScenarioTabDefinition? definition))
+        {
+            return definition.Visible;
+        }
+
+        return tabId switch
+        {
+            TabCurrentRegion => true,
+            TabInventory => true,
+            TabSkills => true,
+            TabDictionary => true,
+            _ => false
         };
     }
 
@@ -450,6 +482,9 @@ public partial class GamePlayUI
                 case EventEffectType.CompleteQuest:
                     parts.Add($"完成任务：{effect.TargetId}");
                     break;
+                case EventEffectType.UnlockAchievement:
+                    parts.Add($"解锁成就：{effect.TargetId}");
+                    break;
             }
         }
 
@@ -623,20 +658,20 @@ public partial class GamePlayUI
         {
             BgColor = background,
             BorderColor = border,
-            BorderWidthLeft = 2,
-            BorderWidthTop = 2,
-            BorderWidthRight = 2,
-            BorderWidthBottom = 2,
+            BorderWidthLeft = 4,
+            BorderWidthTop = 4,
+            BorderWidthRight = 4,
+            BorderWidthBottom = 4,
             CornerRadiusTopLeft = _theme.CornerRadius,
             CornerRadiusTopRight = _theme.CornerRadius,
             CornerRadiusBottomLeft = _theme.CornerRadius,
             CornerRadiusBottomRight = _theme.CornerRadius,
             ShadowColor = new Color(0, 0, 0, 0.32f),
             ShadowSize = 10,
-            ContentMarginLeft = 14,
-            ContentMarginTop = 12,
-            ContentMarginRight = 14,
-            ContentMarginBottom = 12
+            ContentMarginLeft = 10,
+            ContentMarginTop = 8,
+            ContentMarginRight = 10,
+            ContentMarginBottom = 8
         };
     }
 
@@ -649,20 +684,20 @@ public partial class GamePlayUI
         {
             BgColor = background,
             BorderColor = _theme.Tabs.BorderColor,
-            BorderWidthLeft = active ? 2 : 1,
-            BorderWidthTop = active ? 2 : 1,
-            BorderWidthRight = active ? 2 : 1,
-            BorderWidthBottom = active ? 2 : 1,
+            BorderWidthLeft = active ? 4 : 3,
+            BorderWidthTop = active ? 4 : 3,
+            BorderWidthRight = active ? 4 : 3,
+            BorderWidthBottom = active ? 4 : 3,
             CornerRadiusTopLeft = _theme.CornerRadius,
             CornerRadiusTopRight = _theme.CornerRadius,
             CornerRadiusBottomLeft = _theme.CornerRadius,
             CornerRadiusBottomRight = _theme.CornerRadius,
             ShadowColor = new Color(0, 0, 0, active ? 0.24f : 0.16f),
             ShadowSize = active ? 6 : 4,
-            ContentMarginLeft = 14,
-            ContentMarginTop = 8,
-            ContentMarginRight = 14,
-            ContentMarginBottom = 8
+            ContentMarginLeft = 12,
+            ContentMarginTop = 6,
+            ContentMarginRight = 12,
+            ContentMarginBottom = 6
         };
     }
 
@@ -680,6 +715,48 @@ public partial class GamePlayUI
             ContentMarginRight = 8,
             ContentMarginBottom = 6
         };
+    }
+
+    protected StyleBoxFlat CreateSceneHeaderStyle()
+    {
+        return new StyleBoxFlat
+        {
+            BgColor = new Color(0.92f, 0.94f, 0.98f, 0.24f),
+            BorderColor = new Color(0.96f, 0.98f, 1.0f, 0.18f),
+            BorderWidthLeft = 1,
+            BorderWidthTop = 1,
+            BorderWidthRight = 1,
+            BorderWidthBottom = 2,
+            CornerRadiusTopLeft = 4,
+            CornerRadiusTopRight = 4,
+            CornerRadiusBottomLeft = 4,
+            CornerRadiusBottomRight = 4,
+            ShadowColor = new Color(0, 0, 0, 0.26f),
+            ShadowSize = 5,
+            ContentMarginLeft = 6,
+            ContentMarginTop = 1,
+            ContentMarginRight = 6,
+            ContentMarginBottom = 1
+        };
+    }
+
+    protected Label CreateSceneHeaderTextLayer(string text, Color color, int xOffset, int yOffset, int fontSize)
+    {
+        Label label = new()
+        {
+            Text = text,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            MouseFilter = MouseFilterEnum.Ignore
+        };
+        label.SetAnchorsPreset(LayoutPreset.FullRect);
+        label.OffsetLeft = xOffset;
+        label.OffsetTop = yOffset - 2;
+        label.OffsetRight = xOffset;
+        label.OffsetBottom = yOffset - 2;
+        label.AddThemeFontSizeOverride("font_size", fontSize);
+        label.AddThemeColorOverride("font_color", color);
+        return label;
     }
 
     protected Label CreateHintLabel(string text)

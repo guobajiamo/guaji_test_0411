@@ -1,0 +1,9 @@
+# 教学页签当前先只放说明文本。
+tabs:
+  - id: "tutorial"
+    title: "教学"
+    visible: true
+    placeholder_title: "教学页预留"
+    content_lines:
+      - "当前版本先保留教学页入口。"
+      - "后续可以把开局引导、快捷键说明和系统帮助拆成多段教学内容放到这里。"

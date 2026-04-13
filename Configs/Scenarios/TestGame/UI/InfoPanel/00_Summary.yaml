@@ -5,4 +5,4 @@
 # - scalar values are overwritten by later files
 summary_lines:
   - "当前剧本：{{scenario_display_name}}"
-  - "事件总数：{{event_count}}"
+  - "当前主线：{{current_main_quest}}"

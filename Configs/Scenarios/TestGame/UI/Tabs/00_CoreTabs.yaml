@@ -1,0 +1,18 @@
+# 核心页签定义。
+# 页签顺序由代码固定控制，这里主要配置标题、显隐和占位说明。
+tabs:
+  - id: "current_region"
+    title: "当前场景"
+    visible: true
+
+  - id: "inventory"
+    title: "背包"
+    visible: true
+
+  - id: "skills"
+    title: "技能"
+    visible: true
+
+  - id: "system"
+    title: "系统"
+    visible: true

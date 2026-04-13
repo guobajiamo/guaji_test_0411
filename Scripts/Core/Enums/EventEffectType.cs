@@ -16,5 +16,6 @@ public enum EventEffectType
     UnlockZone = 7,
     CompleteEvent = 8,
     CompleteQuest = 9,
-    StartBattle = 10
+    StartBattle = 10,
+    UnlockAchievement = 11
 }

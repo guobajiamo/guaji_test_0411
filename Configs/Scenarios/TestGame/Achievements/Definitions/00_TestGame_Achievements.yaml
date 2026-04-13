@@ -1,0 +1,4 @@
+# 成就定义目录占位。
+# 当前版本任务奖励已经支持 UnlockAchievement 效果，
+# 这里先预留未来正式成就系统要读取的 YAML 入口。
+achievements: []

@@ -1,9 +1,14 @@
 <Project Sdk="Godot.NET.Sdk/4.6.2">
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <IsAndroidExport Condition="'$(GodotTargetPlatform)' == 'android'">true</IsAndroidExport>
+    <IsAndroidExport Condition="'$(IsAndroidExport)' == '' and $([System.String]::Copy('$(RuntimeIdentifier)').StartsWith('android-'))">true</IsAndroidExport>
+    <IsAndroidExport Condition="'$(IsAndroidExport)' == ''">false</IsAndroidExport>
+    <TargetFramework Condition="'$(IsAndroidExport)' == 'true'">net9.0</TargetFramework>
+    <TargetFramework Condition="'$(IsAndroidExport)' != 'true'">net8.0</TargetFramework>
     <EnableDynamicLoading>true</EnableDynamicLoading>
     <RootNamespace>Test00_0410</RootNamespace>
     <AssemblyName>test_00_0410</AssemblyName>
     <Nullable>enable</Nullable>
+    <TargetFramework>net8.0</TargetFramework>
   </PropertyGroup>
 </Project>

@@ -1,0 +1,17 @@
+# 主线剧本的基础页签定义。
+tabs:
+  - id: "current_region"
+    title: "当前场景"
+    visible: true
+
+  - id: "inventory"
+    title: "背包"
+    visible: true
+
+  - id: "skills"
+    title: "技能"
+    visible: true
+
+  - id: "system"
+    title: "系统"
+    visible: true

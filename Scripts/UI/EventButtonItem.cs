@@ -70,8 +70,8 @@ public partial class EventButtonItem : Control
             _progressBar.Visible = data.ShowProgressBar;
             _progressBar.Value = Math.Max(0.0, Math.Min(100.0, data.ProgressRatio * 100.0));
             _progressBar.CustomMinimumSize = new Vector2(0, progressBarHeight);
-            _progressBar.AddThemeColorOverride("fill", new Color("#d6a34a"));
-            _progressBar.AddThemeColorOverride("background", new Color("#2d2419"));
+            _progressBar.AddThemeColorOverride("fill", new Color("#8a63ff"));
+            _progressBar.AddThemeColorOverride("background", new Color("#241c43"));
         }
 
         if (_button != null)

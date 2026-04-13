@@ -1,0 +1,10 @@
+# 任务页签。
+tabs:
+  - id: "quest"
+    title: "任务"
+    visible: true
+    placeholder_title: "任务总览"
+    content_lines:
+      - "左列红色按钮显示主线任务，右列绿色按钮显示支线任务。"
+      - "鼠标悬浮任务按钮可在右上角信息面板同步查看任务说明。"
+      - "按住 Shift 可展开当前任务链中已经完成的关键事件记录。"

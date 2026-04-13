@@ -88,7 +88,7 @@ public partial class SystemPanel : Control
             HorizontalAlignment = HorizontalAlignment.Center
         };
         title.AddThemeFontSizeOverride("font_size", 22);
-        title.AddThemeColorOverride("font_color", new Color("#f0e0b8"));
+        title.AddThemeColorOverride("font_color", new Color("#d7fff3"));
         root.AddChild(title);
 
         Label tip = new()
@@ -97,7 +97,7 @@ public partial class SystemPanel : Control
             AutowrapMode = TextServer.AutowrapMode.WordSmart
         };
         tip.AddThemeFontSizeOverride("font_size", 16);
-        tip.AddThemeColorOverride("font_color", new Color("#d8e1da"));
+        tip.AddThemeColorOverride("font_color", new Color("#cef6e7"));
         root.AddChild(tip);
 
         Button saveButton = CreateActionButton(_saveButtonText, "system_action");

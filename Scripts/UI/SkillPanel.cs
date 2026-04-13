@@ -104,7 +104,7 @@ public partial class SkillPanel : Control
             {
                 Text = $"{_gameManager.TranslateText(definition.NameKey)}  Lv.{state.Level}/{definition.MaxLevel}"
             };
-            nameLabel.AddThemeColorOverride("font_color", new Color("#f7eed9"));
+            nameLabel.AddThemeColorOverride("font_color", new Color("#fff0f6"));
             nameLabel.AddThemeFontSizeOverride("font_size", 17);
             content.AddChild(nameLabel);
 
@@ -115,7 +115,7 @@ public partial class SkillPanel : Control
             {
                 Text = progressText
             };
-            expLabel.AddThemeColorOverride("font_color", new Color("#c7d7c0"));
+            expLabel.AddThemeColorOverride("font_color", new Color("#ff9dc1"));
             content.AddChild(expLabel);
 
             Label descriptionLabel = new()
@@ -123,7 +123,7 @@ public partial class SkillPanel : Control
                 Text = _gameManager.TranslateText(definition.DescriptionKey),
                 AutowrapMode = TextServer.AutowrapMode.WordSmart
             };
-            descriptionLabel.AddThemeColorOverride("font_color", new Color("#d8dee5"));
+            descriptionLabel.AddThemeColorOverride("font_color", new Color("#f1dbe4"));
             content.AddChild(descriptionLabel);
 
             Button levelUpButton = new()
@@ -161,7 +161,7 @@ public partial class SkillPanel : Control
             Name = "SummaryLabel",
             Text = "技能列表"
         };
-        _summaryLabel.AddThemeColorOverride("font_color", new Color("#f0e0b8"));
+        _summaryLabel.AddThemeColorOverride("font_color", new Color("#fff0f6"));
         _summaryLabel.AddThemeFontSizeOverride("font_size", 18);
         root.AddChild(_summaryLabel);
 

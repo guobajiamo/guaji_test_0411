@@ -1,0 +1,7 @@
+tabs:
+  - id: "tutorial"
+    title: "教学"
+    visible: true
+    placeholder_title: "教学页预留"
+    content_lines:
+      - "后续可以把新手引导、系统说明和剧本特有教学整理到这里。"

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Test00_0410.Core.Runtime;
 
@@ -13,6 +14,10 @@ public class PlayerUiState
     public string SelectedTabId { get; set; } = "current_region";
 
     public List<string> FavoriteSceneIds { get; } = new();
+
+    public HashSet<string> ProcessedInteractableEventIds { get; } = new();
+
+    public HashSet<string> AreaIdsWithNewMarker { get; } = new();
 
     public bool IsSceneFavorited(string sceneId)
     {
@@ -32,5 +37,49 @@ public class PlayerUiState
     {
         int index = FavoriteSceneIds.IndexOf(sceneId);
         return index < 0 ? -1 : index;
+    }
+
+    public bool HasProcessedInteractableEvent(string eventId)
+    {
+        return ProcessedInteractableEventIds.Contains(eventId);
+    }
+
+    public void MarkInteractableEventProcessed(string eventId)
+    {
+        if (!string.IsNullOrWhiteSpace(eventId))
+        {
+            ProcessedInteractableEventIds.Add(eventId);
+        }
+    }
+
+    public bool HasNewMarker(string areaId)
+    {
+        return AreaIdsWithNewMarker.Contains(areaId);
+    }
+
+    public void AddNewMarker(string areaId)
+    {
+        if (!string.IsNullOrWhiteSpace(areaId))
+        {
+            AreaIdsWithNewMarker.Add(areaId);
+        }
+    }
+
+    public void ClearNewMarker(string areaId)
+    {
+        if (!string.IsNullOrWhiteSpace(areaId))
+        {
+            AreaIdsWithNewMarker.Remove(areaId);
+        }
+    }
+
+    public List<string> GetSortedProcessedInteractableEventIds()
+    {
+        return ProcessedInteractableEventIds.OrderBy(id => id).ToList();
+    }
+
+    public List<string> GetSortedAreaIdsWithNewMarker()
+    {
+        return AreaIdsWithNewMarker.OrderBy(id => id).ToList();
     }
 }
