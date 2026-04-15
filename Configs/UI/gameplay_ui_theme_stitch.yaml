@@ -1,0 +1,115 @@
+﻿# stitch 风格 UI 主题（默认新UI）
+# 设计依据：stitch_Main_UI / stitch_Backpack_UI / stitch_Element_UI
+
+general:
+  background_color: "#fbf9f5"
+  outer_margin: 6
+  section_gap: 11
+  inner_gap: 10
+  left_right_column_width: 426
+  top_bar_height: 72
+  bottom_log_height: 261
+  info_panel_min_height: 320
+  tab_bar_height: 72
+  scene_card_min_width: 400
+  scene_button_min_height: 74
+  progress_bar_height: 16
+  region_header_font_size: 35
+  region_item_font_size: 24
+  region_count_font_size: 17
+  scene_title_font_size: 29
+  body_font_size: 23
+  tab_font_size: 23
+  tab_active_font_size: 28
+  status_header_font_size: 24
+  status_body_font_size: 20
+  corner_radius: 18
+
+panels:
+  top_bar:
+    color: "#fbf9f5"
+    alpha: 0.98
+    border_color: "#e2e3db"
+    border_alpha: 0.95
+  left_column:
+    color: "#eeeee8"
+    alpha: 0.98
+    border_color: "#d9dbd2"
+    border_alpha: 0.95
+  center_column:
+    color: "#f5f4ef"
+    alpha: 0.98
+    border_color: "#e2e3db"
+    border_alpha: 0.95
+  bottom_log:
+    color: "#f5f4ef"
+    alpha: 0.98
+    border_color: "#e2e3db"
+    border_alpha: 0.95
+  right_info:
+    color: "#eeeee8"
+    alpha: 0.98
+    border_color: "#d9dbd2"
+    border_alpha: 0.95
+  right_status:
+    color: "#eeeee8"
+    alpha: 0.98
+    border_color: "#d9dbd2"
+    border_alpha: 0.95
+  scene_card:
+    color: "#eeeee8"
+    alpha: 0.98
+    border_color: "#e2e3db"
+    border_alpha: 0.95
+
+tabs:
+  current_region_text: "当前场景"
+  inventory_text: "背包"
+  skills_text: "技能"
+  dictionary_text: "图鉴"
+  system_text: "系统"
+  normal_color: "#eeeee8"
+  normal_alpha: 0.95
+  active_color: "#c5eae9"
+  active_alpha: 0.98
+  normal_text_color: "#5d605a"
+  active_text_color: "#224545"
+  border_color: "#b1b3ab"
+
+status:
+  header_text_color: "#30332e"
+  body_text_color: "#5d605a"
+  accent_text_color: "#426464"
+  progress_fill_color: "#39ff88"
+  progress_background_color: "#102018"
+  target_title: "目标"
+  skills_title: "技能"
+  status_title: "状态"
+  currency_title: "货币"
+  reputation_title: "声望"
+  resting_text: "正在休息"
+  empty_status_text: "暂无异常状态"
+  empty_reputation_text: "暂无已解锁声望"
+
+labels:
+  top_bar_main_quest_format: "当前主线任务：{0}"
+  top_bar_area_format: "当前区域：{0}"
+  interaction_count_format: "({0})"
+  idle_marker_text: "★"
+  empty_scene_text: "当前场景暂无可互动内容。"
+  empty_area_text: "当前区域暂无可显示场景。"
+  favorite_hint_text: "右键场景标题可切换收藏置顶。"
+
+region_accents:
+  primary_story:
+    text_color: "#426464"
+    font_size: 32
+  primary_faction:
+    text_color: "#50616d"
+    font_size: 32
+  secondary_peace:
+    text_color: "#355758"
+    font_size: 32
+  secondary_battle:
+    text_color: "#6a4c5c"
+    font_size: 32

@@ -1,0 +1,18 @@
+events:
+  - id: "evt_buy_tricolor_dango"
+    name_key: "购买三色团子(x1)"
+    description_key: "花费 3 枚金币购买 1 个三色团子。"
+    hover_info_key: "重复点击可持续购买。三色团子可在背包详情中食用以获得强力采集 Buff。"
+    type: "RepeatableClick"
+    display_condition_count: 0
+    display_conditions: []
+    interaction_condition_count: 1
+    interaction_conditions:
+      - { condition_type: "HasGold", target_id: "", required_value: 3 }
+    hide_condition_count: 0
+    hide_conditions: []
+    costs: []
+    effects:
+      - { effect_type: "RemoveGold", target_id: "", int_value: 3 }
+      - { effect_type: "GrantItem", target_id: "food_tricolor_dango", int_value: 1 }
+    button_list_group: "MainClick"

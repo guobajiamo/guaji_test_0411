@@ -1,19 +1,8 @@
 Godot Engine v4.6.2.stable.mono.official.71f334935 - https://godotengine.org
 
-[GameLog] [19:53:10] 静态配置加载完成：分类 6，物品 11，技能 1，事件 3。
-[GameLog] [19:53:10] 初版游戏已完成启动。
-probe_button_found=true
-probe_before_click_button=false
-probe_before_idle_button=false
-probe_button_same_instance=true
-[GameLog] [19:53:10] 执行事件成功：捡起石斧
-probe_log_text=[19:53:10] 静态配置加载完成：分类 6，物品 11，技能 1，事件 3。
-[19:53:10] 初版游戏已完成启动。
-[19:53:10] 执行事件成功：捡起石斧
-probe_inventory_summary=已显示 1 种物品。
-probe_after_click_button=true
-probe_after_idle_button=true
-probe_tabs_found=true
-probe_tabs_type=TabContainer
-probe_current_tab=1
-probe_current_tab_after_wait=1
+ERROR: Cannot open file 'res://Scenes/Debug/UiProbe.tscn'.
+   at: load (scene/resources/resource_format_text.cpp:1430)
+ERROR: Failed loading resource: res://Scenes/Debug/UiProbe.tscn.
+   at: _load (core/io/resource_loader.cpp:343)
+ERROR: Failed loading scene: res://Scenes/Debug/UiProbe.tscn.
+   at: start (main/main.cpp:4640)

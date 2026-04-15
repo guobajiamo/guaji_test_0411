@@ -8,7 +8,7 @@ public class PlayerSkillState
 {
     public string SkillId { get; set; } = string.Empty;
 
-    public int Level { get; set; } = 1;
+    public int Level { get; set; }
 
     /// <summary>
     /// 当前存着多少经验。

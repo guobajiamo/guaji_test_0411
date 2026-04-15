@@ -25,6 +25,13 @@ categories:
     definition_order: 200
     is_visible: true
 
+  - id: "mat_mineral"
+    parent_id: "gathering_material"
+    name_key: "矿物"
+    description_key: "采矿与冶炼相关素材"
+    definition_order: 300
+    is_visible: true
+
   - id: "consumable"
     parent_id: ""
     name_key: "消耗品"
@@ -51,4 +58,11 @@ categories:
     name_key: "工具"
     description_key: "用于采集与互动的工具"
     definition_order: 300
+    is_visible: true
+
+  - id: "currency"
+    parent_id: ""
+    name_key: "货币"
+    description_key: "用于交易结算的货币实体"
+    definition_order: 400
     is_visible: true

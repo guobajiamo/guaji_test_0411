@@ -81,7 +81,7 @@ public partial class UiFeatureSmokeTest : Node
             Assert(eventDialogPanel.Visible, "单按钮事件弹窗未弹出。");
             Assert(!dismissButton.Visible, "单按钮强制确认弹窗不应显示“我再想想”按钮。");
             Button confirmButton = FindDialogButtonByExactText(eventDialogPanel, "我知道了");
-            Assert(confirmButton.TooltipText.Contains("金币", StringComparison.Ordinal), "单按钮确认项未显示奖励悬浮说明。");
+            Assert(ReadTooltipText(confirmButton).Contains("金币", StringComparison.Ordinal), "单按钮确认项未显示奖励悬浮说明。");
             confirmButton.EmitSignal(Button.SignalName.Pressed);
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
             Assert(!eventDialogPanel.Visible, "单按钮强制确认事件点击确认后弹窗未关闭。");
@@ -93,8 +93,8 @@ public partial class UiFeatureSmokeTest : Node
             Assert(!dismissButton.Visible, "双选项强制选择弹窗不应显示“我再想想”按钮。");
             Button acceptButton = FindDialogButtonByExactText(eventDialogPanel, "接受馈赠");
             Button declineButton = FindDialogButtonByExactText(eventDialogPanel, "婉拒谢礼");
-            Assert(acceptButton.TooltipText.Contains("金币", StringComparison.Ordinal), "接受馈赠按钮未显示正确悬浮说明。");
-            Assert(declineButton.TooltipText.Contains("包子", StringComparison.Ordinal), "婉拒谢礼按钮未显示正确悬浮说明。");
+            Assert(ReadTooltipText(acceptButton).Contains("金币", StringComparison.Ordinal), "接受馈赠按钮未显示正确悬浮说明。");
+            Assert(ReadTooltipText(declineButton).Contains("包子", StringComparison.Ordinal), "婉拒谢礼按钮未显示正确悬浮说明。");
 
             bool choiceOk = gameManager.ClickEventSystem?.TryTriggerDialogChoice("evt_stranger_reward_offer", "evt_accept_gift_gold", true) ?? false;
             Assert(choiceOk, "双选项分支事件执行失败。");
@@ -358,5 +358,23 @@ public partial class UiFeatureSmokeTest : Node
         }
 
         return null;
+    }
+
+    private static string ReadTooltipText(Control control)
+    {
+        if (!string.IsNullOrWhiteSpace(control.TooltipText))
+        {
+            return control.TooltipText;
+        }
+
+        if (!control.HasMeta("__nb_tooltip_text"))
+        {
+            return string.Empty;
+        }
+
+        Variant metaValue = control.GetMeta("__nb_tooltip_text");
+        return metaValue.VariantType == Variant.Type.Nil
+            ? string.Empty
+            : metaValue.AsString();
     }
 }

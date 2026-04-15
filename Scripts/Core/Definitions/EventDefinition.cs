@@ -57,6 +57,16 @@ public class EventDefinition
     /// </summary>
     public List<EventEffectEntry> Effects { get; } = new();
 
+    /// <summary>
+    /// 采集点资源上限。大于 0 时启用采集点资源消耗/恢复逻辑。
+    /// </summary>
+    public int ResourceCap { get; set; }
+
+    /// <summary>
+    /// 采集点每恢复 1 点资源所需秒数。
+    /// </summary>
+    public double ResourceRecoverSecondsPerPoint { get; set; }
+
     public string LinkedSkillId { get; set; } = string.Empty;
 
     public ButtonListGroup ButtonListGroup { get; set; } = ButtonListGroup.MainClick;
@@ -68,6 +78,8 @@ public class EventDefinition
     /// 只有部分一次性事件会用到它。
     /// </summary>
     public EventDialogDefinition? Dialog { get; set; }
+
+    public bool HasResourceCap => ResourceCap > 0 && ResourceRecoverSecondsPerPoint > 0.0;
 }
 
 /// <summary>

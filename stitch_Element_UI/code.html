@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Digital Curator - Game UI Components</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-primary-fixed": "#224545",
+                    "on-background": "#30332e",
+                    "outline": "#797c75",
+                    "surface-dim": "#d9dbd2",
+                    "secondary-fixed": "#d2e5f3",
+                    "error-container": "#fe8983",
+                    "surface-container-lowest": "#ffffff",
+                    "on-surface": "#30332e",
+                    "on-secondary-fixed": "#30414d",
+                    "background": "#fbf9f5",
+                    "surface-variant": "#e2e3db",
+                    "error": "#9f403d",
+                    "secondary-dim": "#445561",
+                    "on-tertiary-fixed-variant": "#676666",
+                    "on-primary": "#d9ffff",
+                    "tertiary": "#5f5f5f",
+                    "surface-container-high": "#e8e9e2",
+                    "on-error-container": "#752121",
+                    "on-primary-fixed-variant": "#3f6162",
+                    "primary": "#426464",
+                    "secondary-container": "#d2e5f3",
+                    "on-tertiary-container": "#5c5b5b",
+                    "secondary": "#50616d",
+                    "surface-container-highest": "#e2e3db",
+                    "outline-variant": "#b1b3ab",
+                    "on-secondary": "#f4f9ff",
+                    "inverse-primary": "#d8fefd",
+                    "on-error": "#fff7f6",
+                    "primary-dim": "#365858",
+                    "surface-container-low": "#f5f4ef",
+                    "on-surface-variant": "#5d605a",
+                    "surface-tint": "#426464",
+                    "inverse-surface": "#0e0e0d",
+                    "error-dim": "#4e0309",
+                    "primary-fixed": "#c5eae9",
+                    "secondary-fixed-dim": "#c4d7e5",
+                    "on-tertiary-fixed": "#4a4949",
+                    "surface-container": "#eeeee8",
+                    "tertiary-dim": "#535353",
+                    "tertiary-container": "#f6f3f2",
+                    "primary-fixed-dim": "#b7dbdb",
+                    "primary-container": "#c5eae9",
+                    "surface": "#fbf9f5",
+                    "on-secondary-container": "#435460",
+                    "tertiary-fixed-dim": "#e7e5e4",
+                    "tertiary-fixed": "#f6f3f2",
+                    "on-primary-container": "#355758",
+                    "on-secondary-fixed-variant": "#4c5e6a",
+                    "inverse-on-surface": "#9e9d99",
+                    "on-tertiary": "#fbf8f8",
+                    "surface-bright": "#fbf9f5"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Inter"],
+                    "body": ["Inter"],
+                    "label": ["Inter"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .tonal-transition-no-lines { border: none !important; }
+        .glassmorphism-blur { backdrop-filter: blur(20px); }
+        .tabular-nums { font-variant-numeric: tabular-nums; }
+    </style>
+</head>
+<body class="bg-background text-on-background antialiased min-h-screen">
+<!-- Top Navigation Anchor -->
+<header class="w-full border-b border-[#eeeee8]/50 bg-[#fbf9f5] flex justify-between items-center px-8 h-16 fixed top-0 z-50">
+<div class="flex items-center gap-8">
+<span class="text-xl font-bold tracking-tight text-[#30332e]">Digital Curator</span>
+<nav class="hidden md:flex gap-6">
+<a class="text-[#50616d] hover:text-[#426464] transition-colors" href="#">Dashboard</a>
+<a class="text-[#50616d] hover:text-[#426464] transition-colors" href="#">Inventory</a>
+<a class="text-[#50616d] hover:text-[#426464] transition-colors" href="#">Research</a>
+<a class="text-[#426464] border-b-2 border-[#426464] pb-1" href="#">Settings</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined text-[#50616d] p-2 hover:bg-[#eeeee8]/50 rounded-full transition-all" data-icon="notifications">notifications</button>
+<button class="material-symbols-outlined text-[#50616d] p-2 hover:bg-[#eeeee8]/50 rounded-full transition-all" data-icon="account_circle">account_circle</button>
+</div>
+</header>
+<!-- Sidebar Navigation -->
+<aside class="hidden lg:flex flex-col gap-2 p-4 h-screen fixed left-0 top-0 pt-20 bg-[#eeeee8] w-64 border-r border-[#eeeee8]">
+<div class="mb-8 px-4">
+<div class="flex items-center gap-3 mb-2">
+<div class="w-10 h-10 rounded-full bg-surface-container-lowest flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" data-icon="person">person</span>
+</div>
+<div>
+<p class="text-[10px] font-bold tracking-wider uppercase text-on-surface-variant">Admin Level 42</p>
+<p class="text-[10px] text-primary">Productivity: 124.5/s</p>
+</div>
+</div>
+<button class="w-full bg-primary text-on-primary py-2 px-4 rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-primary-dim transition-colors">Boost Efficiency</button>
+</div>
+<nav class="flex flex-col gap-1">
+<a class="flex items-center gap-3 text-[#50616d] px-4 py-3 hover:bg-[#f5f4ef] rounded-lg text-xs font-medium tracking-wider uppercase" href="#">
+<span class="material-symbols-outlined" data-icon="database">database</span> Resources
+            </a>
+<a class="flex items-center gap-3 text-[#50616d] px-4 py-3 hover:bg-[#f5f4ef] rounded-lg text-xs font-medium tracking-wider uppercase" href="#">
+<span class="material-symbols-outlined" data-icon="handyman">handyman</span> Crafting
+            </a>
+<a class="flex items-center gap-3 text-[#50616d] px-4 py-3 hover:bg-[#f5f4ef] rounded-lg text-xs font-medium tracking-wider uppercase" href="#">
+<span class="material-symbols-outlined" data-icon="map">map</span> Quests
+            </a>
+<a class="flex items-center gap-3 text-[#50616d] px-4 py-3 hover:bg-[#f5f4ef] rounded-lg text-xs font-medium tracking-wider uppercase" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span> Character
+            </a>
+<a class="flex items-center gap-3 text-[#50616d] px-4 py-3 hover:bg-[#f5f4ef] rounded-lg text-xs font-medium tracking-wider uppercase" href="#">
+<span class="material-symbols-outlined" data-icon="history">history</span> Log
+            </a>
+</nav>
+</aside>
+<!-- Main Canvas -->
+<main class="lg:pl-64 pt-24 pb-24 lg:pb-8 px-8 max-w-[2000px] mx-auto">
+<header class="mb-12">
+<h1 class="text-4xl font-extrabold tracking-tighter text-on-background mb-2">Game UI Components</h1>
+<p class="text-on-surface-variant font-medium">Elysian Dashboard Design System • v1.0.42</p>
+</header>
+<div class="grid grid-cols-12 gap-8">
+<!-- Section 1: Progress Bars -->
+<section class="col-span-12 xl:col-span-4 space-y-8">
+<div class="bg-surface-container p-8 rounded-xl">
+<h3 class="text-xs font-bold uppercase tracking-[0.2em] text-on-surface-variant mb-8">Progress Architecture</h3>
+<!-- XP Bar -->
+<div class="space-y-3 mb-10">
+<div class="flex justify-between items-end">
+<label class="text-xs font-bold text-on-surface tracking-wide">XP</label>
+<span class="text-[10px] tabular-nums font-medium text-on-surface-variant">LEVEL 84 • 8,420 / 10,000</span>
+</div>
+<div class="h-4 w-full bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-primary w-[84%] relative">
+<div class="absolute inset-0 bg-gradient-to-r from-transparent to-primary-fixed opacity-30"></div>
+</div>
+</div>
+</div>
+<!-- Skill Progress -->
+<div class="space-y-3 mb-10">
+<div class="flex justify-between items-end">
+<label class="text-xs font-bold text-on-surface tracking-wide">Skill Progress</label>
+<span class="text-[10px] tabular-nums font-medium text-on-surface-variant">MASTERY: 42%</span>
+</div>
+<div class="h-4 w-full bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-secondary w-[42%]"></div>
+</div>
+</div>
+<!-- Combat Timer -->
+<div class="space-y-3">
+<div class="flex justify-between items-end">
+<label class="text-xs font-bold text-on-surface tracking-wide">Combat Timer</label>
+<span class="text-[10px] tabular-nums font-medium text-error">CRITICAL • 1.2s</span>
+</div>
+<div class="h-4 w-full bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-error w-[15%]"></div>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-8 rounded-xl shadow-sm">
+<div class="flex items-center gap-4 mb-4">
+<div class="w-12 h-12 bg-primary-container rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-3xl" data-icon="analytics">analytics</span>
+</div>
+<div>
+<h4 class="font-bold text-on-surface">Data Throughput</h4>
+<p class="text-xs text-on-surface-variant">System efficiency metrics</p>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4 pt-4 border-t border-outline-variant/10">
+<div class="text-center">
+<p class="text-[10px] uppercase tracking-wider text-on-surface-variant font-bold">Input</p>
+<p class="text-lg font-extrabold tabular-nums text-primary">842/s</p>
+</div>
+<div class="text-center">
+<p class="text-[10px] uppercase tracking-wider text-on-surface-variant font-bold">Output</p>
+<p class="text-lg font-extrabold tabular-nums text-secondary">711/s</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 2: Buttons & Interaction States -->
+<section class="col-span-12 xl:col-span-8">
+<div class="bg-surface-container p-8 rounded-xl h-full">
+<h3 class="text-xs font-bold uppercase tracking-[0.2em] text-on-surface-variant mb-12">Interaction Palette</h3>
+<div class="grid grid-cols-1 md:grid-cols-5 gap-8 items-start">
+<!-- Natural -->
+<div class="flex flex-col items-center gap-4">
+<button class="w-full py-4 px-6 bg-primary text-on-primary rounded-xl font-bold text-xs uppercase tracking-widest transition-all">
+                                Natural
+                            </button>
+<p class="text-[10px] font-medium text-on-surface-variant uppercase tracking-tighter text-center">Standard State</p>
+</div>
+<!-- Hover -->
+<div class="flex flex-col items-center gap-4">
+<button class="w-full py-4 px-6 bg-primary-dim text-on-primary rounded-xl font-bold text-xs uppercase tracking-widest transition-all shadow-lg shadow-primary/10">
+                                Hover
+                            </button>
+<p class="text-[10px] font-medium text-on-surface-variant uppercase tracking-tighter text-center">Slightly Darker</p>
+</div>
+<!-- Pressed -->
+<div class="flex flex-col items-center gap-4">
+<button class="w-full py-4 px-6 bg-on-primary-fixed text-on-primary rounded-xl font-bold text-xs uppercase tracking-widest translate-y-1 transition-all">
+                                Pressed
+                            </button>
+<p class="text-[10px] font-medium text-on-surface-variant uppercase tracking-tighter text-center">Shift Down</p>
+</div>
+<!-- Focused -->
+<div class="flex flex-col items-center gap-4">
+<button class="w-full py-4 px-6 bg-primary text-on-primary rounded-xl font-bold text-xs uppercase tracking-widest ring-4 ring-primary-fixed transition-all">
+                                Focused
+                            </button>
+<p class="text-[10px] font-medium text-on-surface-variant uppercase tracking-tighter text-center">Outer Glow</p>
+</div>
+<!-- Disabled -->
+<div class="flex flex-col items-center gap-4">
+<button class="w-full py-4 px-6 bg-surface-container-highest text-outline-variant rounded-xl font-bold text-xs uppercase tracking-widest cursor-not-allowed">
+                                Disabled
+                            </button>
+<p class="text-[10px] font-medium text-on-surface-variant uppercase tracking-tighter text-center">Low Contrast</p>
+</div>
+</div>
+<div class="mt-16 grid grid-cols-1 lg:grid-cols-2 gap-8">
+<div class="bg-surface-container-low p-6 rounded-xl space-y-4">
+<h4 class="text-xs font-bold uppercase tracking-widest text-on-surface">Secondary Variants</h4>
+<div class="flex flex-wrap gap-4">
+<button class="px-6 py-2 bg-secondary text-on-secondary rounded-full text-xs font-bold uppercase tracking-wider hover:bg-secondary-dim transition-colors">Action</button>
+<button class="px-6 py-2 bg-secondary-container text-on-secondary-container rounded-full text-xs font-bold uppercase tracking-wider hover:bg-outline-variant/20 transition-colors">Ghost</button>
+<button class="px-6 py-2 border-2 border-primary text-primary rounded-full text-xs font-bold uppercase tracking-wider hover:bg-primary/5 transition-colors">Outline</button>
+</div>
+</div>
+<div class="bg-surface-container-low p-6 rounded-xl space-y-4">
+<h4 class="text-xs font-bold uppercase tracking-widest text-on-surface">System Feedback</h4>
+<div class="flex flex-wrap gap-4">
+<button class="px-6 py-2 bg-error text-on-error rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-error-dim transition-colors">Terminate</button>
+<button class="px-6 py-2 bg-tertiary-fixed text-on-tertiary-fixed rounded-lg text-xs font-bold uppercase tracking-wider">Archive</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 3: Information Panels -->
+<section class="col-span-12 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+<!-- Item Info Card -->
+<div class="bg-surface-container-lowest p-8 rounded-2xl shadow-sm border border-outline-variant/5 group">
+<div class="flex items-start justify-between mb-6">
+<div class="w-16 h-16 bg-surface-container flex items-center justify-center rounded-xl">
+<span class="material-symbols-outlined text-4xl text-primary" data-icon="settings_input_component">settings_input_component</span>
+</div>
+<span class="bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">+2.5/s Productivity</span>
+</div>
+<h3 class="text-xl font-bold text-on-surface mb-2">Flux Capacitor v2</h3>
+<p class="text-sm text-on-surface-variant leading-relaxed mb-6">
+                        An advanced industrial component designed to stabilize the chronal flow between crafting cycles. Increases base resource gathering speed by 15% across all active sectors.
+                    </p>
+<div class="flex items-center gap-2 pt-4 border-t border-outline-variant/10">
+<span class="material-symbols-outlined text-sm text-primary" data-icon="inventory_2">inventory_2</span>
+<span class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Rarity: Exotic</span>
+</div>
+</div>
+<!-- Status Card -->
+<div class="bg-surface-container-lowest p-8 rounded-2xl shadow-sm border border-outline-variant/5">
+<div class="flex items-center gap-4 mb-6">
+<div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" data-icon="bolt">bolt</span>
+</div>
+<div>
+<h4 class="font-bold text-on-surface">System Status</h4>
+<p class="text-[10px] uppercase font-bold text-primary tracking-widest">Nominal</p>
+</div>
+</div>
+<ul class="space-y-4">
+<li class="flex justify-between items-center text-sm">
+<span class="text-on-surface-variant">Memory Load</span>
+<span class="font-bold tabular-nums">14.2 GB</span>
+</li>
+<li class="flex justify-between items-center text-sm">
+<span class="text-on-surface-variant">Core Temp</span>
+<span class="font-bold tabular-nums text-error">78°C</span>
+</li>
+<li class="flex justify-between items-center text-sm">
+<span class="text-on-surface-variant">Uptime</span>
+<span class="font-bold tabular-nums">412h 12m</span>
+</li>
+</ul>
+<button class="w-full mt-6 py-2 bg-surface-container text-on-surface text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-surface-container-high transition-colors">Run Diagnostics</button>
+</div>
+<!-- Bento Card: Achievement -->
+<div class="bg-[#426464] p-8 rounded-2xl relative overflow-hidden flex flex-col justify-between h-full min-h-[300px]">
+<div class="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 blur-2xl"></div>
+<div>
+<h4 class="text-on-primary/60 text-[10px] font-bold uppercase tracking-[0.3em] mb-2">Milestone Reached</h4>
+<h3 class="text-3xl font-extrabold text-on-primary leading-tight tracking-tighter">Master of the Digital Forge</h3>
+</div>
+<div class="space-y-4">
+<p class="text-on-primary/80 text-sm leading-relaxed">You have refined over 1,000,000 units of raw materials through the Elysian pipeline.</p>
+<div class="flex items-center gap-3">
+<div class="flex -space-x-2">
+<div class="w-8 h-8 rounded-full border-2 border-[#426464] bg-primary-fixed"></div>
+<div class="w-8 h-8 rounded-full border-2 border-[#426464] bg-secondary-fixed"></div>
+<div class="w-8 h-8 rounded-full border-2 border-[#426464] bg-white/20"></div>
+</div>
+<span class="text-[10px] text-on-primary font-bold">+5000 XP Granted</span>
+</div>
+</div>
+</div>
+</section>
+</div>
+</main>
+<!-- Bottom Navigation Mobile Pivot -->
+<footer class="lg:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center h-16 px-4 pb-safe bg-[#fbf9f5]/80 backdrop-blur-md border-t border-[#eeeee8] shadow-[0_-4px_12px_rgba(0,0,0,0.02)]">
+<button class="flex flex-col items-center justify-center text-[#426464] font-bold">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="text-[10px] font-medium">Home</span>
+</button>
+<button class="flex flex-col items-center justify-center text-[#50616d]">
+<span class="material-symbols-outlined" data-icon="swords">swords</span>
+<span class="text-[10px] font-medium">Actions</span>
+</button>
+<button class="flex flex-col items-center justify-center text-[#50616d]">
+<span class="material-symbols-outlined" data-icon="trending_up">trending_up</span>
+<span class="text-[10px] font-medium">Upgrades</span>
+</button>
+<button class="flex flex-col items-center justify-center text-[#50616d]">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+<span class="text-[10px] font-medium">Profile</span>
+</button>
+</footer>
+</body></html>

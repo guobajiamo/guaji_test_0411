@@ -18,7 +18,9 @@ regions:
             description: "人间之里里最热闹的小店之一。"
             visibility_condition_count: 0
             visibility_conditions: []
-            event_ids: []
+            event_ids:
+              - "evt_learn_cooking"
+              - "evt_buy_tricolor_dango"
           - id: "tea_house"
             title: "甘味茶屋"
             description: "适合放慢节奏的休息点。"
@@ -34,6 +36,7 @@ regions:
               - "evt_pickup_stone_axe"
               - "evt_read_chopping_notice"
               - "evt_stranger_reward_offer"
+              - "evt_learn_woodworking"
           - id: "fishing_tackle_shop"
             title: "渔具屋"
             description: "用于测试鱼竿、鱼饵和钓鱼按钮解锁逻辑。"
@@ -45,10 +48,37 @@ regions:
               - "evt_get_worm_bait"
           - id: "forge_shop"
             title: "孙惣左卫门锻冶"
-            description: "这里暂时还没有可互动内容。"
+            description: "可学习锻造并进行基础冶炼与工具打造。"
             visibility_condition_count: 0
             visibility_conditions: []
-            event_ids: []
+            event_ids:
+              - "evt_learn_smithing"
+              - "evt_forge_iron_axe"
+              - "evt_forge_iron_pickaxe"
+              - "evt_idle_smith_iron_ingot"
+      - id: "village_outskirts"
+        title: "村外平原"
+        accent: "secondary_peace"
+        visibility_condition_count: 0
+        visibility_conditions: []
+        scenes:
+          - id: "small_grove"
+            title: "小树林"
+            description: "分布着多种树木资源点，可进行采集测试。"
+            visibility_condition_count: 0
+            visibility_conditions: []
+            event_ids:
+              - "evt_idle_oak_tree"
+              - "evt_idle_plum_tree"
+              - "evt_idle_peach_tree"
+          - id: "charcoal_kiln"
+            title: "炭窑"
+            description: "学习烧炭后可在此持续烧制木炭。"
+            visibility_condition_count: 0
+            visibility_conditions: []
+            event_ids:
+              - "evt_learn_firemaking"
+              - "evt_idle_charcoal_kiln"
       - id: "guard_office"
         title: "自警队办事处"
         accent: "secondary_peace"
@@ -73,3 +103,10 @@ regions:
             visibility_condition_count: 0
             visibility_conditions: []
             event_ids: []
+          - id: "hida_family_annex"
+            title: "稗田家宗家别院"
+            description: "用于测试阶段的一次性资源赠礼场景。"
+            visibility_condition_count: 0
+            visibility_conditions: []
+            event_ids:
+              - "evt_hieda_family_annex_gift"

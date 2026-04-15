@@ -22,5 +22,11 @@ public enum ItemTag
     Food = 1 << 8,
     QuestItem = 1 << 9,
     Currency = 1 << 10,
-    Axe = 1 << 11
+    Axe = 1 << 11,
+    Battle = 1 << 12,
+    Special = 1 << 13,
+    Valuable = 1 << 14,
+    Junk = 1 << 15,
+    Other = 1 << 16,
+    Pickaxe = 1 << 17
 }

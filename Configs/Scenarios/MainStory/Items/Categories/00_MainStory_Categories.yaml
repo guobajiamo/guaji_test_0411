@@ -1,14 +1,9 @@
 # 本文件是“正式剧本专用分类树”。
-# 当前写成空数组，表示正式剧本暂时还没有独立分类配置。
-#
-# 当你后续要补正式剧本分类时，可按下面这套字段理解来写：
-# categories: 分类列表
-# id: 分类唯一 ID
-# parent_id: 父分类 ID，留空表示根分类
-# name_key: 分类显示名
-# description_key: 分类说明
-# definition_order: 同级排序值，越小越靠前，建议按 100 间隔
-# is_visible: 是否默认显示
-# hide_when_empty: 没有子项时是否自动隐藏（可选）
-#
-categories: []
+# 当前至少保留货币分类，以支持货币实体化背包显示。
+categories:
+  - id: "currency"
+    parent_id: ""
+    name_key: "货币"
+    description_key: "用于交易结算的货币实体"
+    definition_order: 100
+    is_visible: true

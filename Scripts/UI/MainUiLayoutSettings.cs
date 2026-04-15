@@ -11,64 +11,64 @@ namespace Test00_0410.UI;
 public partial class MainUiLayoutSettings : Resource
 {
     [Export]
-    public int OuterMargin { get; set; } = 14;
+    public int OuterMargin { get; set; } = 19;
 
     [Export]
-    public int PanelSpacing { get; set; } = 10;
+    public int PanelSpacing { get; set; } = 13;
 
     [Export]
-    public int LeftColumnMinWidth { get; set; } = 860;
+    public int LeftColumnMinWidth { get; set; } = 1146;
 
     [Export]
-    public int RightColumnMinWidth { get; set; } = 320;
+    public int RightColumnMinWidth { get; set; } = 426;
 
     [Export]
-    public int EventColumnMinWidth { get; set; } = 260;
+    public int EventColumnMinWidth { get; set; } = 346;
 
     [Export]
-    public int EventColumnSpacing { get; set; } = 10;
+    public int EventColumnSpacing { get; set; } = 13;
 
     [Export]
-    public int HeaderFontSize { get; set; } = 22;
+    public int HeaderFontSize { get; set; } = 29;
 
     [Export]
-    public int SectionHeaderFontSize { get; set; } = 18;
+    public int SectionHeaderFontSize { get; set; } = 24;
 
     [Export]
-    public int BodyFontSize { get; set; } = 16;
+    public int BodyFontSize { get; set; } = 21;
 
     [Export]
-    public int EventButtonMinHeight { get; set; } = 54;
+    public int EventButtonMinHeight { get; set; } = 72;
 
     [Export]
-    public int SpecialButtonMinHeight { get; set; } = 46;
+    public int SpecialButtonMinHeight { get; set; } = 61;
 
     [Export]
-    public int SpecialButtonMinWidth { get; set; } = 140;
+    public int SpecialButtonMinWidth { get; set; } = 187;
 
     [Export]
-    public int FooterButtonSpacing { get; set; } = 10;
+    public int FooterButtonSpacing { get; set; } = 13;
 
     [Export]
-    public int CollapsedLogHeight { get; set; } = 170;
+    public int CollapsedLogHeight { get; set; } = 227;
 
     [Export]
-    public int ExpandedLogMargin { get; set; } = 24;
+    public int ExpandedLogMargin { get; set; } = 32;
 
     [Export]
-    public int StatusCategoryFontSize { get; set; } = 20;
+    public int StatusCategoryFontSize { get; set; } = 27;
 
     [Export]
-    public int StatusItemFontSize { get; set; } = 16;
+    public int StatusItemFontSize { get; set; } = 21;
 
     [Export]
-    public int DialogMinWidth { get; set; } = 560;
+    public int DialogMinWidth { get; set; } = 746;
 
     [Export]
-    public int WindowBaseWidth { get; set; } = 1920;
+    public int WindowBaseWidth { get; set; } = 2560;
 
     [Export]
-    public int WindowBaseHeight { get; set; } = 1080;
+    public int WindowBaseHeight { get; set; } = 1440;
 
     [Export]
     public float RefreshIntervalSeconds { get; set; } = 0.2f;

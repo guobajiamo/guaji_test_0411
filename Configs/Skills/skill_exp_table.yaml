@@ -1,0 +1,257 @@
+# NOTE: exp_to_next now stores cumulative XP threshold for this level (Melvor XP column), not per-level difference.
+# ============================================================
+# 文件名：skill_exp_table.yaml
+# 位置：Configs/Skills/skill_exp_table.yaml
+# 用途：通用技能经验值参考表（只读文档，不被代码直接加载）
+#
+# ──────────────────────────────────────────────────────────
+# 【本文件的定位】
+#   本文件是一份"经验值设计文档"，供策划阅读和对照。
+#   当前代码体系中，每个技能的 level_table 是写在各自的
+#   skills.yaml 里的（内嵌 exp_to_next），不从本文件读取引用。
+#   因此，如果你修改了本文件，必须同步手动修改对应技能的
+#   skills.yaml，才能真正生效。
+#
+# ──────────────────────────────────────────────────────────
+# 【两套经验值系统说明】
+#
+# ★ 系统 A：自设线性经验值系统（已废弃，仅作历史记录）
+#   - 等级上限：20 级
+#   - 升级所需经验（exp_to_next）从 180 开始，每级递增 180
+#     即：180, 360, 540, 720 … 3420（等差数列，公差 180）
+#   - 满级总累计经验：34200
+#   - 曲线特点：完全线性，升级所需经验随等级单调递增，
+#     早期升级非常快，后期变慢，但整体难度较低。
+#   - 适合场景：测试/原型阶段，或需要"感受明显升级"的
+#     早期体验关卡（≤20 级）。
+#
+# ★ 系统 B：梅尔沃放置（Melvor Idle）官方经验值系统（当前使用）
+#   - 等级上限：120 级（需要 DLC"Herald 王座"开启 100~120 级）
+#   - 升级所需经验遵循官方公式：
+#       累计经验(L) = ⌊ (1/4) × Σ(ℓ=1 to L-1) ⌊ ℓ + 300 × 2^(ℓ/7) ⌋ ⌋
+#   - 满级（120 级）累计总经验：104,273,167
+#   - 曲线特点：指数增长，约每 7 级经验需求翻倍；
+#     1~92 级所需经验 ≈ 92~99 级所需经验，
+#     后期每一级都需要数百万乃至千万经验。
+#   - 里程碑：
+#       50  级：  101,333 累计经验
+#       70  级：  737,627 累计经验
+#       99  级：13,034,431 累计经验（技能披风解锁点）
+#      120  级：104,273,167 累计经验（最高等级）
+#   - 适合场景：追求长期成长、数值深度大的放置游戏。
+#
+# ──────────────────────────────────────────────────────────
+# 【如何对不同技能引用不同的经验值系统】
+#
+#   目前代码不支持"引用共享经验表 ID"，每个技能只能在自己的
+#   skills.yaml 里内嵌完整的 level_table。
+#
+#   操作方法：
+#   1. 打开目标技能的 skills.yaml（或 Definitions/ 下对应文件）。
+#   2. 将 max_level、max_total_exp 改为目标系统的数值。
+#   3. 将 level_table 替换为下方对应系统的 exp_to_next 列表，
+#      并按需填入该技能自己的 output / interval 数值。
+#
+#   示例（伪代码）：
+#     # 使用系统 A（20 级）
+#     max_level: 20
+#     max_total_exp: 34200
+#     level_table:
+#       - { level: 1, exp_to_next: 180, output: 5.0, interval: 6.0 }
+#       ...（共 20 行，exp_to_next 参照下方 system_a_reference）
+#
+#     # 使用系统 B（120 级）
+#     max_level: 120
+#     max_total_exp: 104273167
+#     level_table:
+#       - { level: 1, exp_to_next: 83, output: 5.0, interval: 6.0 }
+#       ...（共 120 行，exp_to_next 参照下方 system_b_reference）
+#
+# ============================================================
+
+
+# ──────────────────────────────────────────────────────────
+# 系统 A：自设线性经验值系统（历史记录）
+#   仅记录 exp_to_next；output/interval 由各技能自定义。
+# ──────────────────────────────────────────────────────────
+system_a_reference:
+  name: "自设线性经验值系统"
+  max_level: 20
+  max_total_exp: 34200
+  formula: "exp_to_next(L) = 180 × L（等差，公差 180）"
+  note: "完全线性，早期升级快，适合原型测试；目前已被系统 B 替代。"
+  level_exp_to_next:
+    - { level: 1,  exp_to_next: 180 }
+    - { level: 2,  exp_to_next: 360 }
+    - { level: 3,  exp_to_next: 540 }
+    - { level: 4,  exp_to_next: 720 }
+    - { level: 5,  exp_to_next: 900 }
+    - { level: 6,  exp_to_next: 1080 }
+    - { level: 7,  exp_to_next: 1260 }
+    - { level: 8,  exp_to_next: 1440 }
+    - { level: 9,  exp_to_next: 1620 }
+    - { level: 10, exp_to_next: 1800 }
+    - { level: 11, exp_to_next: 1980 }
+    - { level: 12, exp_to_next: 2160 }
+    - { level: 13, exp_to_next: 2340 }
+    - { level: 14, exp_to_next: 2520 }
+    - { level: 15, exp_to_next: 2700 }
+    - { level: 16, exp_to_next: 2880 }
+    - { level: 17, exp_to_next: 3060 }
+    - { level: 18, exp_to_next: 3240 }
+    - { level: 19, exp_to_next: 3420 }
+    - { level: 20, exp_to_next: 0    }   # 满级，无下一级
+
+
+# ──────────────────────────────────────────────────────────
+# 系统 B：梅尔沃放置（Melvor Idle）官方经验值系统
+#   来源：https://wiki.melvoridle.com/w/Experience_Table
+#   仅记录 exp_to_next（即相邻两级累计经验之差）；
+#   output/interval 由各技能自定义。
+#
+#   列说明：
+#     level        ：当前等级
+#     cumulative   ：到达本级所需的累计总经验（参考信息）
+#     exp_to_next  ：从本级升到下一级所需经验（技能 YAML 中填写此值）
+# ──────────────────────────────────────────────────────────
+system_b_reference:
+  name: "梅尔沃放置官方经验值系统"
+  max_level: 120
+  max_total_exp: 104273167
+  formula: "cumulative(L) = floor( (1/4) * sum(ℓ=1 to L-1)[ floor(ℓ + 300 * 2^(ℓ/7)) ] )"
+  note: >
+    指数增长，约每 7 级需求翻倍；99 级里程碑（技能披风）≈ 1303 万经验；
+    120 级满级 ≈ 1.04 亿经验。适合有长期游戏深度需求的技能。
+  level_exp_to_next:
+    # ─── 1 ~ 10 ───────────────────────────────────────────
+    - { level: 1,   cumulative: 0,        exp_to_next: 0       }
+    - { level: 2,   cumulative: 83,        exp_to_next: 83       }
+    - { level: 3,   cumulative: 174,        exp_to_next: 174      }
+    - { level: 4,   cumulative: 276,        exp_to_next: 276      }
+    - { level: 5,   cumulative: 388,        exp_to_next: 388      }
+    - { level: 6,   cumulative: 512,        exp_to_next: 512      }
+    - { level: 7,   cumulative: 650,        exp_to_next: 650      }
+    - { level: 8,   cumulative: 801,        exp_to_next: 801      }
+    - { level: 9,   cumulative: 969,        exp_to_next: 969      }
+    - { level: 10,  cumulative: 1154,        exp_to_next: 1154      }
+    # ─── 11 ~ 20 ──────────────────────────────────────────
+    - { level: 11,  cumulative: 1358,        exp_to_next: 1358      }
+    - { level: 12,  cumulative: 1584,        exp_to_next: 1584      }
+    - { level: 13,  cumulative: 1833,        exp_to_next: 1833      }
+    - { level: 14,  cumulative: 2107,        exp_to_next: 2107      }
+    - { level: 15,  cumulative: 2411,        exp_to_next: 2411      }
+    - { level: 16,  cumulative: 2746,        exp_to_next: 2746      }
+    - { level: 17,  cumulative: 3115,        exp_to_next: 3115      }
+    - { level: 18,  cumulative: 3523,        exp_to_next: 3523      }
+    - { level: 19,  cumulative: 3973,        exp_to_next: 3973      }
+    - { level: 20,  cumulative: 4470,        exp_to_next: 4470      }
+    # ─── 21 ~ 30 ──────────────────────────────────────────
+    - { level: 21,  cumulative: 5018,        exp_to_next: 5018      }
+    - { level: 22,  cumulative: 5624,        exp_to_next: 5624      }
+    - { level: 23,  cumulative: 6291,        exp_to_next: 6291      }
+    - { level: 24,  cumulative: 7028,        exp_to_next: 7028      }
+    - { level: 25,  cumulative: 7842,        exp_to_next: 7842      }
+    - { level: 26,  cumulative: 8740,        exp_to_next: 8740      }
+    - { level: 27,  cumulative: 9730,        exp_to_next: 9730     }
+    - { level: 28,  cumulative: 10824,        exp_to_next: 10824     }
+    - { level: 29,  cumulative: 12031,        exp_to_next: 12031     }
+    - { level: 30,  cumulative: 13363,        exp_to_next: 13363     }
+    # ─── 31 ~ 40 ──────────────────────────────────────────
+    - { level: 31,  cumulative: 14833,        exp_to_next: 14833     }
+    - { level: 32,  cumulative: 16456,        exp_to_next: 16456     }
+    - { level: 33,  cumulative: 18247,        exp_to_next: 18247     }
+    - { level: 34,  cumulative: 20224,        exp_to_next: 20224     }
+    - { level: 35,  cumulative: 22406,        exp_to_next: 22406     }
+    - { level: 36,  cumulative: 24815,        exp_to_next: 24815     }
+    - { level: 37,  cumulative: 27473,        exp_to_next: 27473     }
+    - { level: 38,  cumulative: 30408,        exp_to_next: 30408     }
+    - { level: 39,  cumulative: 33648,        exp_to_next: 33648     }
+    - { level: 40,  cumulative: 37224,        exp_to_next: 37224     }
+    # ─── 41 ~ 50 ──────────────────────────────────────────
+    - { level: 41,  cumulative: 41171,        exp_to_next: 41171     }
+    - { level: 42,  cumulative: 45529,        exp_to_next: 45529     }
+    - { level: 43,  cumulative: 50339,        exp_to_next: 50339     }
+    - { level: 44,  cumulative: 55649,        exp_to_next: 55649     }
+    - { level: 45,  cumulative: 61512,        exp_to_next: 61512     }
+    - { level: 46,  cumulative: 67983,        exp_to_next: 67983     }
+    - { level: 47,  cumulative: 75127,        exp_to_next: 75127     }
+    - { level: 48,  cumulative: 83014,        exp_to_next: 83014     }
+    - { level: 49,  cumulative: 91721,        exp_to_next: 91721     }
+    - { level: 50,  cumulative: 101333,        exp_to_next: 101333    }
+    # ─── 51 ~ 60 ──────────────────────────────────────────
+    - { level: 51,  cumulative: 111945,        exp_to_next: 111945    }
+    - { level: 52,  cumulative: 123660,        exp_to_next: 123660    }
+    - { level: 53,  cumulative: 136594,        exp_to_next: 136594    }
+    - { level: 54,  cumulative: 150872,        exp_to_next: 150872    }
+    - { level: 55,  cumulative: 166636,        exp_to_next: 166636    }
+    - { level: 56,  cumulative: 184040,        exp_to_next: 184040    }
+    - { level: 57,  cumulative: 203254,        exp_to_next: 203254    }
+    - { level: 58,  cumulative: 224466,        exp_to_next: 224466    }
+    - { level: 59,  cumulative: 247886,        exp_to_next: 247886    }
+    - { level: 60,  cumulative: 273742,        exp_to_next: 273742    }
+    # ─── 61 ~ 70 ──────────────────────────────────────────
+    - { level: 61,  cumulative: 302288,        exp_to_next: 302288    }
+    - { level: 62,  cumulative: 333804,        exp_to_next: 333804    }
+    - { level: 63,  cumulative: 368599,        exp_to_next: 368599    }
+    - { level: 64,  cumulative: 407015,        exp_to_next: 407015    }
+    - { level: 65,  cumulative: 449428,        exp_to_next: 449428    }
+    - { level: 66,  cumulative: 496254,        exp_to_next: 496254    }
+    - { level: 67,  cumulative: 547953,        exp_to_next: 547953    }
+    - { level: 68,  cumulative: 605032,        exp_to_next: 605032    }
+    - { level: 69,  cumulative: 668051,        exp_to_next: 668051    }
+    - { level: 70,  cumulative: 737627,        exp_to_next: 737627    }
+    # ─── 71 ~ 80 ──────────────────────────────────────────
+    - { level: 71,  cumulative: 814445,        exp_to_next: 814445    }
+    - { level: 72,  cumulative: 899257,        exp_to_next: 899257    }
+    - { level: 73,  cumulative: 992895,        exp_to_next: 992895   }
+    - { level: 74,  cumulative: 1096278,        exp_to_next: 1096278   }
+    - { level: 75,  cumulative: 1210421,        exp_to_next: 1210421   }
+    - { level: 76,  cumulative: 1336443,        exp_to_next: 1336443   }
+    - { level: 77,  cumulative: 1475581,        exp_to_next: 1475581   }
+    - { level: 78,  cumulative: 1629200,        exp_to_next: 1629200   }
+    - { level: 79,  cumulative: 1798808,        exp_to_next: 1798808   }
+    - { level: 80,  cumulative: 1986068,        exp_to_next: 1986068   }
+    # ─── 81 ~ 90 ──────────────────────────────────────────
+    - { level: 81,  cumulative: 2192818,        exp_to_next: 2192818   }
+    - { level: 82,  cumulative: 2421087,        exp_to_next: 2421087   }
+    - { level: 83,  cumulative: 2673114,        exp_to_next: 2673114   }
+    - { level: 84,  cumulative: 2951373,        exp_to_next: 2951373   }
+    - { level: 85,  cumulative: 3258594,        exp_to_next: 3258594   }
+    - { level: 86,  cumulative: 3597792,        exp_to_next: 3597792   }
+    - { level: 87,  cumulative: 3972294,        exp_to_next: 3972294   }
+    - { level: 88,  cumulative: 4385776,        exp_to_next: 4385776   }
+    - { level: 89,  cumulative: 4842295,        exp_to_next: 4842295   }
+    - { level: 90,  cumulative: 5346332,        exp_to_next: 5346332   }
+    # ─── 91 ~ 99（技能披风里程碑）──────────────────────────
+    - { level: 91,  cumulative: 5902831,        exp_to_next: 5902831   }
+    - { level: 92,  cumulative: 6517253,        exp_to_next: 6517253   }
+    - { level: 93,  cumulative: 7195629,        exp_to_next: 7195629   }
+    - { level: 94,  cumulative: 7944614,        exp_to_next: 7944614   }
+    - { level: 95,  cumulative: 8771558,        exp_to_next: 8771558   }
+    - { level: 96,  cumulative: 9684577,        exp_to_next: 9684577  }
+    - { level: 97,  cumulative: 10692629,        exp_to_next: 10692629  }
+    - { level: 98,  cumulative: 11805606,        exp_to_next: 11805606  }
+    - { level: 99,  cumulative: 13034431,        exp_to_next: 13034431  }   # ← 技能披风解锁点
+    # ─── 100 ~ 110（DLC 扩展段）──────────────────────────
+    - { level: 100, cumulative: 14391160,        exp_to_next: 14391160  }
+    - { level: 101, cumulative: 15889109,        exp_to_next: 15889109  }
+    - { level: 102, cumulative: 17542976,        exp_to_next: 17542976  }
+    - { level: 103, cumulative: 19368992,        exp_to_next: 19368992  }
+    - { level: 104, cumulative: 21385073,        exp_to_next: 21385073  }
+    - { level: 105, cumulative: 23611006,        exp_to_next: 23611006  }
+    - { level: 106, cumulative: 26068632,        exp_to_next: 26068632  }
+    - { level: 107, cumulative: 28782069,        exp_to_next: 28782069  }
+    - { level: 108, cumulative: 31777943,        exp_to_next: 31777943  }
+    - { level: 109, cumulative: 35085654,        exp_to_next: 35085654  }
+    - { level: 110, cumulative: 38737661,        exp_to_next: 38737661  }
+    # ─── 111 ~ 120（最高段）──────────────────────────────
+    - { level: 111, cumulative: 42769801,        exp_to_next: 42769801  }
+    - { level: 112, cumulative: 47221641,        exp_to_next: 47221641  }
+    - { level: 113, cumulative: 52136869,        exp_to_next: 52136869  }
+    - { level: 114, cumulative: 57563718,        exp_to_next: 57563718  }
+    - { level: 115, cumulative: 63555443,        exp_to_next: 63555443  }
+    - { level: 116, cumulative: 70170840,        exp_to_next: 70170840  }
+    - { level: 117, cumulative: 77474828,        exp_to_next: 77474828  }
+    - { level: 118, cumulative: 85539082,        exp_to_next: 85539082  }
+    - { level: 119, cumulative: 94442737,        exp_to_next: 94442737  }
+    - { level: 120, cumulative: 104273167,        exp_to_next: 104273167        }   # 满级

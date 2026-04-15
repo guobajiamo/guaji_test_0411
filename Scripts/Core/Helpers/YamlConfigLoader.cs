@@ -145,6 +145,8 @@ public class YamlConfigLoader
             for (int entryIndex = 0; entryIndex < entries.Count; entryIndex++)
             {
                 Dictionary<string, object?> entry = entries[entryIndex];
+                ItemTag parsedTags = ParseItemTags(entry.TryGetValue("tags", out object? tagsValue) ? tagsValue : null);
+                bool isStackable = GetBool(entry, "is_stackable", InferStackableByTags(parsedTags));
                 ItemDefinition item = new()
                 {
                     Id = GetString(entry, "id"),
@@ -153,14 +155,17 @@ public class YamlConfigLoader
                     DescriptionKey = GetString(entry, "description_key"),
                     DefinitionOrder = GetInt(entry, "definition_order", 100),
                     BaseRarity = GetEnum(entry, "base_rarity", Rarity.Common),
-                    BaseMaxStack = GetInt(entry, "base_max_stack", 99),
+                    BaseMaxStack = isStackable ? int.MaxValue : 1,
                     BuyPrice = GetInt(entry, "buy_price", 0),
                     SellPrice = GetInt(entry, "sell_price", 0),
-                    Tags = ParseItemTags(entry.TryGetValue("tags", out object? tagsValue) ? tagsValue : null),
+                    Tags = parsedTags,
+                    IsStackable = isStackable,
                     HasDurability = GetBool(entry, "has_durability", false),
                     MaxDurability = GetInt(entry, "max_durability", 100),
                     AcquisitionHintKey = GetString(entry, "acquisition_hint_key"),
                     DetailDescriptionKey = GetString(entry, "detail_description_key"),
+                    IconTexturePath = GetString(entry, "icon_texture_path"),
+                    OwnedUnlockSkillId = GetString(entry, "owned_unlock_skill_id"),
                     IsVisible = GetBool(entry, "is_visible", true),
                     Deprecated = GetBool(entry, "deprecated", false),
                     DeprecatedSince = GetString(entry, "deprecated_since"),
@@ -169,11 +174,44 @@ public class YamlConfigLoader
                     SourceFileOrder = fileIndex,
                     SourceEntryOrder = entryIndex
                 };
+                if (string.IsNullOrWhiteSpace(item.IconTexturePath))
+                {
+                    // 兼容旧写法：icon_path。
+                    item.IconTexturePath = GetString(entry, "icon_path");
+                }
+
+                item.HoverInfoFields.AddRange(GetStringList(entry, "hover_info_fields"));
+                item.DetailInfoFields.AddRange(GetStringList(entry, "detail_info_fields"));
+                item.HoverExtraLines.AddRange(GetStringList(entry, "hover_extra_lines"));
+                item.DetailExtraLines.AddRange(GetStringList(entry, "detail_extra_lines"));
 
                 if (entry.TryGetValue("tool_bonuses", out object? toolBonusValue) && toolBonusValue is Dictionary<string, object?> toolBonusMap)
                 {
                     item.ToolBonuses.LogYieldMultiplier = GetDouble(toolBonusMap, "log_yield_multiplier", 1.0);
                     item.ToolBonuses.ChopSpeedMultiplier = GetDouble(toolBonusMap, "chop_speed_multiplier", 1.0);
+                }
+
+                if (entry.TryGetValue("consume_buff", out object? consumeBuffValue) && consumeBuffValue is Dictionary<string, object?> consumeBuffMap)
+                {
+                    ConsumableBuffDefinition consumeBuff = new()
+                    {
+                        BuffId = GetString(consumeBuffMap, "buff_id"),
+                        DisplayName = GetString(consumeBuffMap, "display_name"),
+                        Description = GetString(consumeBuffMap, "description"),
+                        DurationSeconds = GetDouble(consumeBuffMap, "duration_seconds", 0.0),
+                        ExtendDurationOnReapply = GetBool(consumeBuffMap, "extend_duration_on_reapply", true)
+                    };
+
+                    foreach (Dictionary<string, object?> statMap in GetListOfMaps(consumeBuffMap, "stat_modifiers"))
+                    {
+                        consumeBuff.StatModifiers.Add(new BuffStatModifierDefinition
+                        {
+                            StatId = GetString(statMap, "stat_id"),
+                            Multiplier = GetDouble(statMap, "multiplier", 1.0)
+                        });
+                    }
+
+                    item.ConsumeBuff = consumeBuff;
                 }
 
                 WarnIfDuplicateId(idSources, "物品", item.Id, files[fileIndex]);
@@ -201,11 +239,16 @@ public class YamlConfigLoader
                     Id = GetString(entry, "id"),
                     NameKey = GetString(entry, "name_key"),
                     DescriptionKey = GetString(entry, "description_key"),
+                    GroupId = GetString(entry, "group_id"),
+                    GroupName = GetString(entry, "group_name"),
+                    GroupOrder = GetInt(entry, "group_order", 0),
+                    SkillOrder = GetInt(entry, "skill_order", 0),
                     MaxLevel = GetInt(entry, "max_level", 1),
                     InitialLevel = GetInt(entry, "initial_level", 1),
                     MaxTotalExp = GetInt(entry, "max_total_exp", 0),
                     RequiredToolTag = GetEnum(entry, "required_tool_tag", ItemTag.None),
                     PrimaryOutputItemId = GetString(entry, "primary_output_item_id"),
+                    InheritLevelTableFrom = GetString(entry, "inherit_level_table_from"),
                     SourceFilePath = files[fileIndex],
                     SourceFileOrder = fileIndex,
                     SourceEntryOrder = entryIndex
@@ -218,12 +261,53 @@ public class YamlConfigLoader
                         Level = GetInt(levelEntry, "level", 1),
                         ExpToNext = GetInt(levelEntry, "exp_to_next", 0),
                         Output = GetDouble(levelEntry, "output", 0.0),
-                        Interval = GetDouble(levelEntry, "interval", 1.0)
+                        Interval = GetDouble(levelEntry, "interval", 1.0),
+                        OnLevelUpEventIds = GetStringList(levelEntry, "on_level_up_event_ids")
                     });
                 }
 
                 WarnIfDuplicateId(idSources, "技能", skill.Id, files[fileIndex]);
                 skills.Add(skill);
+            }
+        }
+
+        Dictionary<string, SkillDefinition> skillMap = skills
+            .Where(skill => !string.IsNullOrWhiteSpace(skill.Id))
+            .ToDictionary(skill => skill.Id, skill => skill, StringComparer.Ordinal);
+        foreach (SkillDefinition skill in skills)
+        {
+            if (skill.LevelTable.Count > 0 || string.IsNullOrWhiteSpace(skill.InheritLevelTableFrom))
+            {
+                continue;
+            }
+
+            if (!skillMap.TryGetValue(skill.InheritLevelTableFrom, out SkillDefinition? templateSkill)
+                || templateSkill.LevelTable.Count == 0)
+            {
+                GD.PushWarning($"[YamlConfigLoader] 技能 {skill.Id} 继承模板 {skill.InheritLevelTableFrom} 失败：模板不存在或 level_table 为空。");
+                continue;
+            }
+
+            if (skill.MaxLevel <= 1)
+            {
+                skill.MaxLevel = templateSkill.MaxLevel;
+            }
+
+            if (skill.MaxTotalExp <= 0)
+            {
+                skill.MaxTotalExp = templateSkill.MaxTotalExp;
+            }
+
+            foreach (SkillLevelEntry templateLevel in templateSkill.LevelTable)
+            {
+                skill.LevelTable.Add(new SkillLevelEntry
+                {
+                    Level = templateLevel.Level,
+                    ExpToNext = templateLevel.ExpToNext,
+                    Output = templateLevel.Output,
+                    Interval = templateLevel.Interval,
+                    OnLevelUpEventIds = templateLevel.OnLevelUpEventIds.ToList()
+                });
             }
         }
 
@@ -249,6 +333,8 @@ public class YamlConfigLoader
                     DescriptionKey = GetString(entry, "description_key"),
                     HoverInfoKey = GetString(entry, "hover_info_key"),
                     Type = GetEnum(entry, "type", EventType.RepeatableClick),
+                    ResourceCap = GetInt(entry, "resource_cap", 0),
+                    ResourceRecoverSecondsPerPoint = GetDouble(entry, "resource_recover_seconds_per_point", 0.0),
                     LinkedSkillId = GetString(entry, "linked_skill_id"),
                     ButtonListGroup = GetEnum(entry, "button_list_group", ButtonListGroup.MainClick),
                     RemoveAfterTriggered = GetBool(entry, "remove_after_triggered", false),
@@ -765,6 +851,25 @@ public class YamlConfigLoader
         }
 
         return combined;
+    }
+
+    private static bool InferStackableByTags(ItemTag tags)
+    {
+        if (tags == ItemTag.None)
+        {
+            return true;
+        }
+
+        ItemTag nonStackableTags = ItemTag.Tool
+            | ItemTag.Weapon
+            | ItemTag.Helmet
+            | ItemTag.Armor
+            | ItemTag.QuestItem
+            | ItemTag.Special
+            | ItemTag.Battle
+            | ItemTag.Valuable;
+
+        return (tags & nonStackableTags) == ItemTag.None;
     }
 
     private static void CollectYamlFiles(string directoryPath, List<string> files)

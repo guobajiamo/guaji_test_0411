@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace Test00_0410.Core.Runtime;
 
@@ -42,4 +43,9 @@ public class PlayerIdleState
     /// 例如 8 小时 = 28800 秒。
     /// </summary>
     public int OfflineSettlementCapSeconds { get; set; } = 28800;
+
+    /// <summary>
+    /// 各采集点（idle event）独立的资源上限与恢复状态。
+    /// </summary>
+    public Dictionary<string, GatheringNodeState> GatheringNodeStates { get; } = new();
 }

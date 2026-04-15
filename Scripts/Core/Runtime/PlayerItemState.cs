@@ -15,6 +15,12 @@ public class PlayerItemState
     public bool IsJunkMarked { get; set; }
 
     /// <summary>
+    /// 物品首次入袋后的序号。
+    /// 用于恢复“先来先占位”的默认顺序。
+    /// </summary>
+    public int? AcquiredSequence { get; set; }
+
+    /// <summary>
     /// 玩家手动指定的 UI 显示顺序。
     /// 如果为空，说明仍然沿用静态定义顺序。
     /// </summary>

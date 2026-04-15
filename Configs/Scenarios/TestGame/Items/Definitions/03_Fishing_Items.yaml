@@ -8,9 +8,14 @@ items:
     definition_order: 150
     base_rarity: "Common"
     base_max_stack: 1
+    is_stackable: false
     sell_price: 0
-    tags: ["Tool"]
+    tags: ["Tool", "Battle"]
     has_durability: false
+    hover_info_fields: ["name", "description", "quantity", "base_rarity", "sell_price", "tags"]
+    detail_info_fields: ["item_id", "name", "description", "quantity", "base_rarity", "base_max_stack", "sell_price", "tags"]
+    detail_extra_lines:
+      - "钓鱼事件会检查是否持有该工具。"
 
   - id: "bait_worm"
     parent_id: "consumable_ingredient"
@@ -18,6 +23,6 @@ items:
     description_key: "最基础的钓鱼鱼饵，每次挂机钓鱼会消耗一个"
     definition_order: 120
     base_rarity: "Common"
-    base_max_stack: 999
+    is_stackable: true
     sell_price: 1
-    tags: ["Consumable", "Material"]
+    tags: ["Consumable"]

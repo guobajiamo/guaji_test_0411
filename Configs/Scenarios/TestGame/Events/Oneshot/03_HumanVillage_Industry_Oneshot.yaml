@@ -1,0 +1,128 @@
+events:
+  - id: "evt_learn_smithing"
+    name_key: "学习锻造"
+    description_key: "向孙惣左卫门请教基础锻造技巧。"
+    hover_info_key: "对话后习得锻造技能。习得前，后续锻造相关按钮会显示但保持置灰。"
+    type: "OneshotClick"
+    display_condition_count: 0
+    display_conditions: []
+    interaction_condition_count: 0
+    interaction_conditions: []
+    hide_condition_count: 0
+    hide_conditions: []
+    costs: []
+    effects:
+      - { effect_type: "LearnSkill", target_id: "skill_smithing", int_value: 1 }
+    button_list_group: "MainOneshot"
+
+  - id: "evt_forge_iron_axe"
+    name_key: "锻造铁斧"
+    description_key: "消耗铁锭打造一把铁斧。"
+    hover_info_key: "需要先习得锻造技能，并消耗铁锭 x10。"
+    type: "OneshotClick"
+    display_condition_count: 0
+    display_conditions: []
+    interaction_condition_count: 1
+    interaction_conditions:
+      - { condition_type: "SkillLevel", target_id: "skill_smithing", required_value: 1 }
+    hide_condition_count: 0
+    hide_conditions: []
+    costs:
+      - { item_id: "mat_iron_ingot", amount: 10 }
+    effects:
+      - { effect_type: "GrantItem", target_id: "tool_iron_axe", int_value: 1 }
+    button_list_group: "MainOneshot"
+
+  - id: "evt_forge_iron_pickaxe"
+    name_key: "锻造铁镐"
+    description_key: "消耗铁锭打造一把铁镐。"
+    hover_info_key: "需要先习得锻造技能，并消耗铁锭 x10。持有铁镐后会自动习得采矿。"
+    type: "OneshotClick"
+    display_condition_count: 0
+    display_conditions: []
+    interaction_condition_count: 1
+    interaction_conditions:
+      - { condition_type: "SkillLevel", target_id: "skill_smithing", required_value: 1 }
+    hide_condition_count: 0
+    hide_conditions: []
+    costs:
+      - { item_id: "mat_iron_ingot", amount: 10 }
+    effects:
+      - { effect_type: "GrantItem", target_id: "tool_iron_pickaxe", int_value: 1 }
+    button_list_group: "MainOneshot"
+
+  - id: "evt_learn_woodworking"
+    name_key: "学习木工"
+    description_key: "向佐佐木木匠学习木工基础。"
+    hover_info_key: "互动后自动习得木工技能。"
+    type: "OneshotClick"
+    display_condition_count: 0
+    display_conditions: []
+    interaction_condition_count: 0
+    interaction_conditions: []
+    hide_condition_count: 0
+    hide_conditions: []
+    costs: []
+    effects:
+      - { effect_type: "LearnSkill", target_id: "skill_woodworking", int_value: 1 }
+    button_list_group: "MainOneshot"
+
+  - id: "evt_learn_cooking"
+    name_key: "学习烹饪"
+    description_key: "向点心屋学习简单料理。"
+    hover_info_key: "互动后自动习得烹饪技能。"
+    type: "OneshotClick"
+    display_condition_count: 0
+    display_conditions: []
+    interaction_condition_count: 0
+    interaction_conditions: []
+    hide_condition_count: 0
+    hide_conditions: []
+    costs: []
+    effects:
+      - { effect_type: "LearnSkill", target_id: "skill_cooking", int_value: 1 }
+    button_list_group: "MainOneshot"
+
+  - id: "evt_learn_firemaking"
+    name_key: "学习烧炭"
+    description_key: "向炭窑师傅请教烧炭的方法。"
+    hover_info_key: "点击后会弹出提示“已经学会了如何烧制木炭”，确认后自动习得生火技能。"
+    type: "OneshotClick"
+    display_condition_count: 0
+    display_conditions: []
+    interaction_condition_count: 0
+    interaction_conditions: []
+    hide_condition_count: 0
+    hide_conditions: []
+    costs: []
+    effects:
+      - { effect_type: "LearnSkill", target_id: "skill_firemaking", int_value: 1 }
+    button_list_group: "MainOneshot"
+    dialog:
+      body_text: "已经学会了如何烧制木炭。"
+      confirm_button_text: "我知道了"
+      show_cancel_button: false
+
+  - id: "evt_hieda_family_annex_gift"
+    name_key: "领取宗家赠礼"
+    description_key: "宗家别院准备了一份测试物资赠礼。"
+    hover_info_key: "一次性领取大量资源，用于背包与功能测试。"
+    type: "OneshotClick"
+    display_condition_count: 0
+    display_conditions: []
+    interaction_condition_count: 0
+    interaction_conditions: []
+    hide_condition_count: 0
+    hide_conditions: []
+    costs: []
+    effects:
+      - { effect_type: "GrantGold", target_id: "", int_value: 1000 }
+      - { effect_type: "GrantItem", target_id: "mat_plum", int_value: 1000 }
+      - { effect_type: "GrantItem", target_id: "mat_peach", int_value: 1000 }
+      - { effect_type: "GrantItem", target_id: "mat_apple", int_value: 10000 }
+      - { effect_type: "GrantItem", target_id: "mat_red_date", int_value: 1000 }
+      - { effect_type: "GrantItem", target_id: "mat_iron_ore", int_value: 1000 }
+      - { effect_type: "GrantItem", target_id: "mat_iron_ingot", int_value: 1000 }
+      - { effect_type: "GrantItem", target_id: "mat_wood_log", int_value: 1000 }
+      - { effect_type: "GrantItem", target_id: "mat_charcoal", int_value: 1000 }
+    button_list_group: "MainOneshot"

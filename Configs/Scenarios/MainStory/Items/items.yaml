@@ -8,7 +8,8 @@
 # name_key / description_key / detail_description_key: 文本显示
 # definition_order: 排序值，越小越靠前
 # base_rarity: Common / Uncommon / Rare / Epic / Legendary
-# base_max_stack: 最大堆叠数
+# is_stackable: 是否可堆叠（false 时单格占位）
+# base_max_stack: 历史字段；当前可堆叠物品默认无限堆叠
 # buy_price / sell_price: 买卖价格
 # tags: 标签数组
 # has_durability / max_durability: 耐久配置

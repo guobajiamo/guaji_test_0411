@@ -1,29 +1,32 @@
 using Godot;
 using System.Collections.Generic;
 using System.Linq;
+using Test00_0410.Core.Helpers;
 using Test00_0410.Core.Registry;
 using Test00_0410.Core.Runtime;
 
 namespace Test00_0410.Systems;
 
 /// <summary>
-/// 卖出系统。
-/// 以后可支持“一键卖出标记为垃圾的物品”。
+/// 出售系统。
+/// 当前用于一键出售“垃圾标记”物品。
 /// </summary>
 public partial class SellSystem : Node
 {
     private PlayerProfile? _profile;
     private ItemRegistry? _itemRegistry;
+    private ValueSettlementService? _settlementService;
 
-    public void Configure(PlayerProfile profile, ItemRegistry itemRegistry)
+    public void Configure(PlayerProfile profile, ItemRegistry itemRegistry, ValueSettlementService settlementService)
     {
         _profile = profile;
         _itemRegistry = itemRegistry;
+        _settlementService = settlementService;
     }
 
     public int SellMarkedItems()
     {
-        if (_profile == null || _itemRegistry == null)
+        if (_profile == null || _itemRegistry == null || _settlementService == null)
         {
             return 0;
         }
@@ -34,7 +37,6 @@ public partial class SellSystem : Node
             .ToList();
 
         int totalGoldEarned = 0;
-
         foreach (string itemId in markedItemIds)
         {
             int quantity = _profile.Inventory.GetItemAmount(itemId);
@@ -49,15 +51,20 @@ public partial class SellSystem : Node
                 continue;
             }
 
-            if (_profile.Inventory.TryRemoveItem(itemId, quantity))
+            if (!_settlementService.TryRemoveItem(itemId, quantity))
             {
-                int goldEarned = sellPrice * quantity;
-                totalGoldEarned += goldEarned;
-                _profile.Economy.AddGold(goldEarned);
-
-                // 卖完后清掉“垃圾标记”，避免以后重新获得时被自动当垃圾处理。
-                _profile.Inventory.GetOrCreateItemState(itemId).IsJunkMarked = false;
+                continue;
             }
+
+            int goldEarned = _settlementService.ResolveSellGoldIncome(itemId, sellPrice, quantity);
+            if (goldEarned > 0)
+            {
+                totalGoldEarned += goldEarned;
+                _settlementService.AddCurrency(ValueSettlementService.GoldCurrencyId, goldEarned);
+            }
+
+            // 卖完后清掉“垃圾标记”，避免以后重新获得时自动被当垃圾处理。
+            _profile.Inventory.GetOrCreateItemState(itemId).IsJunkMarked = false;
         }
 
         return totalGoldEarned;

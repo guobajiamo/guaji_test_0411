@@ -14,9 +14,13 @@ public partial class SystemPanel : Control
     private string _saveButtonText = "保存";
     private string _loadButtonText = "读取";
     private string _returnButtonText = "返回主菜单";
+    private bool _showUiSwitcher;
+    private bool _isUsingNewUi = true;
     private Action? _onSaveRequested;
     private Action? _onLoadRequested;
     private Action? _onReturnToMenuRequested;
+    private Action? _onUseNewUiRequested;
+    private Action? _onUseOldUiRequested;
 
     public override void _Ready()
     {
@@ -31,7 +35,11 @@ public partial class SystemPanel : Control
         string returnButtonText,
         Action onSaveRequested,
         Action onLoadRequested,
-        Action onReturnToMenuRequested)
+        Action onReturnToMenuRequested,
+        bool showUiSwitcher = false,
+        bool isUsingNewUi = true,
+        Action? onUseNewUiRequested = null,
+        Action? onUseOldUiRequested = null)
     {
         _titleText = titleText;
         _tipText = tipText;
@@ -41,6 +49,10 @@ public partial class SystemPanel : Control
         _onSaveRequested = onSaveRequested;
         _onLoadRequested = onLoadRequested;
         _onReturnToMenuRequested = onReturnToMenuRequested;
+        _showUiSwitcher = showUiSwitcher;
+        _isUsingNewUi = isUsingNewUi;
+        _onUseNewUiRequested = onUseNewUiRequested;
+        _onUseOldUiRequested = onUseOldUiRequested;
         RebuildStructure();
     }
 
@@ -88,7 +100,7 @@ public partial class SystemPanel : Control
             HorizontalAlignment = HorizontalAlignment.Center
         };
         title.AddThemeFontSizeOverride("font_size", 22);
-        title.AddThemeColorOverride("font_color", new Color("#d7fff3"));
+        title.AddThemeColorOverride("font_color", _isUsingNewUi ? new Color("#224545") : new Color("#d7fff3"));
         root.AddChild(title);
 
         Label tip = new()
@@ -97,7 +109,7 @@ public partial class SystemPanel : Control
             AutowrapMode = TextServer.AutowrapMode.WordSmart
         };
         tip.AddThemeFontSizeOverride("font_size", 16);
-        tip.AddThemeColorOverride("font_color", new Color("#cef6e7"));
+        tip.AddThemeColorOverride("font_color", _isUsingNewUi ? new Color("#30332e") : new Color("#cef6e7"));
         root.AddChild(tip);
 
         Button saveButton = CreateActionButton(_saveButtonText, "system_action");
@@ -112,6 +124,48 @@ public partial class SystemPanel : Control
         returnButton.TooltipText = "返回主菜单前建议先手动保存存档。";
         returnButton.Pressed += () => _onReturnToMenuRequested?.Invoke();
         root.AddChild(returnButton);
+
+        if (!_showUiSwitcher)
+        {
+            return;
+        }
+
+        HSeparator separator = new();
+        root.AddChild(separator);
+
+        Label switcherTitle = new()
+        {
+            Text = "UI 主题切换",
+            HorizontalAlignment = HorizontalAlignment.Left
+        };
+        switcherTitle.AddThemeFontSizeOverride("font_size", 18);
+        switcherTitle.AddThemeColorOverride("font_color", _isUsingNewUi ? new Color("#426464") : new Color("#ffe36e"));
+        root.AddChild(switcherTitle);
+
+        Label switcherTip = new()
+        {
+            Text = _isUsingNewUi
+                ? "当前为新UI(stitch)。可一键切回旧UI用于调试。"
+                : "当前为旧UI(legacy)。可一键切回新UI。",
+            AutowrapMode = TextServer.AutowrapMode.WordSmart
+        };
+        switcherTip.AddThemeFontSizeOverride("font_size", 14);
+        switcherTip.AddThemeColorOverride("font_color", _isUsingNewUi ? new Color("#5d605a") : new Color("#d9e7f0"));
+        root.AddChild(switcherTip);
+
+        Button useNewUiButton = CreateActionButton(
+            _isUsingNewUi ? "使用新UI(stitch)*" : "使用新UI(stitch)",
+            "system_action");
+        useNewUiButton.Disabled = _isUsingNewUi;
+        useNewUiButton.Pressed += () => _onUseNewUiRequested?.Invoke();
+        root.AddChild(useNewUiButton);
+
+        Button useOldUiButton = CreateActionButton(
+            _isUsingNewUi ? "使用旧UI(legacy)" : "使用旧UI(legacy)*",
+            "system_action");
+        useOldUiButton.Disabled = !_isUsingNewUi;
+        useOldUiButton.Pressed += () => _onUseOldUiRequested?.Invoke();
+        root.AddChild(useOldUiButton);
     }
 
     private void RebuildStructure()

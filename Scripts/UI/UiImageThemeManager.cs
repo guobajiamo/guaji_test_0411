@@ -12,8 +12,11 @@ namespace Test00_0410.UI;
 public static class UiImageThemeManager
 {
     private const string ConfigPath = "res://Configs/UI/ui_image_theme.yaml";
+    private const string ConfigPathLegacy = "res://Configs/UI/ui_image_theme_legacy.yaml";
+    private const string ConfigPathStitch = "res://Configs/UI/ui_image_theme_stitch.yaml";
 
     private static UiImageThemeConfig? _cachedConfig;
+    private static string _themeMode = GameplayUiConfigLoader.UiThemeModeStitch;
 
     public static UiImageThemeConfig GetTheme()
     {
@@ -24,6 +27,23 @@ public static class UiImageThemeManager
     public static void ResetCache()
     {
         _cachedConfig = null;
+    }
+
+    public static void SetThemeMode(string? mode)
+    {
+        string normalizedMode = GameplayUiConfigLoader.NormalizeUiThemeMode(mode);
+        if (string.Equals(_themeMode, normalizedMode, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        _themeMode = normalizedMode;
+        ResetCache();
+    }
+
+    public static string GetThemeMode()
+    {
+        return _themeMode;
     }
 
     public static Control CreateMenuBackground()
@@ -81,7 +101,7 @@ public static class UiImageThemeManager
     private static UiImageThemeConfig LoadTheme()
     {
         YamlConfigLoader loader = new();
-        Dictionary<string, object?> root = loader.LoadMap(ConfigPath);
+        Dictionary<string, object?> root = loader.LoadMap(ResolveConfigPath());
 
         UiImageThemeConfig config = new();
 
@@ -120,6 +140,20 @@ public static class UiImageThemeManager
         }
 
         return config;
+    }
+
+    private static string ResolveConfigPath()
+    {
+        if (string.Equals(_themeMode, GameplayUiConfigLoader.UiThemeModeLegacy, StringComparison.Ordinal))
+        {
+            return FileAccess.FileExists(ConfigPathLegacy)
+                ? ConfigPathLegacy
+                : ConfigPath;
+        }
+
+        return FileAccess.FileExists(ConfigPathStitch)
+            ? ConfigPathStitch
+            : ConfigPath;
     }
 
     private static StyleBox CreateButtonStyle(string imagePath, Color fallbackColor, Color borderColor)

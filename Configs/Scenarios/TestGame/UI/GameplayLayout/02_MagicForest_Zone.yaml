@@ -20,6 +20,7 @@ regions:
             event_ids:
               - "evt_click_chop"
               - "evt_idle_chop"
+              - "evt_idle_chop_apple_tree"
       - id: "forest_depths"
         title: "魔法之森深处"
         accent: "secondary_battle"
@@ -31,4 +32,5 @@ regions:
             description: "预留给后续战斗副本。"
             visibility_condition_count: 0
             visibility_conditions: []
-            event_ids: []
+            event_ids:
+              - "evt_idle_chop_miasma_tree"

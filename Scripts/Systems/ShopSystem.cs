@@ -10,22 +10,24 @@ namespace Test00_0410.Systems;
 
 /// <summary>
 /// 商店系统。
-/// 负责 NPC 商品购买、价格检查和支付方式判定。
+/// 负责 NPC 商店购买、库存检查与支付结算。
 /// </summary>
 public partial class ShopSystem : Node
 {
     private PlayerProfile? _profile;
     private FactionRegistry? _factionRegistry;
+    private ValueSettlementService? _settlementService;
 
-    public void Configure(PlayerProfile profile, FactionRegistry factionRegistry)
+    public void Configure(PlayerProfile profile, FactionRegistry factionRegistry, ValueSettlementService settlementService)
     {
         _profile = profile;
         _factionRegistry = factionRegistry;
+        _settlementService = settlementService;
     }
 
     public bool TryBuyFromNpc(string npcId, ShopItemEntry shopItem)
     {
-        if (_profile == null || _factionRegistry == null)
+        if (_profile == null || _factionRegistry == null || _settlementService == null)
         {
             return false;
         }
@@ -42,9 +44,9 @@ public partial class ShopSystem : Node
             return false;
         }
 
-        if (!TryPay(shopItem))
+        if (!TryPay(npcId, shopItem))
         {
-            // 如果支付失败，需要把刚才预扣的库存补回去。
+            // 支付失败时回滚预扣库存。
             if (shopItem.Stock >= 0)
             {
                 int remainingStock = shopState.GetRemainingStock(shopItem.ItemId, shopItem.Stock);
@@ -54,13 +56,12 @@ public partial class ShopSystem : Node
             return false;
         }
 
-        _profile.Inventory.AddItem(shopItem.ItemId, 1);
+        _settlementService.AddItem(shopItem.ItemId, 1);
         return true;
     }
 
     /// <summary>
-    /// 读取某个 NPC 商品的剩余库存。
-    /// 静态配置写在 ShopItemEntry.Stock 里，运行时变化写在 PlayerShopState 里。
+    /// 读取某个 NPC 商店条目的运行时剩余库存。
     /// </summary>
     public int GetRemainingStock(string npcId, ShopItemEntry shopItem)
     {
@@ -72,19 +73,17 @@ public partial class ShopSystem : Node
         return _profile.GetOrCreateShopState(npcId).GetRemainingStock(shopItem.ItemId, shopItem.Stock);
     }
 
-    /// <summary>
-    /// 判断玩家金币是否足够。
-    /// 金币现在放在独立的 Economy 状态里，而不是背包里。
-    /// </summary>
     public bool CanAffordWithGold(int goldCost)
     {
-        return _profile != null && _profile.Economy.Gold >= goldCost;
+        if (_settlementService == null)
+        {
+            return false;
+        }
+
+        int settledCost = _settlementService.ResolveBuyGoldCost(string.Empty, goldCost);
+        return _settlementService.HasCurrency(ValueSettlementService.GoldCurrencyId, settledCost);
     }
 
-    /// <summary>
-    /// 检查 NPC 商店入口和商品本身的声望门槛。
-    /// 这样 `required_reputation` 配置字段在运行时才会真正生效。
-    /// </summary>
     private bool CanAccessNpcShop(NpcDefinition npcDefinition, ShopItemEntry shopItem)
     {
         if (_profile == null)
@@ -108,29 +107,56 @@ public partial class ShopSystem : Node
             && factionState.Reputation >= shopItem.RequiredReputation;
     }
 
-    private bool TryPay(ShopItemEntry shopItem)
+    private bool TryPay(string npcId, ShopItemEntry shopItem)
     {
-        if (_profile == null)
+        if (_settlementService == null)
         {
             return false;
         }
 
-        if (shopItem.PaymentType == CurrencyType.Gold)
+        int settledGoldCost = _settlementService.ResolveBuyGoldCost(npcId, shopItem.GoldCost);
+
+        return shopItem.PaymentType switch
         {
-            if (shopItem.GoldCost <= 0)
+            CurrencyType.Gold => settledGoldCost <= 0 || _settlementService.TrySpendCurrency(ValueSettlementService.GoldCurrencyId, settledGoldCost),
+            CurrencyType.Item => _settlementService.TryPayItemCosts(shopItem.BarterCosts),
+            CurrencyType.Mixed => TryPayMixed(settledGoldCost, shopItem.BarterCosts),
+            _ => false
+        };
+    }
+
+    private bool TryPayMixed(int settledGoldCost, System.Collections.Generic.IEnumerable<ItemCostEntry> barterCosts)
+    {
+        if (_settlementService == null)
+        {
+            return false;
+        }
+
+        if (!_settlementService.HasCurrency(ValueSettlementService.GoldCurrencyId, settledGoldCost)
+            || !_settlementService.CanPayItemCosts(barterCosts))
+        {
+            return false;
+        }
+
+        if (!_settlementService.TryPayItemCosts(barterCosts))
+        {
+            return false;
+        }
+
+        if (_settlementService.TrySpendCurrency(ValueSettlementService.GoldCurrencyId, settledGoldCost))
+        {
+            return true;
+        }
+
+        // 极端情况下如果金币扣除失败，则把刚扣除的物品补回。
+        foreach (ItemCostEntry cost in barterCosts)
+        {
+            if (cost.Amount > 0)
             {
-                return true;
+                _settlementService.AddItem(cost.ItemId, cost.Amount);
             }
-
-            return _profile.Economy.TrySpendGold(shopItem.GoldCost);
         }
 
-        TransactionHelper transaction = new();
-        foreach (ItemCostEntry cost in shopItem.BarterCosts)
-        {
-            transaction.QueueRemoveItem(cost.ItemId, cost.Amount);
-        }
-
-        return transaction.TryCommit(_profile.Inventory);
+        return false;
     }
 }

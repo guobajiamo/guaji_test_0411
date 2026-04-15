@@ -7,11 +7,97 @@ using Test00_0410.Core.Definitions;
 using Test00_0410.Core.Enums;
 using Test00_0410.Core.Helpers;
 using Test00_0410.Core.SaveLoad;
+using Test00_0410.Systems;
 
 namespace Test00_0410.UI;
 
 public partial class GamePlayUI
 {
+    private sealed partial class CornerBracketOverlayControl : Control
+    {
+        private readonly Color _color;
+        private readonly float _cornerRadius;
+        private readonly float _thickness;
+        private readonly float _panelOutset;
+
+        public CornerBracketOverlayControl(Color color, float cornerRadius, float thickness, float panelOutset)
+        {
+            _color = color;
+            _cornerRadius = cornerRadius;
+            _thickness = thickness;
+            _panelOutset = panelOutset;
+            MouseFilter = MouseFilterEnum.Ignore;
+            ZIndex = 4;
+        }
+
+        public override void _Ready()
+        {
+            QueueRedraw();
+        }
+
+        public override void _Notification(int what)
+        {
+            if (what == NotificationResized)
+            {
+                QueueRedraw();
+            }
+        }
+
+        public override void _Draw()
+        {
+            Rect2 panelRect = new(
+                _panelOutset,
+                _panelOutset,
+                Mathf.Max(1.0f, Size.X - (_panelOutset * 2.0f)),
+                Mathf.Max(1.0f, Size.Y - (_panelOutset * 2.0f)));
+
+            float outerRadius = Mathf.Clamp(_cornerRadius, _thickness, Mathf.Min(panelRect.Size.X, panelRect.Size.Y) * 0.5f);
+
+            Vector2 topLeftCenter = new(panelRect.Position.X + outerRadius, panelRect.Position.Y + outerRadius);
+            Vector2 topRightCenter = new(panelRect.End.X - outerRadius, panelRect.Position.Y + outerRadius);
+            Vector2 bottomLeftCenter = new(panelRect.Position.X + outerRadius, panelRect.End.Y - outerRadius);
+            Vector2 bottomRightCenter = new(panelRect.End.X - outerRadius, panelRect.End.Y - outerRadius);
+
+            float leftX = panelRect.Position.X;
+            float rightX = panelRect.End.X;
+            float topY = panelRect.Position.Y;
+            float bottomY = panelRect.End.Y;
+
+            int pointCount = Mathf.Max(16, Mathf.RoundToInt(outerRadius * 2.2f));
+
+            DrawArc(topLeftCenter, outerRadius, Mathf.Pi, Mathf.Pi * 1.5f, pointCount, _color, _thickness, true);
+            DrawArc(topRightCenter, outerRadius, Mathf.Pi * 1.5f, Mathf.Pi * 2.0f, pointCount, _color, _thickness, true);
+            DrawArc(bottomLeftCenter, outerRadius, Mathf.Pi * 0.5f, Mathf.Pi, pointCount, _color, _thickness, true);
+            DrawArc(bottomRightCenter, outerRadius, 0.0f, Mathf.Pi * 0.5f, pointCount, _color, _thickness, true);
+
+            DrawLine(
+                new Vector2(leftX, panelRect.Position.Y + outerRadius),
+                new Vector2(leftX, panelRect.End.Y - outerRadius),
+                _color,
+                _thickness,
+                true);
+            DrawLine(
+                new Vector2(rightX, panelRect.Position.Y + outerRadius),
+                new Vector2(rightX, panelRect.End.Y - outerRadius),
+                _color,
+                _thickness,
+                true);
+
+            DrawLine(
+                new Vector2(panelRect.Position.X + outerRadius, topY),
+                new Vector2(panelRect.End.X - outerRadius, topY),
+                _color,
+                _thickness,
+                true);
+            DrawLine(
+                new Vector2(panelRect.Position.X + outerRadius, bottomY),
+                new Vector2(panelRect.End.X - outerRadius, bottomY),
+                _color,
+                _thickness,
+                true);
+        }
+    }
+
     protected SecondaryAreaLayout? GetSelectedArea()
     {
         if (_gameManager == null)
@@ -144,6 +230,15 @@ public partial class GamePlayUI
 
     protected string GetTabText(string tabId)
     {
+        if (string.Equals(tabId, TabCurrentRegion, StringComparison.Ordinal)
+            && _gameManager?.PlayerProfile.UiState.IsSkillSidebarMode == true)
+        {
+            SkillDefinition? selectedSkill = GetSelectedSkillDefinition();
+            return selectedSkill == null
+                ? "技能相关"
+                : $"{Translate(selectedSkill.NameKey)}相关";
+        }
+
         if (_scenarioTabs.TryGetValue(tabId, out ScenarioTabDefinition? tabDefinition)
             && !string.IsNullOrWhiteSpace(tabDefinition.Title))
         {
@@ -234,14 +329,15 @@ public partial class GamePlayUI
 
         if (definition.Type == EventType.IdleLoop && _gameManager?.IdleSystem?.IsRunningEvent(definition.Id) == true)
         {
-            data.DisplayName = $"停止{data.DisplayName}";
+            data.DisplayName = IsCollectionIdleEvent(definition)
+                ? $"{data.DisplayName}(采集中)"
+                : $"停止{data.DisplayName}";
             data.IsDisabled = false;
         }
 
         return data;
     }
-
-    protected bool IsEventDisabled(EventDefinition definition)
+protected bool IsEventDisabled(EventDefinition definition)
     {
         if (_gameManager == null)
         {
@@ -271,8 +367,18 @@ public partial class GamePlayUI
 
         if (definition.Type == EventType.IdleLoop)
         {
+            string previousIdleEventId = _gameManager.PlayerProfile.IdleState.ActiveEventId;
+            bool wasIdleRunning = _gameManager.PlayerProfile.IdleState.IsRunning;
             HandleIdleEvent(definition);
-            RefreshAllPanels();
+            bool isIdleStateChanged = wasIdleRunning != _gameManager.PlayerProfile.IdleState.IsRunning
+                || !string.Equals(previousIdleEventId, _gameManager.PlayerProfile.IdleState.ActiveEventId, StringComparison.Ordinal);
+            if (!isIdleStateChanged)
+            {
+                RefreshCurrentRegionPage();
+                RefreshLeftRegionTree();
+                RefreshStatusAndLogs();
+            }
+
             return;
         }
 
@@ -288,7 +394,7 @@ public partial class GamePlayUI
             _gameManager.AddGameLog($"事件执行失败：{Translate(definition.NameKey)}");
         }
 
-        RefreshAllPanels();
+        ScheduleActionDrivenRefresh();
     }
 
     protected void HandleIdleEvent(EventDefinition definition)
@@ -350,7 +456,7 @@ public partial class GamePlayUI
                             _gameManager.AddGameLog($"分支选择执行失败：{choice.ButtonText}");
                         }
 
-                        RefreshAllPanels();
+                        ScheduleActionDrivenRefresh();
                     }
                 });
             }
@@ -369,7 +475,7 @@ public partial class GamePlayUI
                         _gameManager.AddGameLog($"事件执行失败：{Translate(definition.NameKey)}");
                     }
 
-                    RefreshAllPanels();
+                    ScheduleActionDrivenRefresh();
                 }
             });
         }
@@ -379,6 +485,7 @@ public partial class GamePlayUI
             Translate(dialog.BodyTextKey),
             buttons,
             dialog.ShowCancelButton);
+        CallDeferred(nameof(HarvestNonBlockingTooltipBindings));
     }
 
     protected string BuildChoiceTooltip(string targetEventId)
@@ -422,16 +529,23 @@ public partial class GamePlayUI
             lines.Add($"消耗：{costText}");
         }
 
-        string rewardText = BuildEffectSummary(definition);
+        string rewardText = definition.Type == EventType.IdleLoop
+            ? BuildIdleDropSummary(definition)
+            : BuildEffectSummary(definition);
         if (!string.IsNullOrWhiteSpace(rewardText))
         {
             lines.Add($"获得：{rewardText}");
         }
 
+        string resourceText = BuildGatheringResourceSummary(definition);
+        if (!string.IsNullOrWhiteSpace(resourceText))
+        {
+            lines.Add(resourceText);
+        }
+
         return string.Join("\n", lines.Where(line => !string.IsNullOrWhiteSpace(line)));
     }
-
-    protected string BuildCostSummary(EventDefinition definition)
+protected string BuildCostSummary(EventDefinition definition)
     {
         if (_gameManager == null || definition.Costs.Count == 0)
         {
@@ -449,7 +563,13 @@ public partial class GamePlayUI
         }
 
         List<string> parts = new();
-        parts.AddRange(definition.Rewards.Select(reward => $"{_gameManager.GetItemDisplayName(reward.ItemId)} x{reward.Amount}"));
+        parts.AddRange(definition.Rewards.Select(reward =>
+        {
+            string chanceText = reward.DropChance >= 0.999999
+                ? string.Empty
+                : $" ({Math.Clamp(reward.DropChance, 0.0, 1.0) * 100.0:0.#}%)";
+            return $"{_gameManager.GetItemDisplayName(reward.ItemId)} x{reward.Amount}{chanceText}";
+        }));
 
         foreach (EventEffectEntry effect in definition.Effects)
         {
@@ -485,12 +605,117 @@ public partial class GamePlayUI
                 case EventEffectType.UnlockAchievement:
                     parts.Add($"解锁成就：{effect.TargetId}");
                     break;
+                case EventEffectType.LearnSkill:
+                    parts.Add($"习得技能：{GetSkillDisplayName(effect.TargetId)}");
+                    break;
             }
         }
 
         return string.Join("，", parts);
     }
 
+    protected string BuildIdleDropSummary(EventDefinition definition)
+    {
+        if (_gameManager == null)
+        {
+            return string.Empty;
+        }
+
+        List<string> parts = new();
+        HashSet<string> dropItemIds = new(StringComparer.Ordinal);
+        SkillDefinition? skillDefinition = _gameManager.SkillRegistry.GetSkill(definition.LinkedSkillId);
+        bool hasPrimaryRewardOverride = skillDefinition != null && definition.Rewards.Any(reward =>
+            string.Equals(reward.ItemId, skillDefinition.PrimaryOutputItemId, StringComparison.Ordinal)
+            && reward.DropChance >= 0.999999);
+        if (skillDefinition != null && !hasPrimaryRewardOverride)
+        {
+            var skillState = _gameManager.PlayerProfile.GetOrCreateSkillState(skillDefinition.Id);
+            SkillLevelEntry? levelEntry = skillDefinition.GetLevelEntry(skillState.Level);
+            if (levelEntry != null && levelEntry.Output > 0.0 && !string.IsNullOrWhiteSpace(skillDefinition.PrimaryOutputItemId))
+            {
+                string outputText = Math.Abs(levelEntry.Output - Math.Round(levelEntry.Output)) < 0.0001
+                    ? Math.Round(levelEntry.Output).ToString("0", CultureInfo.InvariantCulture)
+                    : levelEntry.Output.ToString("0.###", CultureInfo.InvariantCulture);
+                parts.Add($"{_gameManager.GetItemDisplayName(skillDefinition.PrimaryOutputItemId)} x{outputText} (100%)");
+                dropItemIds.Add(skillDefinition.PrimaryOutputItemId);
+            }
+        }
+
+        foreach (EventRewardEntry reward in definition.Rewards)
+        {
+            string chanceText = reward.DropChance >= 0.999999
+                ? "100%"
+                : $"{Math.Clamp(reward.DropChance, 0.0, 1.0) * 100.0:0.#}%";
+            parts.Add($"{_gameManager.GetItemDisplayName(reward.ItemId)} x{reward.Amount} ({chanceText})");
+            dropItemIds.Add(reward.ItemId);
+        }
+
+        if (parts.Count == 0)
+        {
+            return string.Empty;
+        }
+
+        int rarityLevel = 1;
+        if (dropItemIds.Count > 0)
+        {
+            Rarity highestRarity = dropItemIds
+                .Select(itemId => _gameManager.ItemRegistry.GetItem(itemId)?.BaseRarity ?? Rarity.Common)
+                .DefaultIfEmpty(Rarity.Common)
+                .Max();
+            rarityLevel = (int)highestRarity + 1;
+        }
+
+        return $"采集点稀有度：{rarityLevel}级\n掉落：{string.Join("，", parts)}";
+    }
+
+    protected string BuildGatheringResourceSummary(EventDefinition definition)
+    {
+        if (_gameManager?.IdleSystem == null || definition.Type != EventType.IdleLoop || !definition.HasResourceCap)
+        {
+            return string.Empty;
+        }
+
+        if (!_gameManager.IdleSystem.TryGetGatheringNodeView(definition.Id, out IdleSystem.GatheringNodeView nodeView))
+        {
+            return string.Empty;
+        }
+
+        string fullText = nodeView.SecondsToFull <= 0.0
+            ? "已回满采集上限。"
+            : $"约 {FormatDurationText(nodeView.SecondsToFull)} 后回满采集上限。";
+        return $"可采集资源/采集上限={nodeView.AvailableAmount}/{nodeView.Capacity}，{fullText}";
+    }
+
+    protected bool IsCollectionIdleEvent(EventDefinition definition)
+    {
+        if (_gameManager == null || definition.Type != EventType.IdleLoop)
+        {
+            return false;
+        }
+
+        SkillDefinition? skillDefinition = _gameManager.SkillRegistry.GetSkill(definition.LinkedSkillId);
+        return skillDefinition?.IsCollectionSkill == true;
+    }
+
+    protected static string FormatDurationText(double secondsValue)
+    {
+        int seconds = Math.Max(0, (int)Math.Ceiling(secondsValue));
+        if (seconds >= 3600)
+        {
+            int hours = seconds / 3600;
+            int minutes = (seconds % 3600) / 60;
+            return minutes > 0 ? $"{hours}小时{minutes}分" : $"{hours}小时";
+        }
+
+        if (seconds >= 60)
+        {
+            int minutes = seconds / 60;
+            int leftSeconds = seconds % 60;
+            return leftSeconds > 0 ? $"{minutes}分{leftSeconds}秒" : $"{minutes}分";
+        }
+
+        return $"{seconds}秒";
+    }
     protected string GetSkillDisplayName(string skillId)
     {
         if (_gameManager == null)
@@ -701,6 +926,43 @@ public partial class GamePlayUI
         };
     }
 
+    protected void ApplyLogActionButtonStyle(Button button)
+    {
+        button.AddThemeStyleboxOverride("normal", CreateTabStyle(false));
+        button.AddThemeStyleboxOverride("hover", CreateTabStyle(true));
+        button.AddThemeStyleboxOverride("pressed", CreateTabStyle(true));
+        if (IsUsingStitchUiTheme())
+        {
+            button.AddThemeColorOverride("font_color", new Color("#224545"));
+            button.AddThemeColorOverride("font_hover_color", new Color("#183737"));
+            button.AddThemeColorOverride("font_pressed_color", new Color("#183737"));
+            button.AddThemeColorOverride("font_focus_color", new Color("#183737"));
+            button.AddThemeColorOverride("font_disabled_color", new Color("#797c75"));
+            return;
+        }
+
+        button.AddThemeColorOverride("font_color", new Color("#f8fafc"));
+        button.AddThemeColorOverride("font_hover_color", new Color("#ffffff"));
+        button.AddThemeColorOverride("font_pressed_color", new Color("#ffffff"));
+        button.AddThemeColorOverride("font_focus_color", new Color("#ffffff"));
+        button.AddThemeColorOverride("font_disabled_color", new Color("#9ca3af"));
+    }
+
+    protected void ApplyRuntimeTooltipTheme()
+    {
+        if (!IsUsingStitchUiTheme())
+        {
+            Theme = null;
+            return;
+        }
+
+        Theme runtimeTheme = new();
+        runtimeTheme.SetStylebox("panel", "TooltipPanel", StitchElementStyleLibrary.CreateDeepTooltipFrame(Math.Max(10, _theme.CornerRadius - 4)));
+        runtimeTheme.SetColor("font_color", "TooltipLabel", new Color("#f4f9ff"));
+        runtimeTheme.SetFontSize("font_size", "TooltipLabel", Math.Max(14, _theme.BodyFontSize - 5));
+        Theme = runtimeTheme;
+    }
+
     protected StyleBoxFlat CreateFlatStyle(Color color)
     {
         return new StyleBoxFlat
@@ -759,6 +1021,21 @@ public partial class GamePlayUI
         return label;
     }
 
+    protected Control CreateCornerBracketOverlay(Color color, float thickness = 1.5f)
+    {
+        float strokeThickness = Mathf.Max(1.5f, thickness);
+        float effectiveCornerRadius = Mathf.Max(_theme.CornerRadius, strokeThickness + 2.0f);
+        float overlayOutset = strokeThickness;
+
+        CornerBracketOverlayControl overlay = new(color, effectiveCornerRadius, strokeThickness, overlayOutset);
+        overlay.SetAnchorsPreset(LayoutPreset.FullRect);
+        overlay.OffsetLeft = -overlayOutset;
+        overlay.OffsetTop = -overlayOutset;
+        overlay.OffsetRight = overlayOutset;
+        overlay.OffsetBottom = overlayOutset;
+        return overlay;
+    }
+
     protected Label CreateHintLabel(string text)
     {
         Label label = new()
@@ -768,7 +1045,7 @@ public partial class GamePlayUI
             HorizontalAlignment = HorizontalAlignment.Center
         };
         label.AddThemeFontSizeOverride("font_size", _theme.BodyFontSize);
-        label.AddThemeColorOverride("font_color", new Color("#d7dde5"));
+        label.AddThemeColorOverride("font_color", IsUsingStitchUiTheme() ? new Color("#5d605a") : new Color("#d7dde5"));
         return label;
     }
 

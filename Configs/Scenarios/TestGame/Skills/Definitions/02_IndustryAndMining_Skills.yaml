@@ -1,0 +1,70 @@
+skills:
+  - id: "skill_mining"
+    name_key: "采矿"
+    description_key: "采集矿石的技能，经验成长曲线与砍树、钓鱼一致"
+    group_id: "collection"
+    group_name: "采集技能"
+    group_order: 100
+    skill_order: 300
+    max_level: 120
+    initial_level: 0
+    max_total_exp: 104273167
+    required_tool_tag: "Pickaxe"
+    primary_output_item_id: "mat_iron_ore"
+    inherit_level_table_from: "skill_chopping"
+
+  - id: "skill_woodworking"
+    name_key: "木工"
+    description_key: "加工木材与木制构件的工艺技能"
+    group_id: "craft"
+    group_name: "工艺技能"
+    group_order: 200
+    skill_order: 100
+    max_level: 120
+    initial_level: 0
+    max_total_exp: 104273167
+    required_tool_tag: "None"
+    primary_output_item_id: "mat_wood_firewood"
+    inherit_level_table_from: "skill_chopping"
+
+  - id: "skill_firemaking"
+    name_key: "生火"
+    description_key: "与生火、烧炭相关的工艺技能"
+    group_id: "craft"
+    group_name: "工艺技能"
+    group_order: 200
+    skill_order: 200
+    max_level: 120
+    initial_level: 0
+    max_total_exp: 104273167
+    required_tool_tag: "None"
+    primary_output_item_id: "mat_charcoal"
+    inherit_level_table_from: "skill_chopping"
+
+  - id: "skill_smithing"
+    name_key: "锻造"
+    description_key: "金属冶炼与锻造相关技能"
+    group_id: "craft"
+    group_name: "工艺技能"
+    group_order: 200
+    skill_order: 300
+    max_level: 120
+    initial_level: 0
+    max_total_exp: 104273167
+    required_tool_tag: "None"
+    primary_output_item_id: "mat_iron_ingot"
+    inherit_level_table_from: "skill_chopping"
+
+  - id: "skill_cooking"
+    name_key: "烹饪"
+    description_key: "食物制作与料理相关技能"
+    group_id: "craft"
+    group_name: "工艺技能"
+    group_order: 200
+    skill_order: 400
+    max_level: 120
+    initial_level: 0
+    max_total_exp: 104273167
+    required_tool_tag: "None"
+    primary_output_item_id: "food_tricolor_dango"
+    inherit_level_table_from: "skill_chopping"

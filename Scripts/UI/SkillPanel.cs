@@ -10,7 +10,7 @@ namespace Test00_0410.UI;
 
 /// <summary>
 /// 技能面板。
-/// 用于显示技能等级、经验条和升级按钮。
+/// 用于显示技能等级、经验与升级按钮。
 /// </summary>
 public partial class SkillPanel : Control
 {
@@ -43,15 +43,19 @@ public partial class SkillPanel : Control
             return;
         }
 
+        List<SkillDefinition> orderedSkills = GetOrderedSkills(_gameManager.SkillRegistry.Skills.Values);
         List<string> signatureParts = new();
-        int skillCount = 0;
-        foreach (SkillDefinition definition in _gameManager.SkillRegistry.Skills.Values.OrderBy(skill => skill.Id))
+        int learnedSkillCount = 0;
+        foreach (SkillDefinition definition in orderedSkills)
         {
-            skillCount++;
-
             PlayerSkillState state = _gameManager.PlayerProfile.GetOrCreateSkillState(definition.Id);
-            SkillLevelEntry? levelEntry = definition.GetLevelEntry(state.Level);
-            signatureParts.Add($"{definition.Id}:{state.Level}:{state.StoredExp:0.###}:{state.CanLevelUp}:{levelEntry?.ExpToNext ?? -1}");
+            if (state.Level > 0)
+            {
+                learnedSkillCount++;
+            }
+
+            int requiredTotalExp = definition.GetRequiredTotalExpForNextLevel(state.Level);
+            signatureParts.Add($"{definition.Id}:{state.Level}:{state.TotalEarnedExp:0.###}:{state.CanLevelUp}:{requiredTotalExp}");
         }
 
         string nextSignature = string.Join("|", signatureParts);
@@ -63,10 +67,27 @@ public partial class SkillPanel : Control
         _lastSkillSignature = nextSignature;
         ClearSkillList();
 
-        foreach (SkillDefinition definition in _gameManager.SkillRegistry.Skills.Values.OrderBy(skill => skill.Id))
+        string currentGroupId = string.Empty;
+        foreach (SkillDefinition definition in orderedSkills)
         {
+            if (!string.Equals(currentGroupId, definition.GroupId, StringComparison.Ordinal))
+            {
+                currentGroupId = definition.GroupId;
+                string groupTitle = string.IsNullOrWhiteSpace(definition.GroupName)
+                    ? "未分组技能"
+                    : _gameManager.TranslateText(definition.GroupName);
+
+                Label groupLabel = new()
+                {
+                    Text = groupTitle
+                };
+                groupLabel.AddThemeColorOverride("font_color", new Color("#ffe38a"));
+                groupLabel.AddThemeFontSizeOverride("font_size", 19);
+                _skillListContainer!.AddChild(groupLabel);
+            }
+
             PlayerSkillState state = _gameManager.PlayerProfile.GetOrCreateSkillState(definition.Id);
-            SkillLevelEntry? levelEntry = definition.GetLevelEntry(state.Level);
+            int requiredTotalExp = definition.GetRequiredTotalExpForNextLevel(state.Level);
 
             PanelContainer skillCard = new()
             {
@@ -100,17 +121,19 @@ public partial class SkillPanel : Control
             content.AddThemeConstantOverride("separation", 4);
             skillCard.AddChild(content);
 
-            Label nameLabel = new()
-            {
-                Text = $"{_gameManager.TranslateText(definition.NameKey)}  Lv.{state.Level}/{definition.MaxLevel}"
-            };
+            string nameText = state.Level <= 0
+                ? $"{_gameManager.TranslateText(definition.NameKey)}  (未习得)"
+                : $"{_gameManager.TranslateText(definition.NameKey)}  Lv.{state.Level}/{definition.MaxLevel}";
+            Label nameLabel = new() { Text = nameText };
             nameLabel.AddThemeColorOverride("font_color", new Color("#fff0f6"));
             nameLabel.AddThemeFontSizeOverride("font_size", 17);
             content.AddChild(nameLabel);
 
-            string progressText = levelEntry == null
+            string progressText = state.Level <= 0
+                ? "尚未习得该技能。"
+                : requiredTotalExp <= 0
                 ? "已达到当前技能表上限。"
-                : $"经验：{FormatExpValue(state.StoredExp)} / {levelEntry.ExpToNext:0}";
+                : $"经验：{FormatExpValue(state.TotalEarnedExp)} / {requiredTotalExp:0}";
             Label expLabel = new()
             {
                 Text = progressText
@@ -128,15 +151,29 @@ public partial class SkillPanel : Control
 
             Button levelUpButton = new()
             {
-                Text = state.Level >= definition.MaxLevel ? "已满级" : "手动升级",
-                Disabled = state.Level >= definition.MaxLevel || !state.CanLevelUp
+                Text = state.Level <= 0
+                    ? "未习得"
+                    : state.Level >= definition.MaxLevel
+                        ? "已满级"
+                        : "手动升级",
+                Disabled = state.Level <= 0 || state.Level >= definition.MaxLevel || !state.CanLevelUp
             };
             UiImageThemeManager.ApplyButtonStyle(levelUpButton, "special_action");
             levelUpButton.Pressed += () => _onUpgradeRequested?.Invoke(definition.Id);
             content.AddChild(levelUpButton);
         }
 
-        _summaryLabel!.Text = $"当前共有 {skillCount} 项技能。";
+        _summaryLabel!.Text = $"当前共有 {orderedSkills.Count} 项技能，已习得 {learnedSkillCount} 项。";
+    }
+
+    private static List<SkillDefinition> GetOrderedSkills(IEnumerable<SkillDefinition> definitions)
+    {
+        return definitions
+            .OrderBy(skill => skill.GroupOrder)
+            .ThenBy(skill => skill.GroupName, StringComparer.Ordinal)
+            .ThenBy(skill => skill.SkillOrder)
+            .ThenBy(skill => skill.Id, StringComparer.Ordinal)
+            .ToList();
     }
 
     private void EnsureStructure()

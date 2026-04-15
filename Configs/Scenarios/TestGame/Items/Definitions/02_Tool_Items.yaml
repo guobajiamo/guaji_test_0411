@@ -13,8 +13,9 @@ items:
     definition_order: 100
     base_rarity: "Common"
     base_max_stack: 1
+    is_stackable: false
     sell_price: 0
-    tags: ["Tool", "Weapon", "Axe"]
+    tags: ["Tool", "Weapon", "Axe", "Battle"]
     has_durability: false
     tool_bonuses:
       log_yield_multiplier: 1.0
@@ -23,14 +24,30 @@ items:
   - id: "tool_iron_axe"
     parent_id: "tool"
     name_key: "铁斧"
-    description_key: "更加坚固的铁制斧头，伐木效率更高"
+    description_key: "更加坚固的铁制斧头，持有后砍树读条速度提升 50%"
     definition_order: 200
     base_rarity: "Uncommon"
     base_max_stack: 1
+    is_stackable: false
     sell_price: 50
-    tags: ["Tool", "Weapon", "Axe"]
+    tags: ["Tool", "Weapon", "Axe", "Battle"]
     tool_bonuses:
-      log_yield_multiplier: 2.0
+      log_yield_multiplier: 1.0
+      chop_speed_multiplier: 1.5
+
+  - id: "tool_iron_pickaxe"
+    parent_id: "tool"
+    name_key: "铁镐"
+    description_key: "用于采矿的基础工具，持有后会自动习得采矿技能"
+    definition_order: 250
+    base_rarity: "Uncommon"
+    base_max_stack: 1
+    is_stackable: false
+    sell_price: 50
+    tags: ["Tool", "Weapon", "Pickaxe", "Battle"]
+    owned_unlock_skill_id: "skill_mining"
+    tool_bonuses:
+      log_yield_multiplier: 1.0
       chop_speed_multiplier: 1.0
 
   - id: "tool_alloy_axe"
@@ -40,8 +57,9 @@ items:
     definition_order: 300
     base_rarity: "Rare"
     base_max_stack: 1
+    is_stackable: false
     sell_price: 200
-    tags: ["Tool", "Weapon", "Axe"]
+    tags: ["Tool", "Weapon", "Axe", "Battle"]
     tool_bonuses:
       log_yield_multiplier: 4.0
       chop_speed_multiplier: 1.0

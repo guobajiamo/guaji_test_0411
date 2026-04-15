@@ -11,9 +11,11 @@ namespace Test00_0410.UI;
 public partial class SaveSlotDialog : Control
 {
     private ColorRect? _overlay;
+    private PanelContainer? _dialogPanel;
     private Label? _titleLabel;
     private VBoxContainer? _slotList;
     private Button? _closeButton;
+    private bool _useStitchStyle;
 
     public override void _Ready()
     {
@@ -21,10 +23,12 @@ public partial class SaveSlotDialog : Control
         HideDialog();
     }
 
-    public void Configure(MainUiLayoutSettings layoutSettings)
+    public void Configure(MainUiLayoutSettings layoutSettings, bool useStitchStyle = false)
     {
+        _useStitchStyle = useStitchStyle;
         EnsureStructure();
         _titleLabel!.AddThemeFontSizeOverride("font_size", layoutSettings.HeaderFontSize);
+        ApplyThemeStyles();
     }
 
     public void ShowDialog(string title, IReadOnlyList<SaveSlotViewData> slots, Action<int> onSlotPressed)
@@ -43,8 +47,20 @@ public partial class SaveSlotDialog : Control
                 Alignment = HorizontalAlignment.Left,
                 AutowrapMode = TextServer.AutowrapMode.WordSmart,
                 SizeFlagsHorizontal = SizeFlags.ExpandFill,
-                CustomMinimumSize = new Vector2(0, 64)
+                CustomMinimumSize = new Vector2(0, 64),
+                ActionMode = BaseButton.ActionModeEnum.Press,
+                FocusMode = FocusModeEnum.None
             };
+            if (_useStitchStyle)
+            {
+                UiImageThemeManager.ApplyButtonStyle(slotButton, "event_click");
+                slotButton.AddThemeStyleboxOverride("normal", StitchElementStyleLibrary.CreateLightSubPanelFrame());
+                slotButton.AddThemeStyleboxOverride("hover", StitchElementStyleLibrary.CreateLightSubPanelFrame());
+                slotButton.AddThemeStyleboxOverride("pressed", StitchElementStyleLibrary.CreateLightSubPanelFrame());
+                slotButton.AddThemeColorOverride("font_color", slot.IsEnabled ? new Color("#30332e") : new Color("#797c75"));
+                slotButton.AddThemeColorOverride("font_hover_color", new Color("#224545"));
+                slotButton.AddThemeColorOverride("font_pressed_color", new Color("#224545"));
+            }
             slotButton.Pressed += () => onSlotPressed(slot.SlotIndex);
             _slotList!.AddChild(slotButton);
         }
@@ -60,7 +76,7 @@ public partial class SaveSlotDialog : Control
 
     private void EnsureStructure()
     {
-        if (_overlay != null && _titleLabel != null && _slotList != null && _closeButton != null)
+        if (_overlay != null && _dialogPanel != null && _titleLabel != null && _slotList != null && _closeButton != null)
         {
             return;
         }
@@ -86,11 +102,11 @@ public partial class SaveSlotDialog : Control
         margin.AddThemeConstantOverride("margin_bottom", 48);
         AddChild(margin);
 
-        PanelContainer panel = new()
+        _dialogPanel = new PanelContainer
         {
             MouseFilter = MouseFilterEnum.Stop
         };
-        margin.AddChild(panel);
+        margin.AddChild(_dialogPanel);
 
         VBoxContainer content = new()
         {
@@ -98,7 +114,7 @@ public partial class SaveSlotDialog : Control
             SizeFlagsVertical = SizeFlags.ExpandFill
         };
         content.AddThemeConstantOverride("separation", 10);
-        panel.AddChild(content);
+        _dialogPanel.AddChild(content);
 
         HBoxContainer header = new()
         {
@@ -117,7 +133,9 @@ public partial class SaveSlotDialog : Control
         {
             Name = "CloseButton",
             Text = "关闭",
-            CustomMinimumSize = new Vector2(90, 38)
+            CustomMinimumSize = new Vector2(90, 38),
+            ActionMode = BaseButton.ActionModeEnum.Press,
+            FocusMode = FocusModeEnum.None
         };
         _closeButton.Pressed += HideDialog;
         header.AddChild(_closeButton);
@@ -136,6 +154,24 @@ public partial class SaveSlotDialog : Control
         };
         _slotList.AddThemeConstantOverride("separation", 8);
         scroll.AddChild(_slotList);
+
+        ApplyThemeStyles();
+    }
+
+    private void ApplyThemeStyles()
+    {
+        if (_overlay == null || _dialogPanel == null || _titleLabel == null || _closeButton == null)
+        {
+            return;
+        }
+
+        if (_useStitchStyle)
+        {
+            _overlay.Color = new Color(0, 0, 0, 0.46f);
+            _dialogPanel.AddThemeStyleboxOverride("panel", StitchElementStyleLibrary.CreateLightDialogFrame());
+            _titleLabel.AddThemeColorOverride("font_color", new Color("#224545"));
+            UiImageThemeManager.ApplyButtonStyle(_closeButton, "system_return_menu");
+        }
     }
 
     private void ClearSlotList()

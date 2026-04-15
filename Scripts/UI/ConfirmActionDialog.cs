@@ -10,11 +10,13 @@ namespace Test00_0410.UI;
 public partial class ConfirmActionDialog : Control
 {
     private ColorRect? _overlay;
+    private PanelContainer? _dialogPanel;
     private Label? _titleLabel;
     private RichTextLabel? _messageLabel;
     private Button? _confirmButton;
     private Button? _cancelButton;
     private Action? _onConfirm;
+    private bool _useStitchStyle;
 
     public override void _Ready()
     {
@@ -22,11 +24,13 @@ public partial class ConfirmActionDialog : Control
         HideDialog();
     }
 
-    public void Configure(MainUiLayoutSettings layoutSettings)
+    public void Configure(MainUiLayoutSettings layoutSettings, bool useStitchStyle = false)
     {
+        _useStitchStyle = useStitchStyle;
         EnsureStructure();
         _titleLabel!.AddThemeFontSizeOverride("font_size", layoutSettings.SectionHeaderFontSize);
         _messageLabel!.AddThemeFontSizeOverride("normal_font_size", layoutSettings.BodyFontSize);
+        ApplyThemeStyles();
     }
 
     public void ShowDialog(string title, string message, string confirmText, string cancelText, Action onConfirm, bool showCancel = true)
@@ -50,7 +54,12 @@ public partial class ConfirmActionDialog : Control
 
     private void EnsureStructure()
     {
-        if (_overlay != null && _titleLabel != null && _messageLabel != null && _confirmButton != null && _cancelButton != null)
+        if (_overlay != null
+            && _dialogPanel != null
+            && _titleLabel != null
+            && _messageLabel != null
+            && _confirmButton != null
+            && _cancelButton != null)
         {
             return;
         }
@@ -71,15 +80,15 @@ public partial class ConfirmActionDialog : Control
         center.SetAnchorsPreset(LayoutPreset.FullRect);
         AddChild(center);
 
-        PanelContainer panel = new()
+        _dialogPanel = new PanelContainer
         {
             CustomMinimumSize = new Vector2(420, 0)
         };
-        center.AddChild(panel);
+        center.AddChild(_dialogPanel);
 
         VBoxContainer content = new();
         content.AddThemeConstantOverride("separation", 10);
-        panel.AddChild(content);
+        _dialogPanel.AddChild(content);
 
         _titleLabel = new Label
         {
@@ -105,7 +114,9 @@ public partial class ConfirmActionDialog : Control
         _cancelButton = new Button
         {
             Text = "取消",
-            CustomMinimumSize = new Vector2(100, 40)
+            CustomMinimumSize = new Vector2(100, 40),
+            ActionMode = BaseButton.ActionModeEnum.Press,
+            FocusMode = FocusModeEnum.None
         };
         _cancelButton.Pressed += HideDialog;
         buttons.AddChild(_cancelButton);
@@ -113,7 +124,9 @@ public partial class ConfirmActionDialog : Control
         _confirmButton = new Button
         {
             Text = "确认",
-            CustomMinimumSize = new Vector2(100, 40)
+            CustomMinimumSize = new Vector2(100, 40),
+            ActionMode = BaseButton.ActionModeEnum.Press,
+            FocusMode = FocusModeEnum.None
         };
         _confirmButton.Pressed += () =>
         {
@@ -122,5 +135,30 @@ public partial class ConfirmActionDialog : Control
             confirmAction?.Invoke();
         };
         buttons.AddChild(_confirmButton);
+
+        ApplyThemeStyles();
+    }
+
+    private void ApplyThemeStyles()
+    {
+        if (_overlay == null
+            || _dialogPanel == null
+            || _titleLabel == null
+            || _messageLabel == null
+            || _confirmButton == null
+            || _cancelButton == null)
+        {
+            return;
+        }
+
+        if (_useStitchStyle)
+        {
+            _overlay.Color = new Color(0, 0, 0, 0.46f);
+            _dialogPanel.AddThemeStyleboxOverride("panel", StitchElementStyleLibrary.CreateLightDialogFrame());
+            _titleLabel.AddThemeColorOverride("font_color", new Color("#224545"));
+            _messageLabel.AddThemeColorOverride("default_color", new Color("#30332e"));
+            UiImageThemeManager.ApplyButtonStyle(_confirmButton, "system_action");
+            UiImageThemeManager.ApplyButtonStyle(_cancelButton, "system_return_menu");
+        }
     }
 }

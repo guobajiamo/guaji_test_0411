@@ -17,6 +17,7 @@ public partial class ConfigurableInfoPanel : Control
     private Label? _summaryLabel;
     private RichTextLabel? _contentLabel;
     private MainUiLayoutSettings _layoutSettings = new();
+    private bool _useStitchStyle;
     private string _loadedConfigPath = string.Empty;
     private ScenarioInfoPanelConfig _currentConfig = ScenarioInfoPanelConfig.CreateDefault();
     private string _defaultSummaryText = "当前剧本：未载入";
@@ -32,10 +33,12 @@ public partial class ConfigurableInfoPanel : Control
         EnsureStructure();
     }
 
-    public void Configure(MainUiLayoutSettings layoutSettings)
+    public void Configure(MainUiLayoutSettings layoutSettings, bool useStitchStyle = false)
     {
         _layoutSettings = layoutSettings;
+        _useStitchStyle = useStitchStyle;
         EnsureStructure();
+        ApplyVisualTheme();
     }
 
     public void RefreshPanel(GameManager gameManager)
@@ -119,7 +122,6 @@ public partial class ConfigurableInfoPanel : Control
             AutowrapMode = TextServer.AutowrapMode.WordSmart
         };
         _summaryLabel.AddThemeFontSizeOverride("font_size", _layoutSettings.SectionHeaderFontSize);
-        _summaryLabel.AddThemeColorOverride("font_color", new Color("#c9ffe6"));
         root.AddChild(_summaryLabel);
 
         _contentLabel = new RichTextLabel
@@ -133,11 +135,29 @@ public partial class ConfigurableInfoPanel : Control
             SizeFlagsVertical = SizeFlags.ExpandFill
         };
         _contentLabel.AddThemeFontSizeOverride("normal_font_size", _layoutSettings.BodyFontSize);
-        _contentLabel.AddThemeColorOverride("default_color", new Color("#d8f8ea"));
         _contentLabel.AddThemeConstantOverride("line_separation", 6);
         root.AddChild(_contentLabel);
 
+        ApplyVisualTheme();
         ApplyDisplayState();
+    }
+
+    private void ApplyVisualTheme()
+    {
+        if (_summaryLabel == null || _contentLabel == null)
+        {
+            return;
+        }
+
+        if (_useStitchStyle)
+        {
+            _summaryLabel.AddThemeColorOverride("font_color", new Color("#224545"));
+            _contentLabel.AddThemeColorOverride("default_color", new Color("#30332e"));
+            return;
+        }
+
+        _summaryLabel.AddThemeColorOverride("font_color", new Color("#c9ffe6"));
+        _contentLabel.AddThemeColorOverride("default_color", new Color("#d8f8ea"));
     }
 
     private void ApplyDisplayState()

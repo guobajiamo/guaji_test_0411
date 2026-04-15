@@ -1,0 +1,100 @@
+events:
+  - id: "evt_idle_smith_iron_ingot"
+    name_key: "锻造铁锭"
+    description_key: "持续消耗木炭与铁矿石，自动锻造铁锭。"
+    hover_info_key: "每轮消耗木炭 x1、铁矿石 x1，获得铁锭 x1；材料不足时自动停止。"
+    type: "IdleLoop"
+    display_condition_count: 0
+    display_conditions: []
+    interaction_condition_count: 1
+    interaction_conditions:
+      - { condition_type: "SkillLevel", target_id: "skill_smithing", required_value: 1 }
+    hide_condition_count: 0
+    hide_conditions: []
+    costs:
+      - { item_id: "mat_charcoal", amount: 1 }
+      - { item_id: "mat_iron_ore", amount: 1 }
+    rewards:
+      - { item_id: "mat_iron_ingot", amount: 1, drop_chance: 1.0 }
+    linked_skill_id: "skill_smithing"
+    button_list_group: "MainIdle"
+
+  - id: "evt_idle_charcoal_kiln"
+    name_key: "烧炭"
+    description_key: "持续烧制木炭。"
+    hover_info_key: "每轮消耗原木 x5，获得木炭 x5；原木不足时自动停止挂机。"
+    type: "IdleLoop"
+    display_condition_count: 1
+    display_conditions:
+      - { condition_type: "SkillLevel", target_id: "skill_firemaking", required_value: 1 }
+    interaction_condition_count: 0
+    interaction_conditions: []
+    hide_condition_count: 0
+    hide_conditions: []
+    costs:
+      - { item_id: "mat_wood_log", amount: 5 }
+    rewards:
+      - { item_id: "mat_charcoal", amount: 5, drop_chance: 1.0 }
+    linked_skill_id: "skill_firemaking"
+    button_list_group: "MainIdle"
+
+  - id: "evt_idle_oak_tree"
+    name_key: "橡树"
+    description_key: "稳定产出原木的基础采集点。"
+    hover_info_key: "每次采集固定获得原木 x5。"
+    type: "IdleLoop"
+    display_condition_count: 0
+    display_conditions: []
+    interaction_condition_count: 0
+    interaction_conditions: []
+    hide_condition_count: 0
+    hide_conditions: []
+    resource_cap: 20
+    resource_recover_seconds_per_point: 10
+    costs: []
+    rewards:
+      - { item_id: "mat_wood_log", amount: 5, drop_chance: 1.0 }
+    linked_skill_id: "skill_chopping"
+    button_list_group: "MainIdle"
+
+  - id: "evt_idle_plum_tree"
+    name_key: "梅树"
+    description_key: "以原木为主并可能掉落梅子与梅树种子。"
+    hover_info_key: "每次采集固定获得原木 x6，并有概率额外掉落稀有物。"
+    type: "IdleLoop"
+    display_condition_count: 0
+    display_conditions: []
+    interaction_condition_count: 0
+    interaction_conditions: []
+    hide_condition_count: 0
+    hide_conditions: []
+    resource_cap: 20
+    resource_recover_seconds_per_point: 10
+    costs: []
+    rewards:
+      - { item_id: "mat_wood_log", amount: 6, drop_chance: 1.0 }
+      - { item_id: "mat_plum", amount: 1, drop_chance: 0.5 }
+      - { item_id: "mat_plum_seed", amount: 1, drop_chance: 0.1 }
+    linked_skill_id: "skill_chopping"
+    button_list_group: "MainIdle"
+
+  - id: "evt_idle_peach_tree"
+    name_key: "桃树"
+    description_key: "以原木为主并可能掉落桃子与桃树种子。"
+    hover_info_key: "每次采集固定获得原木 x6，并有概率额外掉落稀有物。"
+    type: "IdleLoop"
+    display_condition_count: 0
+    display_conditions: []
+    interaction_condition_count: 0
+    interaction_conditions: []
+    hide_condition_count: 0
+    hide_conditions: []
+    resource_cap: 20
+    resource_recover_seconds_per_point: 10
+    costs: []
+    rewards:
+      - { item_id: "mat_wood_log", amount: 6, drop_chance: 1.0 }
+      - { item_id: "mat_peach", amount: 1, drop_chance: 0.5 }
+      - { item_id: "mat_peach_seed", amount: 1, drop_chance: 0.1 }
+    linked_skill_id: "skill_chopping"
+    button_list_group: "MainIdle"

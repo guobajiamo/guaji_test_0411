@@ -7,11 +7,15 @@
 # name_key / description_key / detail_description_key: 显示文本
 # definition_order: 同分类排序值，越小越靠前，建议按 100 间隔
 # base_rarity: Common / Uncommon / Rare / Epic / Legendary
-# base_max_stack: 最大堆叠数
+# is_stackable: 是否可堆叠（false 时同物品按单格占位显示）
+# base_max_stack: 历史字段；当前可堆叠物品默认无限堆叠
 # buy_price / sell_price: 买入价 / 卖出价
 # tags: 物品标签数组，可多选
+#   推荐先标注大类：Currency / Material / Consumable / Battle / Tool / Special / Other
 # has_durability / max_durability: 是否启用耐久及其上限
 # acquisition_hint_key: 获取提示
+# hover_info_fields / detail_info_fields: 悬浮窗与详细页字段顺序（可选）
+# hover_extra_lines / detail_extra_lines: 额外说明文本（可选）
 # tool_bonuses:
 #   log_yield_multiplier: 产出倍率
 #   chop_speed_multiplier: 速度倍率
@@ -28,7 +32,7 @@ items:
     description_key: "最基础的木材，通过砍树获得"
     definition_order: 100
     base_rarity: "Common"
-    base_max_stack: 9999
+    is_stackable: true
     buy_price: 0
     sell_price: 1
     tags: ["Material"]
@@ -42,7 +46,7 @@ items:
     description_key: "可用于生火的木柴"
     definition_order: 200
     base_rarity: "Common"
-    base_max_stack: 999
+    is_stackable: true
     sell_price: 2
     tags: ["Material", "Fuel"]
 
@@ -52,9 +56,9 @@ items:
     description_key: "常见的淡水鱼，可作为渔获测试物品"
     definition_order: 100
     base_rarity: "Common"
-    base_max_stack: 999
+    is_stackable: true
     sell_price: 3
-    tags: ["Material", "Food"]
+    tags: ["Consumable", "Food"]
 
   - id: "tool_stone_axe"
     parent_id: "tool"
@@ -62,9 +66,10 @@ items:
     description_key: "最基础的伐木工具"
     definition_order: 100
     base_rarity: "Common"
+    is_stackable: false
     base_max_stack: 1
     sell_price: 0
-    tags: ["Tool", "Weapon", "Axe"]
+    tags: ["Tool", "Weapon", "Axe", "Battle"]
     has_durability: false
     tool_bonuses:
       log_yield_multiplier: 1.0
@@ -76,9 +81,10 @@ items:
     description_key: "基础钓鱼工具，用于测试钓鱼事件的互动条件"
     definition_order: 150
     base_rarity: "Common"
+    is_stackable: false
     base_max_stack: 1
     sell_price: 0
-    tags: ["Tool"]
+    tags: ["Tool", "Battle"]
     has_durability: false
 
   - id: "tool_iron_axe"
@@ -87,9 +93,10 @@ items:
     description_key: "更加坚固的铁制斧头，伐木效率更高"
     definition_order: 200
     base_rarity: "Uncommon"
+    is_stackable: false
     base_max_stack: 1
     sell_price: 50
-    tags: ["Tool", "Weapon", "Axe"]
+    tags: ["Tool", "Weapon", "Axe", "Battle"]
     tool_bonuses:
       log_yield_multiplier: 2.0
       chop_speed_multiplier: 1.0
@@ -100,9 +107,10 @@ items:
     description_key: "用特殊合金打造的高级斧头"
     definition_order: 300
     base_rarity: "Rare"
+    is_stackable: false
     base_max_stack: 1
     sell_price: 200
-    tags: ["Tool", "Weapon", "Axe"]
+    tags: ["Tool", "Weapon", "Axe", "Battle"]
     tool_bonuses:
       log_yield_multiplier: 4.0
       chop_speed_multiplier: 1.0
@@ -113,16 +121,16 @@ items:
     description_key: "最基础的钓鱼鱼饵，每次挂机钓鱼会消耗一个"
     definition_order: 120
     base_rarity: "Common"
-    base_max_stack: 999
+    is_stackable: true
     sell_price: 1
-    tags: ["Consumable", "Material"]
+    tags: ["Consumable"]
 
   - id: "food_baozi"
     parent_id: "consumable_cooking"
     name_key: "包子"
     description_key: "热腾腾的包子"
     definition_order: 100
-    base_max_stack: 99
+    is_stackable: true
     sell_price: 5
     tags: ["Consumable", "Food"]
 
@@ -131,6 +139,7 @@ items:
     name_key: "饼子"
     description_key: "香脆的饼子"
     definition_order: 200
+    is_stackable: true
     tags: ["Consumable", "Food"]
 
   - id: "food_mantou"
@@ -138,6 +147,7 @@ items:
     name_key: "馒头"
     description_key: "松软的馒头"
     definition_order: 300
+    is_stackable: true
     tags: ["Consumable", "Food"]
 
   - id: "ingredient_flour"
@@ -145,6 +155,7 @@ items:
     name_key: "面粉"
     description_key: "研磨谷物制成的面粉"
     definition_order: 100
+    is_stackable: true
     tags: ["Material", "Food"]
 
   - id: "ingredient_rice"
@@ -152,6 +163,7 @@ items:
     name_key: "稻米"
     description_key: "脱壳后的稻米"
     definition_order: 200
+    is_stackable: true
     tags: ["Material", "Food"]
 
   - id: "ingredient_oil"
@@ -159,4 +171,5 @@ items:
     name_key: "食用油"
     description_key: "烹饪常用的基础材料"
     definition_order: 300
+    is_stackable: true
     tags: ["Material", "Food"]

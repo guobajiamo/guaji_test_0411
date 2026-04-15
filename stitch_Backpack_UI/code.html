@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Elysian Inventory Hub</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-primary": "#d8fefd",
+                        "primary-fixed-dim": "#b7dbdb",
+                        "outline-variant": "#b1b3ab",
+                        "outline": "#797c75",
+                        "inverse-on-surface": "#9e9d99",
+                        "secondary-fixed": "#d2e5f3",
+                        "tertiary-fixed-dim": "#e7e5e4",
+                        "tertiary-container": "#f6f3f2",
+                        "surface-bright": "#fbf9f5",
+                        "on-tertiary-fixed-variant": "#676666",
+                        "on-primary-fixed-variant": "#3f6162",
+                        "on-primary-container": "#355758",
+                        "primary-fixed": "#c5eae9",
+                        "primary-dim": "#365858",
+                        "surface-container": "#eeeee8",
+                        "tertiary-dim": "#535353",
+                        "background": "#fbf9f5",
+                        "secondary-fixed-dim": "#c4d7e5",
+                        "on-background": "#30332e",
+                        "surface-dim": "#d9dbd2",
+                        "on-secondary-container": "#435460",
+                        "surface-variant": "#e2e3db",
+                        "error-dim": "#4e0309",
+                        "on-secondary": "#f4f9ff",
+                        "on-error-container": "#752121",
+                        "error": "#9f403d",
+                        "surface-container-low": "#f5f4ef",
+                        "surface": "#fbf9f5",
+                        "on-error": "#fff7f6",
+                        "secondary-container": "#d2e5f3",
+                        "on-primary": "#d9ffff",
+                        "on-primary-fixed": "#224545",
+                        "error-container": "#fe8983",
+                        "on-tertiary-container": "#5c5b5b",
+                        "primary": "#426464",
+                        "surface-container-highest": "#e2e3db",
+                        "on-surface-variant": "#5d605a",
+                        "secondary": "#50616d",
+                        "tertiary-fixed": "#f6f3f2",
+                        "on-surface": "#30332e",
+                        "on-secondary-fixed-variant": "#4c5e6a",
+                        "surface-tint": "#426464",
+                        "primary-container": "#c5eae9",
+                        "inverse-surface": "#0e0e0d",
+                        "surface-container-high": "#e8e9e2",
+                        "on-tertiary": "#fbf8f8",
+                        "secondary-dim": "#445561",
+                        "on-tertiary-fixed": "#4a4949",
+                        "tertiary": "#5f5f5f",
+                        "on-secondary-fixed": "#30414d"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Inter"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-background text-on-surface min-h-screen flex overflow-hidden">
+<!-- SideNavBar Anchor -->
+<aside class="fixed left-0 top-0 h-full flex flex-col pt-20 pb-8 border-r-0 bg-surface-container w-64 z-40">
+<div class="px-6 mb-8">
+<div class="flex items-center space-x-3 mb-2">
+<img alt="Curator Avatar" class="w-10 h-10 rounded-full border-2 border-primary-container" data-alt="close up profile shot of a digital humanoid curator with soft blue glowing eyes and intricate metallic facial patterns" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAwfg8yiQlc5eH2HixlGzdt-HWwEsMMVlwvuuE-qUrtxjZtGhc80465MfMb09NjK_zEOsIYgjYTs4lIYfvFHhG_mqecxKpud4PRGPuAv_6YCUGHuNIPgYPR3Vd-FdXWdGNxqXcqoS-MIp-gK7jRbsMIoW7JkejIN4NdAAKbxzn8B9Nm8ftkaY1OKhMcJmyElf3wZHH0MV-vj8fhr-ofY5_1vz9oCFsA-2DC_H1TNv11_py6qyIJBNhoGfG9DtzFZZ9alAiMgOkdGr4"/>
+<div>
+<p class="text-xs font-bold uppercase tracking-widest text-primary">THE CURATOR</p>
+<p class="text-[10px] text-on-surface-variant">LEVEL 142 ADMINISTRATOR</p>
+</div>
+</div>
+<button class="w-full py-2 px-4 bg-primary text-on-primary rounded-lg text-xs font-bold tracking-widest uppercase hover:bg-primary-dim transition-all duration-200">
+                BOOST EFFICIENCY
+            </button>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center space-x-3 text-secondary p-3 mx-2 hover:bg-surface-container-low rounded-lg transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="text-sm font-medium uppercase tracking-wider">DASHBOARD</span>
+</a>
+<a class="flex items-center space-x-3 bg-surface-container-lowest text-primary rounded-lg p-3 mx-2 transition-all duration-200 shadow-sm" href="#">
+<span class="material-symbols-outlined" data-icon="inventory_2" style="font-variation-settings: 'FILL' 1;">inventory_2</span>
+<span class="text-sm font-medium uppercase tracking-wider font-semibold">INVENTORY</span>
+</a>
+<a class="flex items-center space-x-3 text-secondary p-3 mx-2 hover:bg-surface-container-low rounded-lg transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="precision_manufacturing">precision_manufacturing</span>
+<span class="text-sm font-medium uppercase tracking-wider">WORKSHOP</span>
+</a>
+<a class="flex items-center space-x-3 text-secondary p-3 mx-2 hover:bg-surface-container-low rounded-lg transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="auto_stories">auto_stories</span>
+<span class="text-sm font-medium uppercase tracking-wider">ARCHIVES</span>
+</a>
+<a class="flex items-center space-x-3 text-secondary p-3 mx-2 hover:bg-surface-container-low rounded-lg transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="settings_input_component">settings_input_component</span>
+<span class="text-sm font-medium uppercase tracking-wider">SYSTEM</span>
+</a>
+</nav>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 ml-64 flex flex-col h-screen overflow-hidden">
+<!-- TopNavBar Anchor -->
+<header class="flex justify-between items-center w-full px-8 py-4 max-w-[2560px] mx-auto bg-surface-bright z-50">
+<div class="flex items-center space-x-8">
+<h1 class="text-xl font-bold tracking-[0.1em] text-on-surface uppercase">ELYSIAN DASHBOARD</h1>
+<div class="h-[24px] w-[1px] bg-outline-variant opacity-30"></div>
+<nav class="hidden md:flex space-x-6">
+<a class="text-secondary hover:text-primary font-medium text-sm tracking-tight transition-colors" href="#">EQUIPMENT</a>
+<a class="text-primary border-b-2 border-primary pb-1 font-semibold text-sm tracking-tight" href="#">ALCHEMY</a>
+<a class="text-secondary hover:text-primary font-medium text-sm tracking-tight transition-colors" href="#">RESOURCES</a>
+<a class="text-secondary hover:text-primary font-medium text-sm tracking-tight transition-colors" href="#">LIBRARY</a>
+</nav>
+</div>
+<div class="flex items-center space-x-4">
+<button class="p-2 text-secondary hover:bg-surface-container rounded-full transition-colors">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="p-2 text-secondary hover:bg-surface-container rounded-full transition-colors">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+<img alt="Curator Profile" class="w-8 h-8 rounded-full border border-outline-variant" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDpzdTLL1PVnrKiy1ln7RoTY6WQNPfImEJe-7Q6n1h-FdhlZxRgTfF0UGwWsWIX4gyJxdFHf6fvh1RK2tAYeKsi5inQmC7BaFLjtnYt5dVlZiiTnDxY4A_BPd3hci7j4QHqkaw-JkHsaoxaYaL1k5b2-uJhTO0aH53BuMfIbqEWGm6f0usR1vdSvu2TlyEDDuQQJzSGNX2SN66yJ4QvWQ2pdg8UtswLrpn5crt2cD8FjX57dEBqSgavQmkNbqoQgzlV8w_6ACYJU7o"/>
+</div>
+</header>
+<!-- Inventory Sub-Header / Nav Bar -->
+<div class="px-8 py-4 bg-surface-container-low flex items-center justify-between">
+<div class="flex items-center space-x-4 w-1/3">
+<div class="relative w-full">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline text-sm" data-icon="search">search</span>
+<input class="w-full bg-surface-container-lowest border-none rounded-lg pl-10 pr-4 py-2 text-sm focus:ring-2 focus:ring-primary text-on-surface transition-all placeholder:text-outline-variant" placeholder="Search by name" type="text"/>
+</div>
+</div>
+<div class="flex space-x-2">
+<button class="px-4 py-1.5 rounded-full bg-primary text-on-primary text-xs font-semibold tracking-wide shadow-sm">All</button>
+<button class="px-4 py-1.5 rounded-full bg-surface-container-lowest text-secondary text-xs font-medium hover:bg-primary-container transition-colors">Currency</button>
+<button class="px-4 py-1.5 rounded-full bg-surface-container-lowest text-secondary text-xs font-medium hover:bg-primary-container transition-colors">Materials</button>
+<button class="px-4 py-1.5 rounded-full bg-surface-container-lowest text-secondary text-xs font-medium hover:bg-primary-container transition-colors">Consumables</button>
+<button class="px-4 py-1.5 rounded-full bg-surface-container-lowest text-secondary text-xs font-medium hover:bg-primary-container transition-colors">Combat</button>
+<button class="px-4 py-1.5 rounded-full bg-surface-container-lowest text-secondary text-xs font-medium hover:bg-primary-container transition-colors">Tools</button>
+<button class="px-4 py-1.5 rounded-full bg-surface-container-lowest text-secondary text-xs font-medium hover:bg-primary-container transition-colors">Special</button>
+</div>
+</div>
+<!-- Main Content Grid -->
+<div class="flex-1 flex overflow-hidden p-6 gap-6">
+<!-- Item Grid View -->
+<section class="flex-1 bg-surface-container-low rounded-xl p-6 overflow-y-auto">
+<div class="grid grid-cols-5 md:grid-cols-7 lg:grid-cols-10 gap-4">
+<!-- Item Cards (Repeated for effect) -->
+<div class="aspect-square bg-surface-container-lowest rounded-xl flex items-center justify-center relative cursor-pointer group hover:ring-2 hover:ring-primary transition-all shadow-sm">
+<span class="material-symbols-outlined text-primary text-3xl" data-icon="restaurant" style="font-variation-settings: 'FILL' 1;">restaurant</span>
+<span class="absolute bottom-1 right-1 bg-secondary text-on-secondary text-[10px] px-1.5 py-0.5 rounded font-bold">x142</span>
+</div>
+<div class="aspect-square bg-surface-container-lowest rounded-xl flex items-center justify-center relative cursor-pointer ring-2 ring-primary shadow-md">
+<span class="material-symbols-outlined text-primary text-3xl" data-icon="nutrition" style="font-variation-settings: 'FILL' 1;">nutrition</span>
+<span class="absolute bottom-1 right-1 bg-secondary text-on-secondary text-[10px] px-1.5 py-0.5 rounded font-bold">x12</span>
+<div class="absolute top-1 left-1 w-2 h-2 bg-primary rounded-full"></div>
+</div>
+<div class="aspect-square bg-surface-container-lowest rounded-xl flex items-center justify-center relative cursor-pointer group hover:ring-2 hover:ring-primary transition-all shadow-sm">
+<span class="material-symbols-outlined text-secondary text-3xl" data-icon="diamond" style="font-variation-settings: 'FILL' 0;">diamond</span>
+<span class="absolute bottom-1 right-1 bg-secondary text-on-secondary text-[10px] px-1.5 py-0.5 rounded font-bold">x8</span>
+</div>
+<!-- Batching some other icons -->
+<script>
+                        const icons = ['shield', 'swords', 'magic_button', 'flask', 'bolt', 'hardware', 'auto_fix', 'ac_unit', 'eco', 'pet_supplies'];
+                        for(let i=0; i<40; i++) {
+                            const icon = icons[Math.floor(Math.random() * icons.length)];
+                            const qty = Math.floor(Math.random() * 999);
+                            document.write(`
+                                <div class="aspect-square bg-surface-container-lowest rounded-xl flex items-center justify-center relative cursor-pointer group hover:ring-2 hover:ring-primary transition-all shadow-sm">
+                                    <span class="material-symbols-outlined text-on-surface-variant text-3xl opacity-60" data-icon="${icon}">${icon}</span>
+                                    <span class="absolute bottom-1 right-1 bg-surface-container-highest text-on-surface-variant text-[10px] px-1.5 py-0.5 rounded font-medium">x${qty}</span>
+                                </div>
+                            `);
+                        }
+                    </script>
+</div>
+</section>
+<!-- Item Detail Information Panel -->
+<aside class="w-80 bg-surface-container-lowest rounded-xl p-8 flex flex-col shadow-sm border border-outline-variant/10">
+<div class="flex-1">
+<div class="w-full aspect-square bg-surface-container-low rounded-2xl mb-6 flex items-center justify-center relative overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-tr from-primary/5 to-transparent"></div>
+<span class="material-symbols-outlined text-primary text-7xl" data-icon="nutrition" style="font-variation-settings: 'FILL' 1;">nutrition</span>
+</div>
+<div class="mb-6">
+<div class="flex items-center justify-between mb-2">
+<span class="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Consumable</span>
+<span class="px-2 py-0.5 rounded bg-secondary-container text-on-secondary-container text-[10px] font-bold uppercase">Common</span>
+</div>
+<h2 class="text-2xl font-bold text-on-surface tracking-tight mb-2">Golden Peach</h2>
+<p class="text-sm text-on-surface-variant leading-relaxed">
+                            A sun-ripened fruit harvested from the celestial orchards. Soft, sweet, and surprisingly restorative.
+                        </p>
+</div>
+<div class="space-y-4 pt-4 border-t border-outline-variant/10">
+<div class="flex justify-between items-center">
+<span class="text-xs text-on-surface-variant font-medium">Vitality Restore</span>
+<span class="text-xs font-bold text-primary font-mono">+450 HP</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-xs text-on-surface-variant font-medium">Satiety</span>
+<span class="text-xs font-bold text-primary font-mono">+12</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-xs text-on-surface-variant font-medium">Market Value</span>
+<span class="text-xs font-bold text-secondary font-mono">14 G</span>
+</div>
+</div>
+</div>
+<div class="mt-8 space-y-3">
+<button class="w-full py-4 bg-primary text-on-primary rounded-xl font-bold tracking-widest uppercase text-sm hover:scale-[0.98] transition-transform flex items-center justify-center space-x-2">
+<span class="material-symbols-outlined text-lg" data-icon="restaurant">restaurant</span>
+<span>EAT</span>
+</button>
+<button class="w-full py-3 bg-surface-container text-secondary rounded-xl font-bold tracking-widest uppercase text-xs hover:bg-surface-container-highest transition-colors">
+                        DISCARD
+                    </button>
+</div>
+</aside>
+</div>
+</main>
+<!-- Separation logic using a tonal line as per DS -->
+<div class="fixed top-[72px] left-64 right-0 h-[1px] bg-surface-container-highest z-30"></div>
+</body></html>

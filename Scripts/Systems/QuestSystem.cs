@@ -48,11 +48,13 @@ public partial class QuestSystem : Node
 
     private GameManager? _gameManager;
     private PlayerProfile? _profile;
+    private ValueSettlementService? _settlementService;
 
-    public void Configure(GameManager gameManager, PlayerProfile profile, IEnumerable<QuestDefinition> definitions)
+    public void Configure(GameManager gameManager, PlayerProfile profile, ValueSettlementService settlementService, IEnumerable<QuestDefinition> definitions)
     {
         _gameManager = gameManager;
         _profile = profile;
+        _settlementService = settlementService;
 
         _definitions.Clear();
         _definitionMap.Clear();
@@ -309,19 +311,11 @@ public partial class QuestSystem : Node
         switch (effect.EffectType)
         {
             case EventEffectType.GrantItem:
-                _profile.Inventory.AddItem(effect.TargetId, effect.IntValue);
-                break;
             case EventEffectType.RemoveItem:
-                _profile.Inventory.TryRemoveItem(effect.TargetId, effect.IntValue);
-                break;
             case EventEffectType.GrantGold:
-                _profile.Economy.AddGold(effect.IntValue);
-                break;
             case EventEffectType.RemoveGold:
-                _profile.Economy.TrySpendGold(effect.IntValue);
-                break;
             case EventEffectType.GrantSkillExp:
-                _gameManager?.SkillSystem?.AddExp(effect.TargetId, effect.IntValue);
+                _settlementService?.ApplyEconomyAndInventoryEffect(effect);
                 break;
             case EventEffectType.AddFactionReputation:
                 _gameManager?.FactionSystem?.AddReputation(effect.TargetId, effect.IntValue);
@@ -343,6 +337,9 @@ public partial class QuestSystem : Node
                 break;
             case EventEffectType.UnlockAchievement:
                 _gameManager?.AchievementSystem?.UnlockAchievement(effect.TargetId);
+                break;
+            case EventEffectType.LearnSkill:
+                _gameManager?.EnsureSkillLearned(effect.TargetId, effect.IntValue <= 0 ? 1 : effect.IntValue, true);
                 break;
         }
     }
@@ -386,6 +383,9 @@ public partial class QuestSystem : Node
                     break;
                 case EventEffectType.UnlockAchievement:
                     parts.Add($"解锁成就：{effect.TargetId}");
+                    break;
+                case EventEffectType.LearnSkill:
+                    parts.Add($"习得技能：{GetSkillName(effect.TargetId)}");
                     break;
             }
         }

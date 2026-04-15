@@ -9,9 +9,9 @@ items:
     description_key: "最基础的木材，通过砍树获得"
     definition_order: 100
     base_rarity: "Common"
-    base_max_stack: 9999
     buy_price: 0
     sell_price: 1
+    is_stackable: true
     tags: ["Material"]
     has_durability: false
     acquisition_hint_key: "通过砍树获得"
@@ -23,8 +23,8 @@ items:
     description_key: "可用于生火的木柴"
     definition_order: 200
     base_rarity: "Common"
-    base_max_stack: 999
     sell_price: 2
+    is_stackable: true
     tags: ["Material", "Fuel"]
 
   - id: "mat_carp"
@@ -33,6 +33,6 @@ items:
     description_key: "常见的淡水鱼，可作为渔获测试物品"
     definition_order: 100
     base_rarity: "Common"
-    base_max_stack: 999
     sell_price: 3
-    tags: ["Material", "Food"]
+    is_stackable: true
+    tags: ["Consumable", "Food"]

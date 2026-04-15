@@ -1,31 +1,141 @@
+# NOTE: exp_to_next now stores cumulative XP threshold for this level (Melvor XP column), not per-level difference.
 # Split one skill per file when a skill later gains many custom fields.
+# 经验值系统：梅尔沃放置官方 120 级指数曲线
+#   exp_to_next 参考：Configs/Skills/skill_exp_table.yaml → system_b_reference
 skills:
   - id: "skill_chopping"
     name_key: "砍树"
     description_key: "砍伐树木的技能，等级越高效率越高"
-    max_level: 20
+    group_id: "collection"
+    group_name: "采集技能"
+    group_order: 100
+    skill_order: 100
+    max_level: 120
     initial_level: 1
-    max_total_exp: 34200
+    max_total_exp: 104273167
     required_tool_tag: "Axe"
     primary_output_item_id: "mat_wood_log"
     level_table:
-      - { level: 1, exp_to_next: 180, output: 5.000, interval: 6.000 }
-      - { level: 2, exp_to_next: 360, output: 7.368, interval: 5.789 }
-      - { level: 3, exp_to_next: 540, output: 9.737, interval: 5.579 }
-      - { level: 4, exp_to_next: 720, output: 12.105, interval: 5.368 }
-      - { level: 5, exp_to_next: 900, output: 14.474, interval: 5.158 }
-      - { level: 6, exp_to_next: 1080, output: 16.842, interval: 4.947 }
-      - { level: 7, exp_to_next: 1260, output: 19.211, interval: 4.737 }
-      - { level: 8, exp_to_next: 1440, output: 21.579, interval: 4.526 }
-      - { level: 9, exp_to_next: 1620, output: 23.947, interval: 4.316 }
-      - { level: 10, exp_to_next: 1800, output: 26.316, interval: 4.105 }
-      - { level: 11, exp_to_next: 1980, output: 28.684, interval: 3.895 }
-      - { level: 12, exp_to_next: 2160, output: 31.053, interval: 3.684 }
-      - { level: 13, exp_to_next: 2340, output: 33.421, interval: 3.474 }
-      - { level: 14, exp_to_next: 2520, output: 35.789, interval: 3.263 }
-      - { level: 15, exp_to_next: 2700, output: 38.158, interval: 3.053 }
-      - { level: 16, exp_to_next: 2880, output: 40.526, interval: 2.842 }
-      - { level: 17, exp_to_next: 3060, output: 42.895, interval: 2.632 }
-      - { level: 18, exp_to_next: 3240, output: 45.263, interval: 2.421 }
-      - { level: 19, exp_to_next: 3420, output: 47.632, interval: 2.211 }
-      - { level: 20, exp_to_next: 0, output: 50.000, interval: 2.000 }
+      # exp_to_next：梅尔沃放置官方经验曲线
+      # output / interval：从 1 级（5.000 / 6.000）到 120 级（50.000 / 2.000）线性插值
+      - { level: 1,   exp_to_next: 0,       output: 5.000,  interval: 6.000 }
+      # optional: on_level_up_event_ids: ["event_id_example"]
+      - { level: 2,   exp_to_next: 83,       output: 5.378,  interval: 5.966 }
+      - { level: 3,   exp_to_next: 174,      output: 5.756,  interval: 5.933 }
+      - { level: 4,   exp_to_next: 276,      output: 6.134,  interval: 5.899 }
+      - { level: 5,   exp_to_next: 388,      output: 6.513,  interval: 5.866 }
+      - { level: 6,   exp_to_next: 512,      output: 6.891,  interval: 5.832 }
+      - { level: 7,   exp_to_next: 650,      output: 7.269,  interval: 5.798 }
+      - { level: 8,   exp_to_next: 801,      output: 7.647,  interval: 5.765 }
+      - { level: 9,   exp_to_next: 969,      output: 8.025,  interval: 5.731 }
+      - { level: 10,  exp_to_next: 1154,      output: 8.403,  interval: 5.697 }
+      - { level: 11,  exp_to_next: 1358,      output: 8.782,  interval: 5.664 }
+      - { level: 12,  exp_to_next: 1584,      output: 9.160,  interval: 5.630 }
+      - { level: 13,  exp_to_next: 1833,      output: 9.538,  interval: 5.597 }
+      - { level: 14,  exp_to_next: 2107,      output: 9.916,  interval: 5.563 }
+      - { level: 15,  exp_to_next: 2411,      output: 10.294, interval: 5.529 }
+      - { level: 16,  exp_to_next: 2746,      output: 10.672, interval: 5.496 }
+      - { level: 17,  exp_to_next: 3115,      output: 11.050, interval: 5.462 }
+      - { level: 18,  exp_to_next: 3523,      output: 11.429, interval: 5.429 }
+      - { level: 19,  exp_to_next: 3973,      output: 11.807, interval: 5.395 }
+      - { level: 20,  exp_to_next: 4470,      output: 12.185, interval: 5.361 }
+      - { level: 21,  exp_to_next: 5018,      output: 12.563, interval: 5.328 }
+      - { level: 22,  exp_to_next: 5624,      output: 12.941, interval: 5.294 }
+      - { level: 23,  exp_to_next: 6291,      output: 13.319, interval: 5.261 }
+      - { level: 24,  exp_to_next: 7028,      output: 13.697, interval: 5.227 }
+      - { level: 25,  exp_to_next: 7842,      output: 14.076, interval: 5.193 }
+      - { level: 26,  exp_to_next: 8740,      output: 14.454, interval: 5.160 }
+      - { level: 27,  exp_to_next: 9730,     output: 14.832, interval: 5.126 }
+      - { level: 28,  exp_to_next: 10824,     output: 15.210, interval: 5.092 }
+      - { level: 29,  exp_to_next: 12031,     output: 15.588, interval: 5.059 }
+      - { level: 30,  exp_to_next: 13363,     output: 15.966, interval: 5.025 }
+      - { level: 31,  exp_to_next: 14833,     output: 16.345, interval: 4.992 }
+      - { level: 32,  exp_to_next: 16456,     output: 16.723, interval: 4.958 }
+      - { level: 33,  exp_to_next: 18247,     output: 17.101, interval: 4.924 }
+      - { level: 34,  exp_to_next: 20224,     output: 17.479, interval: 4.891 }
+      - { level: 35,  exp_to_next: 22406,     output: 17.857, interval: 4.857 }
+      - { level: 36,  exp_to_next: 24815,     output: 18.235, interval: 4.824 }
+      - { level: 37,  exp_to_next: 27473,     output: 18.613, interval: 4.790 }
+      - { level: 38,  exp_to_next: 30408,     output: 18.992, interval: 4.756 }
+      - { level: 39,  exp_to_next: 33648,     output: 19.370, interval: 4.723 }
+      - { level: 40,  exp_to_next: 37224,     output: 19.748, interval: 4.689 }
+      - { level: 41,  exp_to_next: 41171,     output: 20.126, interval: 4.655 }
+      - { level: 42,  exp_to_next: 45529,     output: 20.504, interval: 4.622 }
+      - { level: 43,  exp_to_next: 50339,     output: 20.882, interval: 4.588 }
+      - { level: 44,  exp_to_next: 55649,     output: 21.261, interval: 4.555 }
+      - { level: 45,  exp_to_next: 61512,     output: 21.639, interval: 4.521 }
+      - { level: 46,  exp_to_next: 67983,     output: 22.017, interval: 4.487 }
+      - { level: 47,  exp_to_next: 75127,     output: 22.395, interval: 4.454 }
+      - { level: 48,  exp_to_next: 83014,     output: 22.773, interval: 4.420 }
+      - { level: 49,  exp_to_next: 91721,     output: 23.151, interval: 4.387 }
+      - { level: 50,  exp_to_next: 101333,    output: 23.529, interval: 4.353 }
+      - { level: 51,  exp_to_next: 111945,    output: 23.908, interval: 4.319 }
+      - { level: 52,  exp_to_next: 123660,    output: 24.286, interval: 4.286 }
+      - { level: 53,  exp_to_next: 136594,    output: 24.664, interval: 4.252 }
+      - { level: 54,  exp_to_next: 150872,    output: 25.042, interval: 4.218 }
+      - { level: 55,  exp_to_next: 166636,    output: 25.420, interval: 4.185 }
+      - { level: 56,  exp_to_next: 184040,    output: 25.798, interval: 4.151 }
+      - { level: 57,  exp_to_next: 203254,    output: 26.176, interval: 4.118 }
+      - { level: 58,  exp_to_next: 224466,    output: 26.555, interval: 4.084 }
+      - { level: 59,  exp_to_next: 247886,    output: 26.933, interval: 4.050 }
+      - { level: 60,  exp_to_next: 273742,    output: 27.311, interval: 4.017 }
+      - { level: 61,  exp_to_next: 302288,    output: 27.689, interval: 3.983 }
+      - { level: 62,  exp_to_next: 333804,    output: 28.067, interval: 3.950 }
+      - { level: 63,  exp_to_next: 368599,    output: 28.445, interval: 3.916 }
+      - { level: 64,  exp_to_next: 407015,    output: 28.824, interval: 3.882 }
+      - { level: 65,  exp_to_next: 449428,    output: 29.202, interval: 3.849 }
+      - { level: 66,  exp_to_next: 496254,    output: 29.580, interval: 3.815 }
+      - { level: 67,  exp_to_next: 547953,    output: 29.958, interval: 3.782 }
+      - { level: 68,  exp_to_next: 605032,    output: 30.336, interval: 3.748 }
+      - { level: 69,  exp_to_next: 668051,    output: 30.714, interval: 3.714 }
+      - { level: 70,  exp_to_next: 737627,    output: 31.092, interval: 3.681 }
+      - { level: 71,  exp_to_next: 814445,    output: 31.471, interval: 3.647 }
+      - { level: 72,  exp_to_next: 899257,    output: 31.849, interval: 3.613 }
+      - { level: 73,  exp_to_next: 992895,   output: 32.227, interval: 3.580 }
+      - { level: 74,  exp_to_next: 1096278,   output: 32.605, interval: 3.546 }
+      - { level: 75,  exp_to_next: 1210421,   output: 32.983, interval: 3.513 }
+      - { level: 76,  exp_to_next: 1336443,   output: 33.361, interval: 3.479 }
+      - { level: 77,  exp_to_next: 1475581,   output: 33.739, interval: 3.445 }
+      - { level: 78,  exp_to_next: 1629200,   output: 34.118, interval: 3.412 }
+      - { level: 79,  exp_to_next: 1798808,   output: 34.496, interval: 3.378 }
+      - { level: 80,  exp_to_next: 1986068,   output: 34.874, interval: 3.345 }
+      - { level: 81,  exp_to_next: 2192818,   output: 35.252, interval: 3.311 }
+      - { level: 82,  exp_to_next: 2421087,   output: 35.630, interval: 3.277 }
+      - { level: 83,  exp_to_next: 2673114,   output: 36.008, interval: 3.244 }
+      - { level: 84,  exp_to_next: 2951373,   output: 36.387, interval: 3.210 }
+      - { level: 85,  exp_to_next: 3258594,   output: 36.765, interval: 3.176 }
+      - { level: 86,  exp_to_next: 3597792,   output: 37.143, interval: 3.143 }
+      - { level: 87,  exp_to_next: 3972294,   output: 37.521, interval: 3.109 }
+      - { level: 88,  exp_to_next: 4385776,   output: 37.899, interval: 3.076 }
+      - { level: 89,  exp_to_next: 4842295,   output: 38.277, interval: 3.042 }
+      - { level: 90,  exp_to_next: 5346332,   output: 38.655, interval: 3.008 }
+      - { level: 91,  exp_to_next: 5902831,   output: 39.034, interval: 2.975 }
+      - { level: 92,  exp_to_next: 6517253,   output: 39.412, interval: 2.941 }
+      - { level: 93,  exp_to_next: 7195629,   output: 39.790, interval: 2.908 }
+      - { level: 94,  exp_to_next: 7944614,   output: 40.168, interval: 2.874 }
+      - { level: 95,  exp_to_next: 8771558,   output: 40.546, interval: 2.840 }
+      - { level: 96,  exp_to_next: 9684577,  output: 40.924, interval: 2.807 }
+      - { level: 97,  exp_to_next: 10692629,  output: 41.303, interval: 2.773 }
+      - { level: 98,  exp_to_next: 11805606,  output: 41.681, interval: 2.739 }
+      - { level: 99,  exp_to_next: 13034431,  output: 42.059, interval: 2.706 }
+      - { level: 100, exp_to_next: 14391160,  output: 42.437, interval: 2.672 }
+      - { level: 101, exp_to_next: 15889109,  output: 42.815, interval: 2.639 }
+      - { level: 102, exp_to_next: 17542976,  output: 43.193, interval: 2.605 }
+      - { level: 103, exp_to_next: 19368992,  output: 43.571, interval: 2.571 }
+      - { level: 104, exp_to_next: 21385073,  output: 43.950, interval: 2.538 }
+      - { level: 105, exp_to_next: 23611006,  output: 44.328, interval: 2.504 }
+      - { level: 106, exp_to_next: 26068632,  output: 44.706, interval: 2.471 }
+      - { level: 107, exp_to_next: 28782069,  output: 45.084, interval: 2.437 }
+      - { level: 108, exp_to_next: 31777943,  output: 45.462, interval: 2.403 }
+      - { level: 109, exp_to_next: 35085654,  output: 45.840, interval: 2.370 }
+      - { level: 110, exp_to_next: 38737661,  output: 46.218, interval: 2.336 }
+      - { level: 111, exp_to_next: 42769801,  output: 46.597, interval: 2.303 }
+      - { level: 112, exp_to_next: 47221641,  output: 46.975, interval: 2.269 }
+      - { level: 113, exp_to_next: 52136869,  output: 47.353, interval: 2.235 }
+      - { level: 114, exp_to_next: 57563718,  output: 47.731, interval: 2.202 }
+      - { level: 115, exp_to_next: 63555443,  output: 48.109, interval: 2.168 }
+      - { level: 116, exp_to_next: 70170840,  output: 48.487, interval: 2.134 }
+      - { level: 117, exp_to_next: 77474828,  output: 48.866, interval: 2.101 }
+      - { level: 118, exp_to_next: 85539082,  output: 49.244, interval: 2.067 }
+      - { level: 119, exp_to_next: 94442737,  output: 49.622, interval: 2.034 }
+      - { level: 120, exp_to_next: 104273167,        output: 50.000, interval: 2.000 }

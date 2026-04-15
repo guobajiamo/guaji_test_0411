@@ -1,0 +1,136 @@
+items:
+  - id: "food_tricolor_dango"
+    parent_id: "consumable_cooking"
+    name_key: "三色团子"
+    description_key: "甜糯的三色团子，食用后能短时间大幅强化采集效率"
+    detail_description_key: "食用后获得“干劲十足”：采集速度提升100%（读条耗时减少50%），采集产出提升100%，持续30分钟，可叠加持续时间。"
+    definition_order: 400
+    base_rarity: "Rare"
+    is_stackable: true
+    sell_price: 12
+    tags: ["Consumable", "Food"]
+    consume_buff:
+      buff_id: "buff_dango_motivation"
+      display_name: "干劲十足"
+      description: "使用以后有采集速度提升100%（读条耗时减少50%），采集产出数量提升100%，持续30分钟，多次服用可延长持续时间。"
+      duration_seconds: 1800
+      extend_duration_on_reapply: true
+      stat_modifiers:
+        - { stat_id: "idle.speed.skill_chopping.multiplier", multiplier: 2.0 }
+        - { stat_id: "idle.speed.skill_fishing.multiplier", multiplier: 2.0 }
+        - { stat_id: "idle.speed.skill_mining.multiplier", multiplier: 2.0 }
+        - { stat_id: "idle.output.skill_chopping.multiplier", multiplier: 2.0 }
+        - { stat_id: "idle.output.skill_fishing.multiplier", multiplier: 2.0 }
+        - { stat_id: "idle.output.skill_mining.multiplier", multiplier: 2.0 }
+
+  - id: "mat_plum"
+    parent_id: "consumable_ingredient"
+    name_key: "梅子"
+    description_key: "酸甜的梅子，可入菜也可直接食用"
+    detail_description_key: "食用后获得“梅开二度”：100%概率获得双倍采集物品掉落，持续10分钟，可叠加持续时间。"
+    definition_order: 420
+    base_rarity: "Uncommon"
+    is_stackable: true
+    sell_price: 4
+    tags: ["Material", "Food", "Consumable"]
+    consume_buff:
+      buff_id: "buff_plum_double_drop"
+      display_name: "梅开二度"
+      description: "使用以后有100%概率获得双倍采集物品掉落，持续10分钟，多次服用可延长持续时间。"
+      duration_seconds: 600
+      extend_duration_on_reapply: true
+      stat_modifiers:
+        - { stat_id: "idle.output.skill_chopping.multiplier", multiplier: 2.0 }
+        - { stat_id: "idle.output.skill_fishing.multiplier", multiplier: 2.0 }
+        - { stat_id: "idle.output.skill_mining.multiplier", multiplier: 2.0 }
+
+  - id: "mat_peach"
+    parent_id: "consumable_ingredient"
+    name_key: "桃子"
+    description_key: "汁水饱满的桃子，可入菜也可直接食用"
+    detail_description_key: "食用后获得“精力充沛”：采集速度提升50%（读条耗时减少25%），持续10分钟，可叠加持续时间。"
+    definition_order: 430
+    base_rarity: "Uncommon"
+    is_stackable: true
+    sell_price: 4
+    tags: ["Material", "Food", "Consumable"]
+    consume_buff:
+      buff_id: "buff_peach_focus"
+      display_name: "精力充沛"
+      description: "使用以后有采集速度提升50%（读条耗时减少25%），持续10分钟，多次服用可延长持续时间。"
+      duration_seconds: 600
+      extend_duration_on_reapply: true
+      stat_modifiers:
+        - { stat_id: "idle.speed.skill_chopping.multiplier", multiplier: 1.3333333333 }
+        - { stat_id: "idle.speed.skill_fishing.multiplier", multiplier: 1.3333333333 }
+        - { stat_id: "idle.speed.skill_mining.multiplier", multiplier: 1.3333333333 }
+
+  - id: "mat_apple"
+    parent_id: "consumable_ingredient"
+    name_key: "苹果"
+    description_key: "常见果实，可作为食材和临时补给"
+    definition_order: 440
+    base_rarity: "Uncommon"
+    is_stackable: true
+    sell_price: 3
+    tags: ["Material", "Food", "Consumable"]
+
+  - id: "mat_red_date"
+    parent_id: "consumable_ingredient"
+    name_key: "红枣"
+    description_key: "甜香的干鲜果，常用于烹饪和药膳"
+    definition_order: 450
+    base_rarity: "Uncommon"
+    is_stackable: true
+    sell_price: 3
+    tags: ["Material", "Food", "Consumable"]
+
+  - id: "mat_plum_seed"
+    parent_id: "consumable_ingredient"
+    name_key: "梅树种子"
+    description_key: "可用于后续种植系统的梅树种子"
+    definition_order: 460
+    base_rarity: "Uncommon"
+    is_stackable: true
+    sell_price: 5
+    tags: ["Material", "Consumable"]
+
+  - id: "mat_peach_seed"
+    parent_id: "consumable_ingredient"
+    name_key: "桃树种子"
+    description_key: "可用于后续种植系统的桃树种子"
+    definition_order: 470
+    base_rarity: "Uncommon"
+    is_stackable: true
+    sell_price: 5
+    tags: ["Material", "Consumable"]
+
+  - id: "mat_charcoal"
+    parent_id: "mat_wood"
+    name_key: "木炭"
+    description_key: "烧炭得到的基础燃料，也可作为冶炼耗材"
+    definition_order: 300
+    base_rarity: "Common"
+    is_stackable: true
+    sell_price: 2
+    tags: ["Material", "Consumable", "Fuel"]
+
+  - id: "mat_iron_ore"
+    parent_id: "mat_mineral"
+    name_key: "铁矿石"
+    description_key: "可用于冶炼铁锭的基础矿石"
+    definition_order: 100
+    base_rarity: "Common"
+    is_stackable: true
+    sell_price: 3
+    tags: ["Material", "Consumable"]
+
+  - id: "mat_iron_ingot"
+    parent_id: "mat_mineral"
+    name_key: "铁锭"
+    description_key: "锻造工具与装备的常用金属材料"
+    definition_order: 200
+    base_rarity: "Common"
+    is_stackable: true
+    sell_price: 8
+    tags: ["Material", "Consumable"]

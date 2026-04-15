@@ -17,6 +17,7 @@ public partial class AppRoot : Control
     private Control? _screenHost;
     private MainUiLayoutSettings _layoutSettings = new();
     private Window? _rootWindow;
+    private bool _isWindowSizeHandlerBound;
 
     public override void _Ready()
     {
@@ -91,8 +92,9 @@ public partial class AppRoot : Control
     }
 
     /// <summary>
-    /// 当前先把 UI 设计尺寸固定在 1920x1080。
-    /// 小窗口时整体缩小，大窗口时不主动放大超过 1 倍，尽量避免图片 UI 被拉糊。
+    /// UI 设计基准切换为 2K（2560x1440），并在运行时根据窗口比例自适应缩放策略：
+    /// 1) 常规横屏采用 Expand，尽量利用额外可视区域；
+    /// 2) 竖屏采用 KeepWidth，优先保证阅读宽度和布局稳定。
     /// </summary>
     private void ConfigureAdaptiveWindow()
     {
@@ -102,44 +104,68 @@ public partial class AppRoot : Control
             return;
         }
 
-        if (OS.HasFeature("mobile") || OS.GetName().Equals("Android", StringComparison.OrdinalIgnoreCase))
-        {
-            _rootWindow.ContentScaleMode = Window.ContentScaleModeEnum.CanvasItems;
-            _rootWindow.ContentScaleAspect = Window.ContentScaleAspectEnum.Keep;
-            _rootWindow.ContentScaleFactor = 1.0f;
-            return;
-        }
-
-        Vector2I designSize = new(_layoutSettings.WindowBaseWidth, _layoutSettings.WindowBaseHeight);
-
-        _rootWindow.Unresizable = false;
-        _rootWindow.Borderless = false;
-        _rootWindow.Size = designSize;
-        _rootWindow.MinSize = new Vector2I(960, 540);
+        Vector2I designSize = GetDesignSize();
         _rootWindow.ContentScaleSize = designSize;
         _rootWindow.ContentScaleMode = Window.ContentScaleModeEnum.CanvasItems;
-        _rootWindow.ContentScaleAspect = Window.ContentScaleAspectEnum.Keep;
-        _rootWindow.SizeChanged += UpdateAdaptiveScale;
+        _rootWindow.ContentScaleFactor = 1.0f;
+        if (!_isWindowSizeHandlerBound)
+        {
+            _rootWindow.SizeChanged += UpdateAdaptiveScale;
+            _isWindowSizeHandlerBound = true;
+        }
+
+        if (!IsMobilePlatform())
+        {
+            _rootWindow.Unresizable = false;
+            _rootWindow.Borderless = false;
+            _rootWindow.Size = designSize;
+            _rootWindow.MinSize = new Vector2I(
+                Math.Max(1280, designSize.X / 2),
+                Math.Max(720, designSize.Y / 2));
+        }
+
         UpdateAdaptiveScale();
     }
 
     /// <summary>
-    /// 当前 UI 设计基准固定为 1920x1080。
-    /// 窗口缩小时按比例压缩，窗口放大时不超过 1 倍，尽量避免 PNG UI 被放大糊掉。
+    /// 根据当前窗口比例切换缩放策略，不做额外倍数放大/缩小（保持 ContentScaleFactor=1）。
     /// </summary>
     private void UpdateAdaptiveScale()
     {
-        if (_rootWindow == null || OS.HasFeature("mobile") || OS.GetName().Equals("Android", StringComparison.OrdinalIgnoreCase))
+        if (_rootWindow == null)
         {
             return;
         }
 
-        Vector2I designSize = new(_layoutSettings.WindowBaseWidth, _layoutSettings.WindowBaseHeight);
-        _rootWindow.ContentScaleFactor = MathF.Min(
-            1.0f,
-            MathF.Min(
-                (float)_rootWindow.Size.X / designSize.X,
-                (float)_rootWindow.Size.Y / designSize.Y));
+        _rootWindow.ContentScaleAspect = ResolveAdaptiveAspect(_rootWindow.Size);
+        _rootWindow.ContentScaleFactor = 1.0f;
+    }
+
+    private Vector2I GetDesignSize()
+    {
+        return new Vector2I(
+            Math.Max(1280, _layoutSettings.WindowBaseWidth),
+            Math.Max(720, _layoutSettings.WindowBaseHeight));
+    }
+
+    private static Window.ContentScaleAspectEnum ResolveAdaptiveAspect(Vector2I windowSize)
+    {
+        if (windowSize.Y <= 0)
+        {
+            return Window.ContentScaleAspectEnum.Expand;
+        }
+
+        float aspect = (float)windowSize.X / windowSize.Y;
+        return aspect < 1.2f
+            ? Window.ContentScaleAspectEnum.KeepWidth
+            : Window.ContentScaleAspectEnum.Expand;
+    }
+
+    private static bool IsMobilePlatform()
+    {
+        return OS.HasFeature("mobile")
+            || OS.GetName().Equals("Android", StringComparison.OrdinalIgnoreCase)
+            || OS.GetName().Equals("iOS", StringComparison.OrdinalIgnoreCase);
     }
 
     private void ReplaceScreen(Control nextScreen)

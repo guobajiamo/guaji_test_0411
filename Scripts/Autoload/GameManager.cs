@@ -25,6 +25,7 @@ public partial class GameManager : Node
     private readonly List<string> _runtimeLogs = new();
     private readonly Dictionary<string, GameScenarioDefinition> _scenarioDefinitions = new(StringComparer.Ordinal);
     private readonly List<QuestDefinition> _questDefinitions = new();
+    private SignalBus? _signalBus;
 
     public static GameManager? Instance { get; private set; }
 
@@ -43,6 +44,8 @@ public partial class GameManager : Node
     public SaveManager SaveManager { get; private set; } = new();
 
     public PlayerProfile PlayerProfile { get; private set; } = new();
+
+    public ValueSettlementService SettlementService { get; } = new();
 
     public GameScenarioDefinition? ActiveScenario { get; private set; }
 
@@ -345,17 +348,19 @@ public partial class GameManager : Node
 
     private void ConfigureSystems()
     {
-        IdleSystem!.Configure(PlayerProfile, EventRegistry, SkillRegistry, ItemRegistry);
-        ClickEventSystem!.Configure(PlayerProfile, EventRegistry, SkillSystem, FactionSystem, ZoneSystem);
-        SkillSystem!.Configure(PlayerProfile, SkillRegistry);
-        ShopSystem?.Configure(PlayerProfile, FactionRegistry);
-        SellSystem?.Configure(PlayerProfile, ItemRegistry);
+        SkillSystem!.Configure(PlayerProfile, SkillRegistry, ClickEventSystem);
+        SettlementService.Configure(PlayerProfile, BuffSystem, SkillSystem);
+        IdleSystem!.Configure(PlayerProfile, EventRegistry, SkillRegistry, ItemRegistry, SettlementService);
+        ClickEventSystem!.Configure(PlayerProfile, EventRegistry, SettlementService, FactionSystem, ZoneSystem, SkillSystem);
+        ShopSystem?.Configure(PlayerProfile, FactionRegistry, SettlementService);
+        SellSystem?.Configure(PlayerProfile, ItemRegistry, SettlementService);
         FactionSystem?.Configure(PlayerProfile, FactionRegistry);
         ZoneSystem?.Configure(PlayerProfile, ZoneRegistry);
         BattleSystem?.Configure(PlayerProfile);
         AchievementSystem?.Configure(PlayerProfile);
-        QuestSystem?.Configure(this, PlayerProfile, _questDefinitions);
+        QuestSystem?.Configure(this, PlayerProfile, SettlementService, _questDefinitions);
         QuestSystem?.RefreshQuestState();
+        ApplyOwnedItemSkillUnlocks(false);
     }
 
     private T AddSystemNode<T>(string nodeName) where T : Node, new()
@@ -439,6 +444,8 @@ public partial class GameManager : Node
             }
         }
 
+        ApplyOwnedItemSkillUnlocks(false);
+
         foreach (FactionDefinition faction in FactionRegistry.Factions.Values)
         {
             PlayerProfile.GetOrCreateFactionState(faction.Id);
@@ -473,6 +480,19 @@ public partial class GameManager : Node
         {
             GD.Print($"[GameLog] {finalMessage}");
         }
+
+        ResolveSignalBus()?.EmitSignal(SignalBus.SignalName.LogMessageRequested, finalMessage);
+    }
+
+    private SignalBus? ResolveSignalBus()
+    {
+        if (_signalBus != null && IsInstanceValid(_signalBus))
+        {
+            return _signalBus;
+        }
+
+        _signalBus = GetNodeOrNull<SignalBus>("/root/SignalBus");
+        return _signalBus;
     }
 
     /// <summary>
@@ -494,6 +514,63 @@ public partial class GameManager : Node
     {
         ItemDefinition? item = ItemRegistry.GetItem(itemId);
         return item == null ? itemId : item.GetDisplayName(TranslateText);
+    }
+
+    public bool EnsureSkillLearned(string skillId, int targetLevel = 1, bool addLog = true)
+    {
+        SkillDefinition? definition = SkillRegistry.GetSkill(skillId);
+        if (definition == null || SkillSystem == null)
+        {
+            return false;
+        }
+
+        bool learned = SkillSystem.TryLearnSkill(skillId, targetLevel);
+        if (learned && addLog)
+        {
+            AddGameLog($"习得技能：{TranslateText(definition.NameKey)}");
+        }
+
+        return learned;
+    }
+
+    public void NotifyItemAcquired(string itemId)
+    {
+        if (string.IsNullOrWhiteSpace(itemId))
+        {
+            return;
+        }
+
+        ItemDefinition? item = ItemRegistry.GetItem(itemId);
+        if (item == null || string.IsNullOrWhiteSpace(item.OwnedUnlockSkillId))
+        {
+            return;
+        }
+
+        if (PlayerProfile.Inventory.GetItemAmount(itemId) <= 0)
+        {
+            return;
+        }
+
+        EnsureSkillLearned(item.OwnedUnlockSkillId, 1, true);
+    }
+
+    private void ApplyOwnedItemSkillUnlocks(bool addLog)
+    {
+        foreach ((string itemId, ItemStack stack) in PlayerProfile.Inventory.Stacks)
+        {
+            if (stack.Quantity <= 0)
+            {
+                continue;
+            }
+
+            ItemDefinition? item = ItemRegistry.GetItem(itemId);
+            if (item == null || string.IsNullOrWhiteSpace(item.OwnedUnlockSkillId))
+            {
+                continue;
+            }
+
+            EnsureSkillLearned(item.OwnedUnlockSkillId, 1, addLog);
+        }
     }
 
     /// <summary>

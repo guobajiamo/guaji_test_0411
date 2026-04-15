@@ -17,6 +17,7 @@ public partial class EventDialogPanel : Control
     private CenterContainer? _dismissRow;
     private Button? _dismissButton;
     private HBoxContainer? _buttonRow;
+    private bool _useStitchStyle;
 
     public override void _Ready()
     {
@@ -24,13 +25,15 @@ public partial class EventDialogPanel : Control
         HideDialog();
     }
 
-    public void Configure(MainUiLayoutSettings layoutSettings)
+    public void Configure(MainUiLayoutSettings layoutSettings, bool useStitchStyle = false)
     {
+        _useStitchStyle = useStitchStyle;
         EnsureStructure();
         _dialogPanel!.CustomMinimumSize = new Vector2(layoutSettings.DialogMinWidth, 0);
         _titleLabel!.AddThemeFontSizeOverride("font_size", layoutSettings.SectionHeaderFontSize);
         _bodyLabel!.AddThemeFontSizeOverride("normal_font_size", layoutSettings.BodyFontSize);
         _dismissButton!.AddThemeFontSizeOverride("font_size", layoutSettings.BodyFontSize);
+        ApplyThemeStyles();
     }
 
     public void ShowDialog(string title, string bodyText, IReadOnlyList<DialogButtonConfig> buttons, bool showCancelButton = true)
@@ -52,13 +55,22 @@ public partial class EventDialogPanel : Control
                 Text = buttonConfig.Text,
                 TooltipText = buttonConfig.TooltipText,
                 SizeFlagsHorizontal = SizeFlags.ExpandFill,
-                CustomMinimumSize = new Vector2(120, 42)
+                CustomMinimumSize = new Vector2(120, 42),
+                ActionMode = BaseButton.ActionModeEnum.Press,
+                FocusMode = FocusModeEnum.None
             };
             button.Pressed += () =>
             {
                 HideDialog();
                 buttonConfig.OnPressed?.Invoke();
             };
+            if (_useStitchStyle)
+            {
+                UiImageThemeManager.ApplyButtonStyle(button, "event_oneshot");
+                button.AddThemeColorOverride("font_color", new Color("#f4f9ff"));
+                button.AddThemeColorOverride("font_hover_color", new Color("#f4f9ff"));
+                button.AddThemeColorOverride("font_pressed_color", new Color("#f4f9ff"));
+            }
             _buttonRow!.AddChild(button);
         }
 
@@ -150,7 +162,9 @@ public partial class EventDialogPanel : Control
         {
             Name = "DismissButton",
             Text = "我再想想",
-            CustomMinimumSize = new Vector2(140, 40)
+            CustomMinimumSize = new Vector2(140, 40),
+            ActionMode = BaseButton.ActionModeEnum.Press,
+            FocusMode = FocusModeEnum.None
         };
         _dismissButton.Pressed += HideDialog;
         _dismissRow.AddChild(_dismissButton);
@@ -163,6 +177,28 @@ public partial class EventDialogPanel : Control
         };
         _buttonRow.AddThemeConstantOverride("separation", 12);
         content.AddChild(_buttonRow);
+
+        ApplyThemeStyles();
+    }
+
+    private void ApplyThemeStyles()
+    {
+        if (_overlay == null || _dialogPanel == null || _titleLabel == null || _bodyLabel == null || _dismissButton == null)
+        {
+            return;
+        }
+
+        if (_useStitchStyle)
+        {
+            _overlay.Color = new Color(0, 0, 0, 0.46f);
+            _dialogPanel.AddThemeStyleboxOverride("panel", StitchElementStyleLibrary.CreateLightDialogFrame());
+            _titleLabel.AddThemeColorOverride("font_color", new Color("#224545"));
+            _bodyLabel.AddThemeColorOverride("default_color", new Color("#30332e"));
+            UiImageThemeManager.ApplyButtonStyle(_dismissButton, "system_return_menu");
+            _dismissButton.AddThemeColorOverride("font_color", new Color("#fbf8f8"));
+            _dismissButton.AddThemeColorOverride("font_hover_color", new Color("#fbf8f8"));
+            _dismissButton.AddThemeColorOverride("font_pressed_color", new Color("#fbf8f8"));
+        }
     }
 
     private void ClearButtonRow()

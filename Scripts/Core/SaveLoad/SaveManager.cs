@@ -174,12 +174,29 @@ public class SaveManager
                     AccumulatedProgressSeconds = profile.IdleState.AccumulatedProgressSeconds,
                     PendingOutputFraction = profile.IdleState.PendingOutputFraction,
                     LastProgressUnixSeconds = profile.IdleState.LastProgressUnixSeconds,
-                    OfflineSettlementCapSeconds = profile.IdleState.OfflineSettlementCapSeconds
+                    OfflineSettlementCapSeconds = profile.IdleState.OfflineSettlementCapSeconds,
+                    GatheringNodeStates = profile.IdleState.GatheringNodeStates.Values
+                        .Where(state => !string.IsNullOrWhiteSpace(state.EventId))
+                        .OrderBy(state => state.EventId, StringComparer.Ordinal)
+                        .Select(state => new GatheringNodeSnapshot
+                        {
+                            EventId = state.EventId,
+                            AvailableAmount = state.AvailableAmount,
+                            LastRecoverUnixSeconds = state.LastRecoverUnixSeconds
+                        })
+                        .ToList()
                 },
                 UiState = new UiStateSnapshot
                 {
                     SelectedAreaId = profile.UiState.SelectedAreaId,
                     SelectedTabId = profile.UiState.SelectedTabId,
+                    IsSkillSidebarMode = profile.UiState.IsSkillSidebarMode,
+                    SelectedSkillId = profile.UiState.SelectedSkillId,
+                    UiThemeMode = profile.UiState.UiThemeMode,
+                    InventorySortMode = profile.UiState.InventorySortMode.ToString(),
+                    InventoryTagFilter = profile.UiState.InventoryTagFilter.ToString(),
+                    InventoryFilterTab = profile.UiState.InventoryFilterTab.ToString(),
+                    InventoryUseLargeIcons = profile.UiState.InventoryUseLargeIcons,
                     FavoriteSceneIds = profile.UiState.FavoriteSceneIds.ToList(),
                     ProcessedInteractableEventIds = profile.UiState.GetSortedProcessedInteractableEventIds(),
                     AreaIdsWithNewMarker = profile.UiState.GetSortedAreaIdsWithNewMarker()
@@ -258,6 +275,7 @@ public class SaveManager
             state.IsAcquired = item.IsAcquired;
             state.IsFavorite = item.IsFavorite;
             state.IsJunkMarked = item.IsJunkMarked;
+            state.AcquiredSequence = item.AcquiredSequence;
             state.PlayerDisplayOrder = item.PlayerDisplayOrder;
         }
 
@@ -273,11 +291,49 @@ public class SaveManager
         profile.IdleState.PendingOutputFraction = document.Profile.IdleState.PendingOutputFraction;
         profile.IdleState.LastProgressUnixSeconds = document.Profile.IdleState.LastProgressUnixSeconds;
         profile.IdleState.OfflineSettlementCapSeconds = document.Profile.IdleState.OfflineSettlementCapSeconds;
+        foreach (GatheringNodeSnapshot nodeState in document.Profile.IdleState.GatheringNodeStates)
+        {
+            if (string.IsNullOrWhiteSpace(nodeState.EventId))
+            {
+                continue;
+            }
+
+            profile.IdleState.GatheringNodeStates[nodeState.EventId] = new GatheringNodeState
+            {
+                EventId = nodeState.EventId,
+                AvailableAmount = Math.Max(0, nodeState.AvailableAmount),
+                LastRecoverUnixSeconds = nodeState.LastRecoverUnixSeconds
+            };
+        }
 
         profile.UiState.SelectedAreaId = document.Profile.UiState.SelectedAreaId;
         profile.UiState.SelectedTabId = string.IsNullOrWhiteSpace(document.Profile.UiState.SelectedTabId)
             ? "current_region"
             : document.Profile.UiState.SelectedTabId;
+        profile.UiState.IsSkillSidebarMode = document.Profile.UiState.IsSkillSidebarMode;
+        profile.UiState.SelectedSkillId = document.Profile.UiState.SelectedSkillId ?? string.Empty;
+        profile.UiState.UiThemeMode = string.IsNullOrWhiteSpace(document.Profile.UiState.UiThemeMode)
+            ? "stitch"
+            : document.Profile.UiState.UiThemeMode;
+        profile.UiState.InventorySortMode = Enum.TryParse(
+            document.Profile.UiState.InventorySortMode,
+            true,
+            out InventorySortMode parsedSortMode)
+            ? parsedSortMode
+            : InventorySortMode.ArrivalOrder;
+        profile.UiState.InventoryTagFilter = Enum.TryParse(
+            document.Profile.UiState.InventoryTagFilter,
+            true,
+            out ItemTag parsedTag)
+            ? parsedTag
+            : ItemTag.None;
+        profile.UiState.InventoryFilterTab = Enum.TryParse(
+            document.Profile.UiState.InventoryFilterTab,
+            true,
+            out InventoryFilterTab parsedFilterTab)
+            ? parsedFilterTab
+            : InventoryFilterTab.All;
+        profile.UiState.InventoryUseLargeIcons = document.Profile.UiState.InventoryUseLargeIcons;
         foreach (string sceneId in document.Profile.UiState.FavoriteSceneIds)
         {
             if (!string.IsNullOrWhiteSpace(sceneId))
@@ -395,6 +451,7 @@ public class SaveManager
                     IsAcquired = state?.IsAcquired ?? false,
                     IsFavorite = state?.IsFavorite ?? false,
                     IsJunkMarked = state?.IsJunkMarked ?? false,
+                    AcquiredSequence = state?.AcquiredSequence,
                     PlayerDisplayOrder = state?.PlayerDisplayOrder
                 };
             })
@@ -453,6 +510,8 @@ public class SaveManager
 
         public bool IsJunkMarked { get; set; }
 
+        public int? AcquiredSequence { get; set; }
+
         public int? PlayerDisplayOrder { get; set; }
     }
 
@@ -476,6 +535,17 @@ public class SaveManager
         public long LastProgressUnixSeconds { get; set; }
 
         public int OfflineSettlementCapSeconds { get; set; } = 28800;
+
+        public List<GatheringNodeSnapshot> GatheringNodeStates { get; set; } = new();
+    }
+
+    private sealed class GatheringNodeSnapshot
+    {
+        public string EventId { get; set; } = string.Empty;
+
+        public int AvailableAmount { get; set; }
+
+        public double LastRecoverUnixSeconds { get; set; }
     }
 
     private sealed class UiStateSnapshot
@@ -483,6 +553,20 @@ public class SaveManager
         public string SelectedAreaId { get; set; } = string.Empty;
 
         public string SelectedTabId { get; set; } = "current_region";
+
+        public bool IsSkillSidebarMode { get; set; }
+
+        public string SelectedSkillId { get; set; } = string.Empty;
+
+        public string UiThemeMode { get; set; } = "stitch";
+
+        public string InventorySortMode { get; set; } = "ArrivalOrder";
+
+        public string InventoryTagFilter { get; set; } = "None";
+
+        public string InventoryFilterTab { get; set; } = "All";
+
+        public bool InventoryUseLargeIcons { get; set; } = true;
 
         public List<string> FavoriteSceneIds { get; set; } = new();
 

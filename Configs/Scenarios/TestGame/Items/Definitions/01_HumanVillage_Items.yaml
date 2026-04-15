@@ -5,7 +5,7 @@ items:
     name_key: "包子"
     description_key: "热腾腾的包子"
     definition_order: 100
-    base_max_stack: 99
+    is_stackable: true
     sell_price: 5
     tags: ["Consumable", "Food"]
 
@@ -14,6 +14,7 @@ items:
     name_key: "饼子"
     description_key: "香脆的饼子"
     definition_order: 200
+    is_stackable: true
     tags: ["Consumable", "Food"]
 
   - id: "food_mantou"
@@ -21,6 +22,7 @@ items:
     name_key: "馒头"
     description_key: "松软的馒头"
     definition_order: 300
+    is_stackable: true
     tags: ["Consumable", "Food"]
 
   - id: "ingredient_flour"
@@ -28,6 +30,7 @@ items:
     name_key: "面粉"
     description_key: "研磨谷物制成的面粉"
     definition_order: 100
+    is_stackable: true
     tags: ["Material", "Food"]
 
   - id: "ingredient_rice"
@@ -35,6 +38,7 @@ items:
     name_key: "稻米"
     description_key: "脱壳后的稻米"
     definition_order: 200
+    is_stackable: true
     tags: ["Material", "Food"]
 
   - id: "ingredient_oil"
@@ -42,4 +46,5 @@ items:
     name_key: "食用油"
     description_key: "烹饪常用的基础材料"
     definition_order: 300
+    is_stackable: true
     tags: ["Material", "Food"]

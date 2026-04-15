@@ -296,11 +296,17 @@ public sealed class ScenarioTabDefinition
 public static class GameplayUiConfigLoader
 {
     private const string ThemeConfigPath = "res://Configs/UI/gameplay_ui_theme.yaml";
+    public const string UiThemeModeLegacy = "legacy";
+    public const string UiThemeModeStitch = "stitch";
+    private const string ThemeConfigPathLegacy = "res://Configs/UI/gameplay_ui_theme_legacy.yaml";
+    private const string ThemeConfigPathStitch = "res://Configs/UI/gameplay_ui_theme_stitch.yaml";
 
-    public static GameplayUiTheme LoadTheme()
+    public static GameplayUiTheme LoadTheme(string? uiThemeMode = null)
     {
         YamlConfigLoader loader = new();
-        Dictionary<string, object?> root = loader.LoadMap(ThemeConfigPath);
+        string resolvedMode = NormalizeUiThemeMode(uiThemeMode);
+        string themePath = ResolveThemeConfigPath(resolvedMode);
+        Dictionary<string, object?> root = loader.LoadMap(themePath);
         GameplayUiTheme theme = new();
 
         if (root.TryGetValue("general", out object? generalValue) && generalValue is Dictionary<string, object?> generalMap)
@@ -405,6 +411,30 @@ public static class GameplayUiConfigLoader
         }
 
         return theme;
+    }
+
+    public static string NormalizeUiThemeMode(string? uiThemeMode)
+    {
+        if (string.Equals(uiThemeMode, UiThemeModeLegacy, StringComparison.OrdinalIgnoreCase))
+        {
+            return UiThemeModeLegacy;
+        }
+
+        return UiThemeModeStitch;
+    }
+
+    private static string ResolveThemeConfigPath(string uiThemeMode)
+    {
+        if (string.Equals(uiThemeMode, UiThemeModeLegacy, StringComparison.Ordinal))
+        {
+            return FileAccess.FileExists(ThemeConfigPathLegacy)
+                ? ThemeConfigPathLegacy
+                : ThemeConfigPath;
+        }
+
+        return FileAccess.FileExists(ThemeConfigPathStitch)
+            ? ThemeConfigPathStitch
+            : ThemeConfigPath;
     }
 
     public static ScenarioGameplayLayout LoadScenarioLayout(GameScenarioDefinition? scenario)

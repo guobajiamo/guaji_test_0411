@@ -1,0 +1,20 @@
+# Currency entities in inventory.
+# Currency is still used as numeric economy value, and is mirrored into these item stacks.
+items:
+  - id: "currency_gold"
+    parent_id: "currency"
+    name_key: "金币"
+    description_key: "通用货币实体，可用于交易与系统结算"
+    definition_order: 100
+    base_rarity: "Common"
+    is_stackable: true
+    buy_price: 0
+    sell_price: 0
+    tags: ["Currency"]
+    has_durability: false
+    acquisition_hint_key: "通过交易、任务奖励、事件奖励等获得"
+    detail_description_key: "既作为货币系统中的结算数值，也作为背包中的实体货币保存。"
+    hover_info_fields: ["name", "description", "quantity", "acquisition_hint"]
+    detail_info_fields: ["item_id", "name", "description", "quantity", "buy_price", "sell_price", "acquisition_hint", "detail_description"]
+    hover_extra_lines:
+      - "该道具用于和货币账本做双向同步。"

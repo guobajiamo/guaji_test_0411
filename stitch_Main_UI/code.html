@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>The Digital Curator - PC Idle RPG Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Custom scrollbar for log area */
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #eeeee8; border-radius: 10px; }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "primary-container": "#c5eae9",
+                      "secondary-container": "#d2e5f3",
+                      "surface-container": "#eeeee8",
+                      "on-surface": "#30332e",
+                      "primary-fixed": "#c5eae9",
+                      "on-primary-fixed": "#224545",
+                      "on-error-container": "#752121",
+                      "secondary": "#50616d",
+                      "tertiary-dim": "#535353",
+                      "inverse-surface": "#0e0e0d",
+                      "surface-dim": "#d9dbd2",
+                      "secondary-fixed-dim": "#c4d7e5",
+                      "on-tertiary-fixed-variant": "#676666",
+                      "surface-container-high": "#e8e9e2",
+                      "on-primary-container": "#355758",
+                      "on-surface-variant": "#5d605a",
+                      "primary": "#426464",
+                      "inverse-on-surface": "#9e9d99",
+                      "on-error": "#fff7f6",
+                      "outline-variant": "#b1b3ab",
+                      "on-tertiary-container": "#5c5b5b",
+                      "secondary-fixed": "#d2e5f3",
+                      "surface-container-low": "#f5f4ef",
+                      "background": "#fbf9f5",
+                      "inverse-primary": "#d8fefd",
+                      "on-secondary-fixed": "#30414d",
+                      "primary-dim": "#365858",
+                      "surface-container-highest": "#e2e3db",
+                      "on-tertiary": "#fbf8f8",
+                      "surface-tint": "#426464",
+                      "on-background": "#30332e",
+                      "outline": "#797c75",
+                      "tertiary-fixed-dim": "#e7e5e4",
+                      "primary-fixed-dim": "#b7dbdb",
+                      "on-tertiary-fixed": "#4a4949",
+                      "on-secondary": "#f4f9ff",
+                      "surface-bright": "#fbf9f5",
+                      "surface-variant": "#e2e3db",
+                      "on-secondary-fixed-variant": "#4c5e6a",
+                      "tertiary-fixed": "#f6f3f2",
+                      "secondary-dim": "#445561",
+                      "error-container": "#fe8983",
+                      "tertiary-container": "#f6f3f2",
+                      "tertiary": "#5f5f5f",
+                      "error-dim": "#4e0309",
+                      "surface": "#fbf9f5",
+                      "on-primary": "#d9ffff",
+                      "on-primary-fixed-variant": "#3f6162",
+                      "error": "#9f403d"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {},
+              "fontFamily": {
+                      "headline": ["Inter"],
+                      "body": ["Inter"],
+                      "label": ["Inter"]
+              }
+            },
+          },
+        }
+    </script>
+</head>
+<body class="bg-surface text-on-surface min-h-screen overflow-hidden flex flex-col antialiased font-inter tracking-tight">
+<!-- TopNavBar (Information Bar) -->
+<header class="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-6 bg-[#fbf9f5] dark:bg-stone-950 h-14 font-inter tracking-tight tabular-nums">
+<div class="flex items-center gap-8">
+<span class="text-xl font-bold tracking-tighter text-[#30332e] dark:text-stone-200">The Digital Curator</span>
+<div class="flex items-center gap-6 ml-4">
+<div class="flex items-center gap-2 group cursor-default">
+<span class="material-symbols-outlined text-primary text-sm">payments</span>
+<span class="text-sm font-bold text-on-surface">25,430</span>
+</div>
+<div class="flex items-center gap-2 group cursor-default">
+<span class="material-symbols-outlined text-primary text-sm">forest</span>
+<span class="text-sm font-bold text-on-surface">1.2k</span>
+</div>
+<div class="flex items-center gap-2 group cursor-default">
+<span class="material-symbols-outlined text-primary text-sm">set_meal</span>
+<span class="text-sm font-bold text-on-surface">850</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<button class="p-2 hover:bg-[#eeeee8] transition-colors duration-200 cursor-pointer active:opacity-80 rounded-lg">
+<span class="material-symbols-outlined text-[#50616d] text-xl">account_balance_wallet</span>
+</button>
+<button class="p-2 hover:bg-[#eeeee8] transition-colors duration-200 cursor-pointer active:opacity-80 rounded-lg">
+<span class="material-symbols-outlined text-[#50616d] text-xl">diamond</span>
+</button>
+<button class="p-2 hover:bg-[#eeeee8] transition-colors duration-200 cursor-pointer active:opacity-80 rounded-lg">
+<span class="material-symbols-outlined text-[#50616d] text-xl">settings</span>
+</button>
+</div>
+</header>
+<div class="flex flex-1 pt-14 pb-8 overflow-hidden">
+<!-- SideNavBar (Region & Skill List) -->
+<nav class="fixed left-0 top-14 h-[calc(100vh-88px)] flex flex-col p-4 z-40 bg-[#eeeee8] dark:bg-stone-900 w-64 tonal-transition font-inter text-sm font-medium tracking-wide">
+<div class="mb-6 px-2">
+<p class="text-lg font-black uppercase text-[#426464]">System Admin</p>
+<p class="text-[10px] opacity-70 tracking-widest uppercase">Level 42 Curator</p>
+</div>
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-3 p-3 text-[#50616d] hover:text-[#426464] hover:bg-[#f5f4ef] dark:hover:bg-stone-800/50 transition-all rounded-lg cursor-pointer scale-95 active:scale-90 duration-150">
+<span class="material-symbols-outlined">map</span>
+<span>Regions</span>
+</div>
+<div class="flex items-center gap-3 p-3 text-[#50616d] hover:text-[#426464] hover:bg-[#f5f4ef] dark:hover:bg-stone-800/50 transition-all rounded-lg cursor-pointer scale-95 active:scale-90 duration-150">
+<span class="material-symbols-outlined">bolt</span>
+<span>Skills</span>
+</div>
+<!-- Active Item -->
+<div class="flex items-center gap-3 p-3 bg-[#ffffff] dark:bg-stone-800 text-[#426464] shadow-sm rounded-lg cursor-pointer scale-95 duration-150">
+<span class="material-symbols-outlined">swords</span>
+<span class="font-bold">Combat</span>
+</div>
+<div class="flex items-center gap-3 p-3 text-[#50616d] hover:text-[#426464] hover:bg-[#f5f4ef] dark:hover:bg-stone-800/50 transition-all rounded-lg cursor-pointer scale-95 active:scale-90 duration-150">
+<span class="material-symbols-outlined">humerus</span>
+<span>Crafting</span>
+</div>
+<div class="flex items-center gap-3 p-3 text-[#50616d] hover:text-[#426464] hover:bg-[#f5f4ef] dark:hover:bg-stone-800/50 transition-all rounded-lg cursor-pointer scale-95 active:scale-90 duration-150">
+<span class="material-symbols-outlined">science</span>
+<span>Research</span>
+</div>
+<div class="flex items-center gap-3 p-3 text-[#50616d] hover:text-[#426464] hover:bg-[#f5f4ef] dark:hover:bg-stone-800/50 transition-all rounded-lg cursor-pointer scale-95 active:scale-90 duration-150">
+<span class="material-symbols-outlined">inventory_2</span>
+<span>Archive</span>
+</div>
+</div>
+<div class="mt-auto px-2 space-y-4">
+<div class="space-y-2">
+<div class="flex justify-between text-[10px] uppercase font-bold text-secondary">
+<span>Active: Woodcutting</span>
+<span>Lv. 48</span>
+</div>
+<div class="w-full h-1.5 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-primary w-[65%]" style="box-shadow: inset 0 0 2px #c5eae9;"></div>
+</div>
+</div>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="ml-64 flex-1 p-6 grid grid-cols-12 gap-6 overflow-y-auto custom-scrollbar">
+<!-- Center Section (Main Tab Area) -->
+<div class="col-span-8 flex flex-col gap-6">
+<div class="flex items-center justify-between">
+<h1 class="text-3xl font-extrabold tracking-tight text-on-surface">Active Engagement</h1>
+<div class="flex gap-2">
+<span class="px-3 py-1 bg-secondary-container text-on-secondary-container rounded-full text-xs font-bold uppercase tracking-wider">Combat Zone</span>
+<span class="px-3 py-1 bg-primary-container text-on-primary-container rounded-full text-xs font-bold uppercase tracking-wider">2.5x XP Boost</span>
+</div>
+</div>
+<!-- Adventure Cards Grid (Bento Style) -->
+<div class="grid grid-cols-2 gap-4">
+<!-- Card 1 -->
+<div class="group bg-surface-container-lowest p-6 rounded-xl border border-transparent hover:border-primary-container transition-all duration-300">
+<div class="flex justify-between items-start mb-4">
+<div>
+<h3 class="text-lg font-bold text-on-surface">Goblin Encampment</h3>
+<p class="text-xs font-medium text-on-surface-variant">Level 5 Staging Grounds</p>
+</div>
+<span class="material-symbols-outlined text-primary bg-primary-container/30 p-2 rounded-lg">swords</span>
+</div>
+<div class="mt-8 space-y-2">
+<div class="flex justify-between text-xs font-bold text-secondary uppercase">
+<span>Clearing Progress</span>
+<span>82%</span>
+</div>
+<div class="w-full h-2 bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-primary w-[82%] transition-all duration-500"></div>
+</div>
+</div>
+<div class="mt-4 flex gap-3">
+<div class="flex items-center gap-1 text-[10px] font-bold text-on-surface-variant">
+<span class="material-symbols-outlined text-sm">database</span>
+                                45 Gold/min
+                            </div>
+<div class="flex items-center gap-1 text-[10px] font-bold text-on-surface-variant">
+<span class="material-symbols-outlined text-sm">trending_up</span>
+                                12 XP/sec
+                            </div>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="group bg-surface-container-lowest p-6 rounded-xl border border-transparent hover:border-primary-container transition-all duration-300">
+<div class="flex justify-between items-start mb-4">
+<div>
+<h3 class="text-lg font-bold text-on-surface">Wolf Den</h3>
+<p class="text-xs font-medium text-on-surface-variant">Level 10 Predation Zone</p>
+</div>
+<span class="material-symbols-outlined text-secondary bg-secondary-container/30 p-2 rounded-lg">pets</span>
+</div>
+<div class="mt-8 space-y-2">
+<div class="flex justify-between text-xs font-bold text-secondary uppercase opacity-40">
+<span>Clearing Progress</span>
+<span>0%</span>
+</div>
+<div class="w-full h-2 bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-secondary w-0 transition-all duration-500"></div>
+</div>
+</div>
+<div class="mt-4 flex gap-3 grayscale opacity-50">
+<div class="flex items-center gap-1 text-[10px] font-bold text-on-surface-variant">
+<span class="material-symbols-outlined text-sm">database</span>
+                                120 Gold/min
+                            </div>
+<div class="flex items-center gap-1 text-[10px] font-bold text-on-surface-variant">
+<span class="material-symbols-outlined text-sm">trending_up</span>
+                                28 XP/sec
+                            </div>
+</div>
+</div>
+<!-- Large Action Card -->
+<div class="col-span-2 relative overflow-hidden bg-primary p-8 rounded-xl flex items-center justify-between text-on-primary group cursor-pointer active:scale-[0.99] transition-transform">
+<div class="relative z-10">
+<h2 class="text-4xl font-black uppercase tracking-tighter italic">Start Adventure</h2>
+<p class="text-on-primary/80 font-medium tracking-wide mt-1">Initiate protocol: Goblin Suppression</p>
+</div>
+<div class="relative z-10 flex items-center gap-4">
+<div class="text-right">
+<p class="text-[10px] font-bold uppercase opacity-60">Estimated Yield</p>
+<p class="text-xl font-bold">2.4k Gold / hr</p>
+</div>
+<span class="material-symbols-outlined text-5xl">play_circle</span>
+</div>
+<!-- Abstract decorative elements -->
+<div class="absolute right-[-10%] top-[-50%] w-64 h-64 bg-on-primary/10 rounded-full blur-3xl"></div>
+<div class="absolute left-[-5%] bottom-[-50%] w-48 h-48 bg-primary-container/10 rounded-full blur-2xl"></div>
+</div>
+</div>
+</div>
+<!-- Right Section (Panels) -->
+<div class="col-span-4 flex flex-col gap-6">
+<!-- Information Panel (World Info / Buffs) -->
+<div class="bg-surface-container p-6 rounded-xl">
+<h3 class="text-xs font-black uppercase tracking-widest text-on-surface-variant mb-4">World Metadata</h3>
+<div class="space-y-4">
+<div class="flex items-center justify-between p-3 bg-surface-container-lowest rounded-lg">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">wb_sunny</span>
+<div>
+<p class="text-sm font-bold">Cycle: Day</p>
+<p class="text-[10px] text-on-surface-variant">14:02 IST (System Time)</p>
+</div>
+</div>
+<span class="text-xs font-mono font-bold text-primary">06:58:22</span>
+</div>
+<div class="space-y-2">
+<p class="text-[10px] font-bold uppercase text-on-surface-variant opacity-70">Active Modifiers</p>
+<div class="flex flex-wrap gap-2">
+<div class="px-2 py-1 bg-primary-container/50 text-on-primary-container rounded flex items-center gap-1">
+<span class="material-symbols-outlined text-xs">bolt</span>
+<span class="text-[10px] font-bold">Haste +15%</span>
+</div>
+<div class="px-2 py-1 bg-secondary-container/50 text-on-secondary-container rounded flex items-center gap-1">
+<span class="material-symbols-outlined text-xs">local_library</span>
+<span class="text-[10px] font-bold">Wise I</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Character Status -->
+<div class="bg-surface-container-high p-6 rounded-xl flex-1">
+<h3 class="text-xs font-black uppercase tracking-widest text-on-surface-variant mb-6">Vital Diagnostics</h3>
+<div class="space-y-6">
+<!-- Health -->
+<div class="space-y-1">
+<div class="flex justify-between items-end">
+<span class="text-xs font-bold uppercase">HP Stability</span>
+<span class="text-sm font-black tabular-nums">150 / 150</span>
+</div>
+<div class="w-full h-3 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-error rounded-full"></div>
+</div>
+</div>
+<!-- Mana -->
+<div class="space-y-1">
+<div class="flex justify-between items-end">
+<span class="text-xs font-bold uppercase">MP Reserves</span>
+<span class="text-sm font-black tabular-nums text-secondary">45 / 45</span>
+</div>
+<div class="w-full h-3 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-secondary rounded-full"></div>
+</div>
+</div>
+<!-- Technical Readouts -->
+<div class="grid grid-cols-2 gap-4 pt-4">
+<div class="bg-surface-container-lowest p-3 rounded-lg text-center border-b-2 border-primary">
+<p class="text-[10px] font-bold uppercase opacity-60">Output (ATK)</p>
+<p class="text-xl font-black">248</p>
+</div>
+<div class="bg-surface-container-lowest p-3 rounded-lg text-center border-b-2 border-secondary">
+<p class="text-[10px] font-bold uppercase opacity-60">Structure (DEF)</p>
+<p class="text-xl font-black">115</p>
+</div>
+</div>
+<div class="space-y-3">
+<p class="text-[10px] font-bold uppercase text-on-surface-variant opacity-70">Duration Effects</p>
+<div class="space-y-2">
+<div class="flex items-center justify-between text-xs p-2 bg-surface-container-highest/50 rounded">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
+<span>Oak Skin</span>
+</div>
+<span class="font-mono">04:12</span>
+</div>
+<div class="flex items-center justify-between text-xs p-2 bg-surface-container-highest/50 rounded">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-secondary"></div>
+<span>Focus</span>
+</div>
+<span class="font-mono">12:45</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- Footer (Wide Log Area) -->
+<footer class="fixed bottom-0 left-0 w-full z-50 flex flex-col bg-[#fbf9f5] dark:bg-stone-950 border-t border-[#eeeee8] dark:border-stone-800">
+<!-- Log Content -->
+<div class="h-32 px-8 py-3 overflow-y-auto custom-scrollbar bg-surface-container-low/50">
+<div class="space-y-1.5">
+<div class="flex gap-4 items-center animate-in fade-in slide-in-from-bottom-1">
+<span class="font-mono text-[11px] text-on-surface-variant opacity-50">[14:02]</span>
+<p class="text-xs font-medium text-on-surface-variant">System node updated: Gained <span class="text-primary font-bold">5 oak logs</span></p>
+</div>
+<div class="flex gap-4 items-center opacity-80">
+<span class="font-mono text-[11px] text-on-surface-variant opacity-50">[14:01]</span>
+<p class="text-xs font-medium text-on-surface-variant">Assembly complete: <span class="text-on-surface font-bold italic">Crafted Iron Sword +1</span></p>
+</div>
+<div class="flex gap-4 items-center opacity-60">
+<span class="font-mono text-[11px] text-on-surface-variant opacity-50">[13:58]</span>
+<p class="text-xs font-medium text-on-surface-variant">Combat sequence resolved: Defeated <span class="text-error font-bold">Goblin Scout (Lv. 3)</span></p>
+</div>
+<div class="flex gap-4 items-center opacity-40">
+<span class="font-mono text-[11px] text-on-surface-variant opacity-50">[13:55]</span>
+<p class="text-xs font-medium text-on-surface-variant">Energy threshold reached: <span class="text-secondary font-bold">Skill Woodcutting (Lv. 48)</span></p>
+</div>
+</div>
+</div>
+<!-- Status Bar -->
+<div class="h-8 px-6 flex items-center justify-between bg-[#fbf9f5] dark:bg-stone-950 font-inter text-[10px] uppercase tracking-widest font-bold">
+<div class="flex gap-6">
+<span class="text-[#426464]">v1.0.4 - System Stable</span>
+<span class="text-[#50616d] opacity-50 hover:text-[#426464] transition-colors cursor-pointer">Patch Notes</span>
+</div>
+<div class="flex gap-6">
+<span class="text-[#50616d] opacity-50 hover:text-[#426464] transition-colors cursor-pointer">Discord</span>
+<span class="text-[#50616d] opacity-50 hover:text-[#426464] transition-colors cursor-pointer">Wiki</span>
+</div>
+</div>
+</footer>
+</body></html>
