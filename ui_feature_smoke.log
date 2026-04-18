@@ -2,8 +2,8 @@ Godot Engine v4.6.2.stable.mono.official.71f334935 - https://godotengine.org
 
 ERROR: Failed to read the root certificate store.
    at: get_system_ca_certificates (platform/windows/os_windows.cpp:2570)
-[GameLog] [18:04:48] 已发现剧本数量：2
-[GameLog] [18:04:48] 游戏主菜单入口已准备完成。
+[GameLog] [13:07:16] 已发现剧本数量：2
+[GameLog] [13:07:16] 游戏主菜单入口已准备完成。
 [YamlConfigLoader] bundle=categories path=res://Configs/Items/Categories 已解析 3 个 yaml 文件。
 [YamlConfigLoader] bundle=items path=res://Configs/Items/Definitions 已解析 9 个 yaml 文件。
 [YamlConfigLoader] bundle=skills path=res://Configs/Scenarios/TestGame/Skills/Definitions 已解析 5 个 yaml 文件。
@@ -20,38 +20,28 @@ WARNING: [ItemRegistry] 物品树调试文件写入失败：Access to the path '
    C# backtrace (most recent call first):
        [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
        [1] void Test00_0410.Core.Registry.ItemRegistry.DumpTreeToDefaultRuntimeFile() (L:\00_godot_project_0410\test-00-0410\Scripts\Core\Registry\ItemRegistry.cs:172)
-       [2] void Test00_0410.Autoload.GameManager.LoadStaticData(Test00_0410.Core.Scenario.GameScenarioDefinition) (L:\00_godot_project_0410\test-00-0410\Scripts\Autoload\GameManager.cs:428)
-       [3] bool Test00_0410.Autoload.GameManager.StartScenario(string, string, bool) (L:\00_godot_project_0410\test-00-0410\Scripts\Autoload\GameManager.cs:158)
-       [4] bool Test00_0410.Autoload.GameManager.StartTestScenario() (L:\00_godot_project_0410\test-00-0410\Scripts\Autoload\GameManager.cs:131)
+       [2] void Test00_0410.Autoload.GameManager.LoadStaticData(Test00_0410.Core.Scenario.GameScenarioDefinition) (L:\00_godot_project_0410\test-00-0410\Scripts\Autoload\GameManager.cs:432)
+       [3] bool Test00_0410.Autoload.GameManager.StartScenario(string, string, bool) (L:\00_godot_project_0410\test-00-0410\Scripts\Autoload\GameManager.cs:160)
+       [4] bool Test00_0410.Autoload.GameManager.StartTestScenario() (L:\00_godot_project_0410\test-00-0410\Scripts\Autoload\GameManager.cs:133)
        [5] void Test00_0410.UI.AppRoot.OpenTestGame() (L:\00_godot_project_0410\test-00-0410\Scripts\UI\AppRoot.cs:45)
        [6] void Test00_0410.Debug.UiFeatureSmokeTest+<_Ready>d__0.MoveNext() (L:\00_godot_project_0410\test-00-0410\Scripts\Debug\UiFeatureSmokeTest.cs:27)
        [7] void System.Threading.ExecutionContext.RunInternal(System.Threading.ExecutionContext, System.Threading.ContextCallback, object)
        [8] void System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1.MoveNext(System.Threading.Thread)
        [9] void Godot.SignalAwaiter.SignalCallback(nint, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_bool*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/SignalAwaiter.cs:65)
-[GameLog] [18:04:48] 静态配置加载完成：剧本 游戏测试剧本，分类 24，物品 76，技能 11，事件 50，遭遇 15，任务 3。
-[GameLog] [18:04:48] 任务已解锁：初入人间之里
-[GameLog] [18:04:48] 已载入剧本：游戏测试剧本
+[GameLog] [13:07:16] 静态配置加载完成：剧本 游戏测试剧本，分类 24，物品 106，技能 11，事件 64，遭遇 15，任务 3。
+[GameLog] [13:07:16] 任务已解锁：初入人间之里
+[GameLog] [13:07:16] 已载入剧本：游戏测试剧本
 [YamlConfigLoader] bundle=gameplay_layout path=res://Configs/Scenarios/TestGame/UI/GameplayLayout 已解析 8 个 yaml 文件。
 [YamlConfigLoader] bundle=gameplay_layout path=res://Configs/Scenarios/TestGame/UI/GameplayLayout 已解析 8 个 yaml 文件。
-[YamlConfigLoader] bundle=ui_tabs path=res://Configs/Scenarios/TestGame/UI/Tabs 已解析 6 个 yaml 文件。
-[YamlConfigLoader] bundle=ui_tabs path=res://Configs/Scenarios/TestGame/UI/Tabs 已解析 6 个 yaml 文件。
+[YamlConfigLoader] bundle=ui_tabs path=res://Configs/Scenarios/TestGame/UI/Tabs 已解析 7 个 yaml 文件。
+[YamlConfigLoader] bundle=ui_tabs path=res://Configs/Scenarios/TestGame/UI/Tabs 已解析 7 个 yaml 文件。
 [YamlConfigLoader] bundle=info_panel path=res://Configs/Scenarios/TestGame/UI/InfoPanel 已解析 3 个 yaml 文件。
 [YamlConfigLoader] bundle=info_panel path=res://Configs/Scenarios/TestGame/UI/InfoPanel 已解析 3 个 yaml 文件。
-[GameLog] [18:04:50] 任务已完成：初入人间之里
-[GameLog] [18:04:50] 已领取任务奖励：初入人间之里
-[GameLog] [18:04:51] 任务已解锁：山涧钓手
-[GameLog] [18:04:51] 任务已解锁：渔具屋的备用货
-[GameLog] [18:04:51] 任务已完成：山涧钓手
-[GameLog] [18:04:52] Idle settled: 挂机钓鱼 x1, item +5 鲤鱼, exp +6.
-[GameLog] [18:04:52] Idle stopped: interaction conditions no longer met.
-ERROR: [UiFeatureSmokeTest] System.InvalidOperationException: 未找到可点击控件：魔法之森外围
-   at Test00_0410.Debug.UiFeatureSmokeTest.FindClickableControl(Node root, String displayText) in L:\00_godot_project_0410\test-00-0410\Scripts\Debug\UiFeatureSmokeTest.cs:line 300
-   at Test00_0410.Debug.UiFeatureSmokeTest.EmitPressOnButton(Node root, String displayText) in L:\00_godot_project_0410\test-00-0410\Scripts\Debug\UiFeatureSmokeTest.cs:line 235
-   at Test00_0410.Debug.UiFeatureSmokeTest._Ready() in L:\00_godot_project_0410\test-00-0410\Scripts\Debug\UiFeatureSmokeTest.cs:line 196
-   at: void Test00_0410.Debug.UiFeatureSmokeTest+<_Ready>d__0.MoveNext() (res://Scripts/Debug/UiFeatureSmokeTest.cs:196)
-   C# backtrace (most recent call first):
-       [0] void Godot.GD.PushError(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:366)
-       [1] void Test00_0410.Debug.UiFeatureSmokeTest+<_Ready>d__0.MoveNext() (L:\00_godot_project_0410\test-00-0410\Scripts\Debug\UiFeatureSmokeTest.cs:196)
-       [2] void System.Threading.ExecutionContext.RunInternal(System.Threading.ExecutionContext, System.Threading.ContextCallback, object)
-       [3] void System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1.MoveNext(System.Threading.Thread)
-       [4] void Godot.SignalAwaiter.SignalCallback(nint, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_bool*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/SignalAwaiter.cs:65)
+[GameLog] [13:07:17] 任务已完成：初入人间之里
+[GameLog] [13:07:17] 已领取任务奖励：初入人间之里
+[GameLog] [13:07:18] 任务已解锁：山涧钓手
+[GameLog] [13:07:18] 任务已解锁：渔具屋的备用货
+[GameLog] [13:07:18] 任务已完成：山涧钓手
+[GameLog] [13:07:18] Idle settled: 挂机钓鱼 x1, item +5 鲤鱼, exp +6.
+[GameLog] [13:07:18] Idle stopped: interaction conditions no longer met.
+[UiFeatureSmokeTest] all checks passed

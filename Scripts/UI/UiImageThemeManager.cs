@@ -17,6 +17,14 @@ public static class UiImageThemeManager
 
     private static UiImageThemeConfig? _cachedConfig;
     private static string _themeMode = GameplayUiConfigLoader.UiThemeModeStitch;
+    private static readonly Dictionary<ButtonStyleCacheKey, StyleBox> _buttonStyleCache = new();
+    private static readonly Dictionary<string, Texture2D?> _textureCache = new(StringComparer.Ordinal);
+
+    private readonly record struct ButtonStyleCacheKey(
+        string ThemeMode,
+        string ImagePath,
+        Color FallbackColor,
+        Color BorderColor);
 
     public static UiImageThemeConfig GetTheme()
     {
@@ -27,6 +35,8 @@ public static class UiImageThemeManager
     public static void ResetCache()
     {
         _cachedConfig = null;
+        _buttonStyleCache.Clear();
+        _textureCache.Clear();
     }
 
     public static void SetThemeMode(string? mode)
@@ -158,17 +168,29 @@ public static class UiImageThemeManager
 
     private static StyleBox CreateButtonStyle(string imagePath, Color fallbackColor, Color borderColor)
     {
-        Texture2D? texture = LoadTexture(imagePath);
+        string normalizedImagePath = imagePath?.Trim() ?? string.Empty;
+        ButtonStyleCacheKey cacheKey = new(
+            _themeMode,
+            normalizedImagePath,
+            fallbackColor,
+            borderColor);
+        if (_buttonStyleCache.TryGetValue(cacheKey, out StyleBox? cachedStyle))
+        {
+            return cachedStyle;
+        }
+
+        Texture2D? texture = LoadTexture(normalizedImagePath);
         if (texture != null)
         {
             StyleBoxTexture textureStyle = new()
             {
                 Texture = texture
             };
+            _buttonStyleCache[cacheKey] = textureStyle;
             return textureStyle;
         }
 
-        return new StyleBoxFlat
+        StyleBoxFlat flatStyle = new()
         {
             BgColor = fallbackColor,
             BorderColor = borderColor,
@@ -187,16 +209,32 @@ public static class UiImageThemeManager
             ContentMarginRight = 12,
             ContentMarginBottom = 8
         };
+        _buttonStyleCache[cacheKey] = flatStyle;
+        return flatStyle;
     }
 
     private static Texture2D? LoadTexture(string path)
     {
-        if (string.IsNullOrWhiteSpace(path) || !ResourceLoader.Exists(path))
+        string normalizedPath = path?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(normalizedPath))
         {
             return null;
         }
 
-        return ResourceLoader.Load<Texture2D>(path);
+        if (_textureCache.TryGetValue(normalizedPath, out Texture2D? cachedTexture))
+        {
+            return cachedTexture;
+        }
+
+        if (!ResourceLoader.Exists(normalizedPath))
+        {
+            _textureCache[normalizedPath] = null;
+            return null;
+        }
+
+        Texture2D? loadedTexture = ResourceLoader.Load<Texture2D>(normalizedPath);
+        _textureCache[normalizedPath] = loadedTexture;
+        return loadedTexture;
     }
 
     private static string GetString(Dictionary<string, object?> map, string key)

@@ -244,6 +244,18 @@ public class SaveManager
                     ExpireAtUnixSeconds = profile.StapleFoodState.ExpireAtUnixSeconds,
                     AutoConsumeSelectedStaple = profile.StapleFoodState.AutoConsumeSelectedStaple
                 },
+                BattleLootState = new BattleLootStateSnapshot
+                {
+                    Capacity = profile.BattleLootState.GetCapacity(),
+                    AutoTransferEnabled = profile.BattleLootState.AutoTransferEnabled,
+                    Slots = profile.BattleLootState.GetOrderedSlots()
+                        .Select(slot => new BattleLootSlotSnapshot
+                        {
+                            ItemId = slot.ItemId,
+                            Quantity = slot.Quantity
+                        })
+                        .ToList()
+                },
                 SkillStates = profile.SkillStates.Values
                     .OrderBy(state => state.SkillId)
                     .Select(state => new SkillStateSnapshot
@@ -447,6 +459,23 @@ public class SaveManager
         profile.StapleFoodState.ActiveStapleId = document.Profile.StapleFoodState.ActiveStapleId ?? string.Empty;
         profile.StapleFoodState.ExpireAtUnixSeconds = Math.Max(0, document.Profile.StapleFoodState.ExpireAtUnixSeconds);
         profile.StapleFoodState.AutoConsumeSelectedStaple = document.Profile.StapleFoodState.AutoConsumeSelectedStaple;
+        profile.BattleLootState.Capacity = Math.Max(1, document.Profile.BattleLootState.Capacity);
+        profile.BattleLootState.AutoTransferEnabled = document.Profile.BattleLootState.AutoTransferEnabled;
+        profile.BattleLootState.Clear();
+        foreach (BattleLootSlotSnapshot slot in document.Profile.BattleLootState.Slots)
+        {
+            if (string.IsNullOrWhiteSpace(slot.ItemId) || slot.Quantity <= 0)
+            {
+                continue;
+            }
+
+            profile.BattleLootState.Slots.Add(new PlayerBattleLootSlotState
+            {
+                ItemId = slot.ItemId,
+                Quantity = slot.Quantity
+            });
+        }
+        profile.BattleLootState.Normalize();
 
         foreach (SkillStateSnapshot skill in document.Profile.SkillStates)
         {
@@ -579,6 +608,8 @@ public class SaveManager
         public FarmingStateSnapshot FarmingState { get; set; } = new();
 
         public StapleFoodStateSnapshot StapleFoodState { get; set; } = new();
+
+        public BattleLootStateSnapshot BattleLootState { get; set; } = new();
 
         public List<SkillStateSnapshot> SkillStates { get; set; } = new();
 
@@ -742,6 +773,22 @@ public class SaveManager
         public long ExpireAtUnixSeconds { get; set; }
 
         public bool AutoConsumeSelectedStaple { get; set; }
+    }
+
+    private sealed class BattleLootStateSnapshot
+    {
+        public int Capacity { get; set; } = PlayerBattleLootState.DefaultCapacity;
+
+        public bool AutoTransferEnabled { get; set; }
+
+        public List<BattleLootSlotSnapshot> Slots { get; set; } = new();
+    }
+
+    private sealed class BattleLootSlotSnapshot
+    {
+        public string ItemId { get; set; } = string.Empty;
+
+        public int Quantity { get; set; }
     }
 
     private sealed class SkillStateSnapshot

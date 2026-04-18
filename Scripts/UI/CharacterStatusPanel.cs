@@ -17,8 +17,15 @@ namespace Test00_0410.UI;
 /// </summary>
 public partial class CharacterStatusPanel : Control
 {
+    private const string IdleTargetProgressKey = "target:idle_progress";
+    private const string BattleTargetHpProgressKey = "target:battle_hp";
+    private const string BattleTargetAttackProgressKey = "target:battle_attack";
     private static readonly Color ProgressFillColor = new("#39ff88");
     private static readonly Color ProgressBackgroundColor = new("#102018");
+    private static readonly Color BattleHpFillColor = new("#4fcf6a");
+    private static readonly Color BattleHpBackgroundColor = new("#7a1c1c");
+    private static readonly Color BattleAttackFillColor = new("#62b7ff");
+    private static readonly Color BattleAttackBackgroundColor = new("#21324d");
 
     private ScrollContainer? _scrollContainer;
     private VBoxContainer? _rootContainer;
@@ -28,6 +35,7 @@ public partial class CharacterStatusPanel : Control
     private string _lastSignature = string.Empty;
     private ProgressBar? _targetProgressBar;
     private readonly Dictionary<string, Label> _dynamicItemLabels = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, ProgressBar> _dynamicProgressBars = new(StringComparer.Ordinal);
     private readonly Dictionary<string, bool> _expandedStates = new()
     {
         ["target"] = true,
@@ -63,7 +71,8 @@ public partial class CharacterStatusPanel : Control
         bool idleRunning = _gameManager.PlayerProfile.IdleState.IsRunning;
         bool hasTimedBuff = _gameManager.BuffSystem?.GetActiveBuffs().Any(buff => buff.IsTimed) == true;
         bool hasActiveStaple = _gameManager.StapleFoodSystem?.GetActiveStaple() != null;
-        return idleRunning || hasTimedBuff || hasActiveStaple;
+        bool battleRunning = _gameManager.BattleSystem?.IsBattleActive == true;
+        return idleRunning || hasTimedBuff || hasActiveStaple || battleRunning;
     }
 
     public void RefreshStatus()
@@ -143,7 +152,34 @@ public partial class CharacterStatusPanel : Control
     {
         string targetText = _theme.Status.RestingText;
         string tooltip = "当前没有进行中的挂机项目。";
-        double progressRatio = 0.0;
+        List<StatusProgressData> leadingBars = new();
+        List<StatusProgressData> trailingBars = new();
+
+        bool battleRunning = _gameManager?.BattleSystem?.IsBattleActive == true;
+        bool hasBattleSelection = !string.IsNullOrWhiteSpace(profile.UiState.SelectedBattleEncounterId)
+            || !string.IsNullOrWhiteSpace(profile.UiState.SelectedBattleEventId);
+        if ((battleRunning || (!profile.IdleState.IsRunning && hasBattleSelection))
+            && TryBuildBattleTargetSection(profile, ref targetText, ref tooltip, leadingBars, trailingBars))
+        {
+            return new StatusSectionData
+            {
+                SectionId = "target",
+                Title = _theme.Status.TargetSectionTitle,
+                TooltipText = "显示当前正在进行的目标。",
+                LeadingProgressBars = leadingBars,
+                TrailingProgressBars = trailingBars,
+                Items = new List<StatusItemData>
+                {
+                    new()
+                    {
+                        DynamicKey = "target:text",
+                        Text = targetText,
+                        TooltipText = tooltip,
+                        IsAccent = true
+                    }
+                }
+            };
+        }
 
         if (_gameManager?.IdleSystem != null
             && profile.IdleState.IsRunning
@@ -172,7 +208,13 @@ public partial class CharacterStatusPanel : Control
                 : isWaitingForRecovery
                     ? $"当前正在等待 {eventName} 资源恢复。"
                     : $"当前正在采集 {eventName}。";
-            progressRatio = isWaitingForRecovery ? 0.0 : _gameManager.IdleSystem.GetProgressRatio(eventId);
+            leadingBars.Add(new StatusProgressData
+            {
+                DynamicKey = IdleTargetProgressKey,
+                Ratio = isWaitingForRecovery ? 0.0 : _gameManager.IdleSystem.GetProgressRatio(eventId),
+                Visible = !isWaitingForRecovery,
+                TooltipText = isWaitingForRecovery ? "当前处于资源恢复等待阶段。" : tooltip
+            });
         }
 
         return new StatusSectionData
@@ -180,11 +222,12 @@ public partial class CharacterStatusPanel : Control
             SectionId = "target",
             Title = _theme.Status.TargetSectionTitle,
             TooltipText = "显示当前正在进行的目标。",
-            ProgressRatio = progressRatio,
+            LeadingProgressBars = leadingBars,
             Items = new List<StatusItemData>
             {
                 new()
                 {
+                    DynamicKey = "target:text",
                     Text = targetText,
                     TooltipText = tooltip,
                     IsAccent = true
@@ -368,6 +411,7 @@ public partial class CharacterStatusPanel : Control
 
         _targetProgressBar = null;
         _dynamicItemLabels.Clear();
+        _dynamicProgressBars.Clear();
 
         foreach (Node child in _rootContainer.GetChildren())
         {
@@ -414,26 +458,7 @@ public partial class CharacterStatusPanel : Control
                 continue;
             }
 
-            if (section.ProgressRatio > 0.0 || string.Equals(section.SectionId, "target", StringComparison.Ordinal))
-            {
-                ProgressBar progressBar = new()
-                {
-                    MinValue = 0,
-                    MaxValue = 100,
-                    Value = section.ProgressRatio * 100.0,
-                    ShowPercentage = false,
-                    CustomMinimumSize = new Vector2(0, 8),
-                    SizeFlagsHorizontal = SizeFlags.ExpandFill
-                };
-                progressBar.AddThemeStyleboxOverride("fill", CreateProgressFillStyle());
-                progressBar.AddThemeStyleboxOverride("background", CreateProgressBackgroundStyle());
-                content.AddChild(progressBar);
-
-                if (string.Equals(section.SectionId, "target", StringComparison.Ordinal))
-                {
-                    _targetProgressBar = progressBar;
-                }
-            }
+            AddProgressBars(content, section.LeadingProgressBars);
 
             VBoxContainer itemList = new()
             {
@@ -520,6 +545,8 @@ public partial class CharacterStatusPanel : Control
                 itemList.AddChild(label);
                 RegisterDynamicLabel(item, label);
             }
+
+            AddProgressBars(content, section.TrailingProgressBars);
         }
     }
 
@@ -529,7 +556,9 @@ public partial class CharacterStatusPanel : Control
             new[]
             {
                 $"{section.SectionId}:{_expandedStates.GetValueOrDefault(section.SectionId, true)}",
-                $"{section.Title}:{section.ProgressRatio:0.###}"
+                $"{section.Title}",
+                $"lead:{string.Join(",", section.LeadingProgressBars.Select(progress => $"{progress.DynamicKey}:{progress.Visible}:{progress.Height:0.##}"))}",
+                $"trail:{string.Join(",", section.TrailingProgressBars.Select(progress => $"{progress.DynamicKey}:{progress.Visible}:{progress.Height:0.##}"))}"
             }.Concat(section.Items.Select(item =>
             {
                 if (!string.IsNullOrWhiteSpace(item.DynamicKey))
@@ -573,6 +602,36 @@ public partial class CharacterStatusPanel : Control
             if (!string.Equals(label.TooltipText, item.TooltipText, StringComparison.Ordinal))
             {
                 label.TooltipText = item.TooltipText;
+            }
+        }
+
+        foreach (StatusProgressData progress in sections.SelectMany(section => section.LeadingProgressBars.Concat(section.TrailingProgressBars)))
+        {
+            if (string.IsNullOrWhiteSpace(progress.DynamicKey))
+            {
+                continue;
+            }
+
+            if (!_dynamicProgressBars.TryGetValue(progress.DynamicKey, out ProgressBar? progressBar) || !IsInstanceValid(progressBar))
+            {
+                continue;
+            }
+
+            bool shouldShow = progress.Visible;
+            if (progressBar.Visible != shouldShow)
+            {
+                progressBar.Visible = shouldShow;
+            }
+
+            double clampedValue = Math.Max(0.0, Math.Min(100.0, progress.Ratio * 100.0));
+            if (Math.Abs(progressBar.Value - clampedValue) > 0.02)
+            {
+                progressBar.Value = clampedValue;
+            }
+
+            if (!string.Equals(progressBar.TooltipText, progress.TooltipText, StringComparison.Ordinal))
+            {
+                progressBar.TooltipText = progress.TooltipText;
             }
         }
     }
@@ -643,11 +702,47 @@ public partial class CharacterStatusPanel : Control
             : value.ToString("0.###");
     }
 
-    private static StyleBoxFlat CreateProgressFillStyle()
+    private void AddProgressBars(Control parent, IReadOnlyList<StatusProgressData> progressBars)
+    {
+        foreach (StatusProgressData progress in progressBars)
+        {
+            ProgressBar progressBar = new()
+            {
+                MinValue = 0,
+                MaxValue = 100,
+                Value = Math.Max(0.0, Math.Min(100.0, progress.Ratio * 100.0)),
+                ShowPercentage = false,
+                Visible = progress.Visible,
+                CustomMinimumSize = new Vector2(0, progress.Height <= 0.0f ? 8.0f : progress.Height),
+                SizeFlagsHorizontal = SizeFlags.ExpandFill,
+                TooltipText = progress.TooltipText
+            };
+            progressBar.AddThemeStyleboxOverride("fill", CreateProgressFillStyle(progress.FillColor));
+            progressBar.AddThemeStyleboxOverride("background", CreateProgressBackgroundStyle(progress.BackgroundColor));
+            parent.AddChild(progressBar);
+            RegisterDynamicProgressBar(progress, progressBar);
+        }
+    }
+
+    private void RegisterDynamicProgressBar(StatusProgressData progress, ProgressBar progressBar)
+    {
+        if (string.IsNullOrWhiteSpace(progress.DynamicKey))
+        {
+            return;
+        }
+
+        _dynamicProgressBars[progress.DynamicKey] = progressBar;
+        if (string.Equals(progress.DynamicKey, IdleTargetProgressKey, StringComparison.Ordinal))
+        {
+            _targetProgressBar = progressBar;
+        }
+    }
+
+    private static StyleBoxFlat CreateProgressFillStyle(Color? fillColor = null)
     {
         return new StyleBoxFlat
         {
-            BgColor = ProgressFillColor,
+            BgColor = fillColor ?? ProgressFillColor,
             CornerRadiusTopLeft = 4,
             CornerRadiusTopRight = 4,
             CornerRadiusBottomLeft = 4,
@@ -655,11 +750,11 @@ public partial class CharacterStatusPanel : Control
         };
     }
 
-    private static StyleBoxFlat CreateProgressBackgroundStyle()
+    private static StyleBoxFlat CreateProgressBackgroundStyle(Color? backgroundColor = null)
     {
         return new StyleBoxFlat
         {
-            BgColor = ProgressBackgroundColor,
+            BgColor = backgroundColor ?? ProgressBackgroundColor,
             BorderColor = new Color("#203128"),
             BorderWidthLeft = 1,
             BorderWidthTop = 1,
@@ -794,14 +889,32 @@ public partial class CharacterStatusPanel : Control
         const string outputPrefix = "idle.output.";
         const string suffix = ".multiplier";
 
+        if (string.Equals(modifier.StatId, SettlementStatIds.IdleSpeedMultiplier, StringComparison.Ordinal))
+        {
+            if (modifier.Multiplier > 0.0)
+            {
+                double timePercent = 100.0 / modifier.Multiplier;
+                return $"采集速度倍率 x{modifier.Multiplier:0.###}（读条耗时约为原来的 {timePercent:0.#}%）";
+            }
+
+            return $"采集速度倍率 x{modifier.Multiplier:0.###}";
+        }
+
+        if (string.Equals(modifier.StatId, SettlementStatIds.IdleOutputMultiplier, StringComparison.Ordinal))
+        {
+            return $"采集产出倍率 x{modifier.Multiplier:0.###}";
+        }
+
         if (modifier.StatId.StartsWith(speedPrefix, StringComparison.Ordinal)
-            && modifier.StatId.EndsWith(suffix, StringComparison.Ordinal))
+            && modifier.StatId.EndsWith(suffix, StringComparison.Ordinal)
+            && modifier.StatId.Length > speedPrefix.Length + suffix.Length)
         {
             string skillId = modifier.StatId[speedPrefix.Length..^suffix.Length];
             statName = $"{GetSkillDisplayName(skillId)}速度";
         }
         else if (modifier.StatId.StartsWith(outputPrefix, StringComparison.Ordinal)
-            && modifier.StatId.EndsWith(suffix, StringComparison.Ordinal))
+            && modifier.StatId.EndsWith(suffix, StringComparison.Ordinal)
+            && modifier.StatId.Length > outputPrefix.Length + suffix.Length)
         {
             string skillId = modifier.StatId[outputPrefix.Length..^suffix.Length];
             statName = $"{GetSkillDisplayName(skillId)}产出";
@@ -879,6 +992,126 @@ public partial class CharacterStatusPanel : Control
         }
     }
 
+    private bool TryBuildBattleTargetSection(
+        PlayerProfile profile,
+        ref string targetText,
+        ref string tooltip,
+        List<StatusProgressData> leadingBars,
+        List<StatusProgressData> trailingBars)
+    {
+        if (_gameManager?.BattleSystem == null)
+        {
+            return false;
+        }
+
+        BattleSystem battle = _gameManager.BattleSystem;
+        GameplayActionContext? context = ResolveBattleActionContext(profile);
+        string encounterName = battle.IsBattleActive
+            ? battle.CurrentEncounterDisplayName
+            : ResolveSelectedBattleEncounterName(profile);
+        bool hasBattleContext = battle.IsBattleActive
+            || !string.IsNullOrWhiteSpace(encounterName)
+            || !string.IsNullOrWhiteSpace(profile.UiState.SelectedBattleEncounterId)
+            || !string.IsNullOrWhiteSpace(profile.UiState.SelectedBattleEventId);
+        if (!hasBattleContext)
+        {
+            return false;
+        }
+
+        string areaTitle = context?.AreaTitle ?? string.Empty;
+        string sceneTitle = context?.SceneTitle ?? string.Empty;
+        string locationText = !string.IsNullOrWhiteSpace(areaTitle) ? areaTitle : (!string.IsNullOrWhiteSpace(sceneTitle) ? sceneTitle : "未知区域");
+        string safeEncounterName = string.IsNullOrWhiteSpace(encounterName) ? "未选择敌人" : encounterName;
+
+        targetText = battle.IsBattleActive
+            ? $"正在{locationText}挑战{safeEncounterName}"
+            : $"正准备向{locationText}的{safeEncounterName}发起挑战";
+
+        List<string> tooltipLines = new()
+        {
+            battle.IsBattleActive ? "当前处于战斗中。" : "当前处于战斗待机状态。"
+        };
+        if (!string.IsNullOrWhiteSpace(areaTitle) || !string.IsNullOrWhiteSpace(sceneTitle))
+        {
+            tooltipLines.Add($"区域：{(string.IsNullOrWhiteSpace(areaTitle) ? "未记录" : areaTitle)} / {(string.IsNullOrWhiteSpace(sceneTitle) ? "未记录" : sceneTitle)}");
+        }
+
+        tooltipLines.Add($"目标：{safeEncounterName}");
+
+        if (battle.IsBattleActive)
+        {
+            double playerMaxHp = Math.Max(1.0, battle.CurrentPlayerMaxHp);
+            double playerHpRatio = Math.Clamp(battle.CurrentPlayerHp / playerMaxHp, 0.0, 1.0);
+            double attackRatio = Math.Clamp(battle.GetPlayerAttackProgressRatio(), 0.0, 1.0);
+            string hpTooltip = $"当前生命：{battle.CurrentPlayerHp:0.##}/{playerMaxHp:0.##}";
+            string attackTooltip = $"当前攻击进度：{attackRatio:P0}";
+
+            leadingBars.Add(new StatusProgressData
+            {
+                DynamicKey = BattleTargetHpProgressKey,
+                Ratio = playerHpRatio,
+                Visible = true,
+                FillColor = BattleHpFillColor,
+                BackgroundColor = BattleHpBackgroundColor,
+                Height = 10.0f,
+                TooltipText = hpTooltip
+            });
+
+            trailingBars.Add(new StatusProgressData
+            {
+                DynamicKey = BattleTargetAttackProgressKey,
+                Ratio = attackRatio,
+                Visible = true,
+                FillColor = BattleAttackFillColor,
+                BackgroundColor = BattleAttackBackgroundColor,
+                Height = 8.0f,
+                TooltipText = attackTooltip
+            });
+
+            tooltipLines.Add(hpTooltip);
+            tooltipLines.Add(attackTooltip);
+        }
+
+        tooltip = string.Join("\n", tooltipLines);
+        return true;
+    }
+
+    private GameplayActionContext? ResolveBattleActionContext(PlayerProfile profile)
+    {
+        if (_actionContextResolver == null)
+        {
+            return null;
+        }
+
+        if (!string.IsNullOrWhiteSpace(profile.UiState.SelectedBattleEventId))
+        {
+            GameplayActionContext? context = _actionContextResolver.Invoke(profile.UiState.SelectedBattleEventId);
+            if (context.HasValue)
+            {
+                return context;
+            }
+        }
+
+        return null;
+    }
+
+    private string ResolveSelectedBattleEncounterName(PlayerProfile profile)
+    {
+        if (_gameManager == null)
+        {
+            return string.Empty;
+        }
+
+        string encounterId = profile.UiState.SelectedBattleEncounterId;
+        if (string.IsNullOrWhiteSpace(encounterId))
+        {
+            return string.Empty;
+        }
+
+        BattleEncounterDefinition? definition = _gameManager.BattleEncounterRegistry.GetEncounter(encounterId);
+        return definition?.GetDisplayName(_gameManager.TranslateText) ?? encounterId;
+    }
+
     private sealed class StatusSectionData
     {
         public string SectionId { get; set; } = string.Empty;
@@ -887,9 +1120,28 @@ public partial class CharacterStatusPanel : Control
 
         public string TooltipText { get; set; } = string.Empty;
 
-        public double ProgressRatio { get; set; }
+        public List<StatusProgressData> LeadingProgressBars { get; set; } = new();
+
+        public List<StatusProgressData> TrailingProgressBars { get; set; } = new();
 
         public List<StatusItemData> Items { get; set; } = new();
+    }
+
+    private sealed class StatusProgressData
+    {
+        public string DynamicKey { get; set; } = string.Empty;
+
+        public double Ratio { get; set; }
+
+        public bool Visible { get; set; } = true;
+
+        public string TooltipText { get; set; } = string.Empty;
+
+        public float Height { get; set; } = 8.0f;
+
+        public Color FillColor { get; set; } = ProgressFillColor;
+
+        public Color BackgroundColor { get; set; } = ProgressBackgroundColor;
     }
 
     private sealed class StatusItemData

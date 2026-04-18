@@ -17,6 +17,7 @@ namespace Test00_0410.UI;
 /// </summary>
 public partial class InventoryPanel : Control
 {
+    private const int MaxSnackBuffSlots = 5;
     private const int StitchGridSlotCount = 240;
     private const int StitchLargeColumns = 8;
     private const int StitchSmallColumns = 16;
@@ -61,6 +62,7 @@ public partial class InventoryPanel : Control
     private int _pendingStitchGridReflowFrames;
 
     public event Action<string, IReadOnlyList<ItemInfoDisplayEntry>>? ItemDetailFocused;
+    public event Action? RuntimeStateChanged;
 
     public override void _Ready()
     {
@@ -1066,6 +1068,7 @@ public partial class InventoryPanel : Control
             if (consumedStaple)
             {
                 RefreshInventory();
+                NotifyRuntimeStateChanged();
             }
 
             return;
@@ -1082,6 +1085,11 @@ public partial class InventoryPanel : Control
             return;
         }
 
+        if (IsSnackFoodItem(item))
+        {
+            PrepareSnackQueueForConsumption(item);
+        }
+
         ConsumableBuffDefinition buff = item.ConsumeBuff;
         _gameManager.BuffSystem?.ApplyTimedBuff(
             buff.BuffId,
@@ -1091,8 +1099,102 @@ public partial class InventoryPanel : Control
             buff.ExtendDurationOnReapply,
             buff.StatModifiers);
         _gameManager.BuffSystem?.RefreshActiveBuffs();
+        if (IsSnackFoodItem(item))
+        {
+            RegisterConsumedSnackItem(item);
+        }
         _gameManager.AddGameLog($"已食用：{item.GetDisplayName(_gameManager.TranslateText)}");
         RefreshInventory();
+        NotifyRuntimeStateChanged();
+    }
+
+    private bool IsSnackFoodItem(ItemDefinition item)
+    {
+        return item.CanConsumeFromInventory && item.ConsumeBuff != null && !item.IsStapleFood;
+    }
+
+    private void SyncSnackQueueWithActiveBuffs()
+    {
+        if (_gameManager?.BuffSystem == null)
+        {
+            return;
+        }
+
+        PlayerUiState uiState = _gameManager.PlayerProfile.UiState;
+        if (uiState.SelectedSnackItemIds.Count == 0)
+        {
+            return;
+        }
+
+        HashSet<string> activeBuffIds = _gameManager.BuffSystem.GetActiveBuffs()
+            .Select(buff => buff.BuffId)
+            .ToHashSet(StringComparer.Ordinal);
+        List<string> validItemIds = uiState.SelectedSnackItemIds
+            .Where(itemId =>
+            {
+                ItemDefinition? snackItem = _gameManager.ItemRegistry.GetItem(itemId);
+                return snackItem != null
+                    && IsSnackFoodItem(snackItem)
+                    && snackItem.ConsumeBuff != null
+                    && activeBuffIds.Contains(snackItem.ConsumeBuff.BuffId);
+            })
+            .ToList();
+
+        if (!uiState.SelectedSnackItemIds.SequenceEqual(validItemIds, StringComparer.Ordinal))
+        {
+            uiState.SetSelectedSnackItems(validItemIds, MaxSnackBuffSlots);
+        }
+    }
+
+    private void PrepareSnackQueueForConsumption(ItemDefinition item)
+    {
+        if (_gameManager?.BuffSystem == null || item.ConsumeBuff == null)
+        {
+            return;
+        }
+
+        SyncSnackQueueWithActiveBuffs();
+        PlayerUiState uiState = _gameManager.PlayerProfile.UiState;
+        List<string> orderedItemIds = uiState.SelectedSnackItemIds.ToList();
+        if (orderedItemIds.Contains(item.Id, StringComparer.Ordinal))
+        {
+            return;
+        }
+
+        if (orderedItemIds.Count < MaxSnackBuffSlots)
+        {
+            return;
+        }
+
+        string removedItemId = orderedItemIds[0];
+        orderedItemIds.RemoveAt(0);
+        uiState.SetSelectedSnackItems(orderedItemIds, MaxSnackBuffSlots);
+
+        ItemDefinition? removedItem = _gameManager.ItemRegistry.GetItem(removedItemId);
+        if (removedItem?.ConsumeBuff != null)
+        {
+            _gameManager.BuffSystem.RemoveBuff(removedItem.ConsumeBuff.BuffId);
+            _gameManager.BuffSystem.RefreshActiveBuffs();
+            _gameManager.AddGameLog($"零食位已满：最早生效的 {_gameManager.GetItemDisplayName(removedItemId)} Buff 被新零食顶替。");
+        }
+    }
+
+    private void RegisterConsumedSnackItem(ItemDefinition item)
+    {
+        if (_gameManager == null)
+        {
+            return;
+        }
+
+        SyncSnackQueueWithActiveBuffs();
+        PlayerUiState uiState = _gameManager.PlayerProfile.UiState;
+        List<string> orderedItemIds = uiState.SelectedSnackItemIds.ToList();
+        if (!orderedItemIds.Contains(item.Id, StringComparer.Ordinal))
+        {
+            orderedItemIds.Add(item.Id);
+        }
+
+        uiState.SetSelectedSnackItems(orderedItemIds, MaxSnackBuffSlots);
     }
 
     private void TryExecuteCustomAction(ItemDefinition item, InventoryUseActionDefinition action)
@@ -1165,6 +1267,12 @@ public partial class InventoryPanel : Control
             : action.SuccessLogText;
         _gameManager.AddGameLog(successLog);
         RefreshInventory();
+        NotifyRuntimeStateChanged();
+    }
+
+    private void NotifyRuntimeStateChanged()
+    {
+        RuntimeStateChanged?.Invoke();
     }
 
     private static bool HasEnoughActionCosts(PlayerInventory inventory, InventoryUseActionDefinition action)

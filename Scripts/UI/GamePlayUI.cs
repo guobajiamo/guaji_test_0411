@@ -128,7 +128,6 @@ public partial class GamePlayUI : Control
         UpdateAreaNewMarkers();
         RefreshLeftRegionTree();
         RefreshTabBar();
-        RefreshCurrentRegionPage();
         RefreshCenterTabs();
         RefreshInfoPanel();
         RefreshStatusAndLogs();
@@ -151,7 +150,11 @@ public partial class GamePlayUI : Control
         if (needsTimedStatusRefresh)
         {
             _statusRefreshAccumulator += delta;
-            if (_statusRefreshAccumulator >= Math.Max(0.5, timedRefreshInterval * 2.0))
+            bool battleRunning = _gameManager?.BattleSystem?.IsBattleActive == true;
+            double refreshThreshold = battleRunning
+                ? Math.Max(0.12, timedRefreshInterval)
+                : Math.Max(0.5, timedRefreshInterval * 2.0);
+            if (_statusRefreshAccumulator >= refreshThreshold)
             {
                 _statusRefreshAccumulator = 0.0;
                 _statusPanel?.RefreshStatus();
@@ -599,6 +602,7 @@ public partial class GamePlayUI : Control
 
         _inventoryPanel = new InventoryPanel { Name = _theme.InventoryTabText };
         _inventoryPanel.Configure(_gameManager!);
+        _inventoryPanel.RuntimeStateChanged += RequestActionDrivenRefresh;
         _inventoryPanel.SetAnchorsPreset(LayoutPreset.FullRect);
         _pageHost.AddChild(_inventoryPanel);
         _tabPagesById[TabInventory] = _inventoryPanel;
@@ -1336,6 +1340,7 @@ public partial class GamePlayUI : Control
     private void OnLogMessageRequested(string message)
     {
         RefreshLogPanels();
+        _statusPanel?.RefreshStatus();
         if (!IsModalDialogVisible() && !Input.IsMouseButtonPressed(MouseButton.Left))
         {
             RefreshAllVisibleEventWidgets();

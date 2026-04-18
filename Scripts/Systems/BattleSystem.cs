@@ -1,6 +1,7 @@
 ﻿using Godot;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Test00_0410.Autoload;
 using Test00_0410.Core.Definitions;
 using Test00_0410.Core.Enums;
@@ -22,6 +23,8 @@ public sealed class BattleStartRequest
 
     public double KillSkillExp { get; set; } = 12.0;
 }
+
+public readonly record struct TransferBattleLootResult(int TransferredSlots, int TransferredItems, bool Success);
 
 public partial class BattleSystem : Node
 {
@@ -585,7 +588,7 @@ public partial class BattleSystem : Node
 
     private string GrantEncounterRewards()
     {
-        if (_runtime.EncounterDefinition == null || _settlementService == null)
+        if (_runtime.EncounterDefinition == null || _settlementService == null || _profile == null || _itemRegistry == null)
         {
             return string.Empty;
         }
@@ -615,12 +618,61 @@ public partial class BattleSystem : Node
                 continue;
             }
 
-            _settlementService.AddItem(drop.ItemId, drop.Amount);
             string displayName = GameManager.Instance?.GetItemDisplayName(drop.ItemId) ?? drop.ItemId;
-            parts.Add($"{displayName} x{drop.Amount}");
+            ItemDefinition? item = _itemRegistry.GetItem(drop.ItemId);
+            bool isStackable = item?.IsStackable != false;
+            if (_profile.BattleLootState.AutoTransferEnabled)
+            {
+                _settlementService.AddItem(drop.ItemId, drop.Amount);
+                parts.Add($"{displayName} x{drop.Amount}");
+                continue;
+            }
+
+            BattleLootAddResult addResult = _profile.BattleLootState.AddItem(drop.ItemId, drop.Amount, isStackable);
+            if (addResult.StoredAny)
+            {
+                parts.Add($"{displayName} x{addResult.StoredAmount}");
+            }
+
+            if (addResult.LostAny)
+            {
+                parts.Add($"{displayName} 丢失 x{addResult.LostAmount}");
+            }
         }
 
         return string.Join("，", parts);
+    }
+
+    public TransferBattleLootResult TransferBattleLootToInventory()
+    {
+        if (_profile == null || _settlementService == null)
+        {
+            return new TransferBattleLootResult(0, 0, false);
+        }
+
+        PlayerBattleLootState lootState = _profile.BattleLootState;
+        IReadOnlyList<PlayerBattleLootSlotState> slots = lootState.GetOrderedSlots().ToList();
+        if (slots.Count == 0)
+        {
+            return new TransferBattleLootResult(0, 0, false);
+        }
+
+        int transferredSlots = 0;
+        int transferredItems = 0;
+        foreach (PlayerBattleLootSlotState slot in slots)
+        {
+            if (string.IsNullOrWhiteSpace(slot.ItemId) || slot.Quantity <= 0)
+            {
+                continue;
+            }
+
+            _settlementService.AddItem(slot.ItemId, slot.Quantity);
+            transferredSlots++;
+            transferredItems += slot.Quantity;
+        }
+
+        lootState.Clear();
+        return new TransferBattleLootResult(transferredSlots, transferredItems, true);
     }
 
     private double GrantKillSkillExp(HandAttackState killingAttack)

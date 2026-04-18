@@ -440,8 +440,23 @@ public partial class GamePlayUI
         BindHoverInfo(button, region.Title, tooltipText);
         button.Pressed += () =>
         {
-            _regionExpandedStates[region.Id] = !_regionExpandedStates.GetValueOrDefault(region.Id, true);
-            RefreshLeftRegionTree();
+            bool wasExpanded = _regionExpandedStates.GetValueOrDefault(region.Id, true);
+            if (!wasExpanded)
+            {
+                _regionExpandedStates[region.Id] = true;
+                RefreshLeftRegionTree();
+                return;
+            }
+
+            SecondaryAreaLayout? firstVisibleArea = GetVisibleAreas(region).FirstOrDefault();
+            if (firstVisibleArea == null)
+            {
+                _regionExpandedStates[region.Id] = false;
+                RefreshLeftRegionTree();
+                return;
+            }
+
+            SelectArea(firstVisibleArea.Id);
         };
 
         return button;
@@ -575,6 +590,7 @@ public partial class GamePlayUI
             return;
         }
 
+        _gameManager.PlayerProfile.UiState.IsSkillSidebarMode = false;
         _gameManager.PlayerProfile.UiState.SelectedAreaId = areaId;
         _gameManager.PlayerProfile.UiState.ClearNewMarker(areaId);
         _gameManager.PlayerProfile.UiState.SelectedTabId = TabCurrentRegion;
@@ -719,13 +735,35 @@ public partial class GamePlayUI
             return;
         }
 
+        if (string.Equals(_gameManager.PlayerProfile.UiState.SelectedTabId, tabId, StringComparison.Ordinal))
+        {
+            if (string.Equals(tabId, TabBattle, StringComparison.Ordinal))
+            {
+                PrepareBattleTabLayout();
+            }
+
+            UpdatePageVisibility();
+            RefreshTabBar();
+            RefreshActiveCenterTab();
+            RefreshInfoPanel();
+            RefreshStatusAndLogs();
+            HarvestNonBlockingTooltipBindings();
+            return;
+        }
+
         _gameManager.PlayerProfile.UiState.SelectedTabId = tabId;
         if (string.Equals(tabId, TabBattle, StringComparison.Ordinal))
         {
             PrepareBattleTabLayout();
         }
 
-        RefreshAllPanels();
+        EnsureTabSelection();
+        UpdatePageVisibility();
+        RefreshTabBar();
+        RefreshActiveCenterTab();
+        RefreshInfoPanel();
+        RefreshStatusAndLogs();
+        HarvestNonBlockingTooltipBindings();
     }
 
     protected void UpdatePageVisibility()
@@ -1166,12 +1204,78 @@ public partial class GamePlayUI
 
     protected void RefreshCenterTabs()
     {
-        _inventoryPanel?.RefreshInventory();
-        _skillPanel?.RefreshSkills();
-        _battlePanel?.RefreshPanel();
-        _equipmentPanel?.RefreshPanel();
+        RefreshActiveCenterTab();
+        RefreshCurrentRegionPageIfInactive();
+        RefreshQuestPanelIfInactive();
+        RefreshSkillPanelIfInactive();
+    }
+
+    private void RefreshCurrentRegionPageIfInactive()
+    {
+        if (_gameManager == null
+            || string.Equals(_gameManager.PlayerProfile.UiState.SelectedTabId, TabCurrentRegion, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        RefreshCurrentRegionPage();
+    }
+
+    private void RefreshQuestPanelIfInactive()
+    {
+        if (_gameManager == null
+            || string.Equals(_gameManager.PlayerProfile.UiState.SelectedTabId, TabQuest, StringComparison.Ordinal))
+        {
+            return;
+        }
+
         _questPanel?.RefreshQuests();
-        _dictionaryPanel?.RefreshDictionary();
+    }
+
+    private void RefreshSkillPanelIfInactive()
+    {
+        if (_gameManager == null
+            || string.Equals(_gameManager.PlayerProfile.UiState.SelectedTabId, TabSkills, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        _skillPanel?.RefreshSkills();
+    }
+
+    protected void RefreshActiveCenterTab()
+    {
+        if (_gameManager == null)
+        {
+            return;
+        }
+
+        string activeTabId = _gameManager.PlayerProfile.UiState.SelectedTabId;
+        switch (activeTabId)
+        {
+            case TabCurrentRegion:
+                RefreshCurrentRegionPage();
+                break;
+            case TabInventory:
+                _inventoryPanel?.RefreshInventory();
+                break;
+            case TabSkills:
+                _skillPanel?.RefreshSkills();
+                break;
+            case TabBattle:
+                _battlePanel?.RefreshPanel();
+                break;
+            case TabEquipment:
+                _equipmentPanel?.RefreshPanel();
+                break;
+            case TabQuest:
+                _gameManager.QuestSystem?.RefreshQuestState();
+                _questPanel?.RefreshQuests();
+                break;
+            case TabDictionary:
+                _dictionaryPanel?.RefreshDictionary();
+                break;
+        }
     }
 
     protected void RefreshInfoPanel()

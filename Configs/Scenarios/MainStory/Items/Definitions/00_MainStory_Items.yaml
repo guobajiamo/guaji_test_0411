@@ -1,3 +1,10 @@
+# DEPRECATED SCENARIO-LOCAL ITEM/CATEGORY FILE.
+# Runtime now loads the shared global item library from:
+# - res://Configs/Items/Definitions
+# - res://Configs/Items/Categories
+# Do NOT add new shared items or categories here.
+# Retained only as a legacy reference / migration anchor on 2026-04-18.
+# Keep UTF-8 when editing so Chinese text stays intact.
 # Legacy stub only.
 # Shared item definitions now live in res://Configs/Items/Definitions and are scenario-independent.
 # Keep this file empty so MainStory does not redefine global items such as currency_gold.

@@ -1,3 +1,10 @@
+# DEPRECATED SCENARIO-LOCAL ITEM/CATEGORY FILE.
+# Runtime now loads the shared global item library from:
+# - res://Configs/Items/Definitions
+# - res://Configs/Items/Categories
+# Do NOT add new shared items or categories here.
+# Retained only as a legacy reference / migration anchor on 2026-04-18.
+# Keep UTF-8 when editing so Chinese text stays intact.
 # Legacy scenario-local stub only.
 # The authoritative shared item library lives in res://Configs/Items/Definitions.
 # Keep UTF-8 when editing so existing Chinese text stays intact.

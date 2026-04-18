@@ -45,6 +45,8 @@ public class PlayerProfile
     /// </summary>
     public PlayerStapleFoodState StapleFoodState { get; set; } = new();
 
+    public PlayerBattleLootState BattleLootState { get; set; } = new();
+
     public Dictionary<string, PlayerSkillState> SkillStates { get; } = new();
 
     public Dictionary<string, PlayerFactionState> FactionStates { get; } = new();

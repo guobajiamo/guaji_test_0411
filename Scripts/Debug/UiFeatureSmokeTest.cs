@@ -212,6 +212,63 @@ public partial class UiFeatureSmokeTest : Node
 
             Assert(gameManager.EventRegistry.Events.Count >= 11, "测试剧本事件配置未成功加载完整。");
 
+            gameManager.IdleSystem?.StopIdleEvent();
+            typedMainUi.RefreshAllPanels();
+            await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+
+            foreach (string snackItemId in new[] { "mat_peach", "mat_plum", "mat_cucumber", "mat_chili" })
+            {
+                gameManager.SettlementService.AddItem(snackItemId, 1);
+            }
+            gameManager.PlayerProfile.Inventory.ApplyDisplayOrder(
+                new[] { "mat_peach", "mat_plum", "mat_cucumber", "mat_chili" }
+                    .Concat(gameManager.PlayerProfile.Inventory.GetActiveItemIdsByDisplayOrder()
+                        .Where(itemId => itemId != "mat_peach"
+                            && itemId != "mat_plum"
+                            && itemId != "mat_cucumber"
+                            && itemId != "mat_chili")));
+            typedMainUi.RefreshAllPanels();
+            await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+
+            foreach (string snackItemId in new[] { "mat_peach", "mat_plum", "mat_cucumber", "mat_chili" })
+            {
+                ConsumeSnackFromInventory(mainUi, snackItemId);
+                await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+                await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+            }
+
+            Assert(gameManager.BuffSystem?.GetActiveBuffs().Any(buff => string.Equals(buff.BuffId, "buff_plum_double_drop", StringComparison.Ordinal)) == true, "After consuming snacks, BuffSystem did not register buff_plum_double_drop.");
+            Assert(gameManager.BuffSystem?.GetActiveBuffs().Any(buff => string.Equals(buff.BuffId, "buff_peach_focus", StringComparison.Ordinal)) == true, "After consuming snacks, BuffSystem did not register buff_peach_focus.");
+            Assert(gameManager.BuffSystem?.GetActiveBuffs().Any(buff => string.Equals(buff.BuffId, "buff_cucumber_refreshing", StringComparison.Ordinal)) == true, "After consuming snacks, BuffSystem did not register buff_cucumber_refreshing.");
+            Assert(gameManager.BuffSystem?.GetActiveBuffs().Any(buff => string.Equals(buff.BuffId, "buff_chili_burning", StringComparison.Ordinal)) == true, "After consuming snacks, BuffSystem did not register buff_chili_burning.");
+            Assert(gameManager.PlayerProfile.UiState.SelectedSnackItemIds.Count == 4, "After consuming snacks, the selected snack queue count was not 4.");
+            string plumBuffDisplayName = gameManager.ItemRegistry.GetItem("mat_plum")?.ConsumeBuff?.DisplayName
+                ?? throw new InvalidOperationException("mat_plum consume buff display name is missing.");
+            Assert(ContainsLabelText(mainUi, plumBuffDisplayName), "After consuming mat_plum, the status panel did not show the plum buff label.");
+
+            EmitPressOnMainTab(mainUi, "battle");
+            await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+            await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+            Assert(string.Equals(gameManager.PlayerProfile.UiState.SelectedTabId, "battle", StringComparison.Ordinal), "After consuming mat_plum, clicking the battle tab did not switch to battle.");
+            Control battlePageRootAfterSnack = mainUi.FindChild("BattlePageRoot", true, false) as Control
+                ?? throw new InvalidOperationException("BattlePageRoot was not found after consuming mat_plum.");
+            Assert(battlePageRootAfterSnack.Visible, "BattlePageRoot was not visible after consuming mat_plum.");
+
+            EmitPressOnMainTab(mainUi, "system");
+            await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+            await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+            Assert(string.Equals(gameManager.PlayerProfile.UiState.SelectedTabId, "system", StringComparison.Ordinal), "After consuming mat_plum, clicking the system tab did not switch to system.");
+
+            PressReturnToMainMenuButton(mainUi);
+            await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+            ConfirmActionDialog confirmDialogAfterSnack = mainUi.FindChild("ConfirmDialog", true, false) as ConfirmActionDialog
+                ?? throw new InvalidOperationException("ConfirmDialog was not found after requesting return to main menu.");
+            Assert(confirmDialogAfterSnack.Visible, "Return-to-main-menu confirm dialog did not become visible after consuming mat_plum.");
+            PressConfirmDialogPrimaryButton(confirmDialogAfterSnack);
+            await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+            await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+            Assert(mainScene.FindChild("MainMenuUI", true, false) != null, "After consuming mat_plum, confirming return did not show MainMenuUI.");
+
             GD.Print("[UiFeatureSmokeTest] all checks passed");
             GetTree().Quit(0);
         }
@@ -247,6 +304,53 @@ public partial class UiFeatureSmokeTest : Node
         clickableControl.EmitSignal(Control.SignalName.GuiInput, clickEvent);
     }
 
+    private static void EmitPressOnMainTab(Node root, string tabId)
+    {
+        HBoxContainer tabBar = root.FindChild("MainTabBar", true, false) as HBoxContainer
+            ?? throw new InvalidOperationException("MainTabBar was not found.");
+
+        Button[] buttons = tabBar.GetChildren().OfType<Button>().ToArray();
+        Button targetButton = tabId switch
+        {
+            "battle" => buttons.ElementAtOrDefault(3),
+            "system" => buttons.LastOrDefault(),
+            _ => throw new InvalidOperationException($"Unsupported main tab id: {tabId}")
+        }
+            ?? throw new InvalidOperationException($"Main tab button was not found for tab id: {tabId}");
+        targetButton.EmitSignal(Button.SignalName.Pressed);
+    }
+
+    private static void PressReturnToMainMenuButton(Node root)
+    {
+        Control currentVisiblePage = GetCurrentVisibleMainTabPage(root);
+        Button returnButton = currentVisiblePage.FindChildren("*", "Button", true, false)
+            .OfType<Button>()
+            .Where(button => button.IsVisibleInTree())
+            .ElementAtOrDefault(2)
+            ?? throw new InvalidOperationException("Return-to-main-menu button was not found in SystemPanel.");
+        returnButton.EmitSignal(Button.SignalName.Pressed);
+    }
+
+    private static void PressConfirmDialogPrimaryButton(Node root)
+    {
+        Button confirmButton = root.FindChildren("*", "Button", true, false)
+            .OfType<Button>()
+            .Where(button => button.IsVisibleInTree())
+            .LastOrDefault()
+            ?? throw new InvalidOperationException("Primary confirm button was not found in ConfirmActionDialog.");
+        confirmButton.EmitSignal(Button.SignalName.Pressed);
+    }
+
+    private static Control GetCurrentVisibleMainTabPage(Node root)
+    {
+        Control pageHost = root.FindChild("MainTabs", true, false) as Control
+            ?? throw new InvalidOperationException("MainTabs was not found.");
+        return pageHost.GetChildren()
+            .OfType<Control>()
+            .FirstOrDefault(control => control.IsVisibleInTree())
+            ?? throw new InvalidOperationException("No visible main tab page was found.");
+    }
+
     private static Button FindDialogButtonByExactText(Node root, string displayText)
     {
         foreach (Node child in root.FindChildren("*", "Button", true, false))
@@ -258,6 +362,29 @@ public partial class UiFeatureSmokeTest : Node
         }
 
         throw new InvalidOperationException($"未找到弹窗按钮：{displayText}");
+    }
+
+    private static void ConsumeSnackFromInventory(Node mainUi, string itemId)
+    {
+        MainUI typedMainUi = mainUi as MainUI
+            ?? throw new InvalidOperationException("MainUI type resolution failed while consuming snack.");
+        GameManager gameManager = GameManager.Instance ?? throw new InvalidOperationException("GameManager is not initialized.");
+        GD.Print($"[UiFeatureSmokeTest] preparing snack consume: {itemId}");
+        gameManager.PlayerProfile.UiState.SelectedTabId = "inventory";
+        typedMainUi.RefreshAllPanels();
+        GD.Print($"[UiFeatureSmokeTest] inventory refreshed for: {itemId}");
+
+        Button slotButton = mainUi.FindChild($"Slot_{itemId}#0", true, false) as Button
+            ?? throw new InvalidOperationException($"Snack inventory slot was not found: {itemId}");
+        GD.Print($"[UiFeatureSmokeTest] slot found for: {itemId}");
+        slotButton.EmitSignal(Button.SignalName.Pressed);
+
+        Button consumeButton = mainUi.FindChild("ConsumeButton", true, false) as Button
+            ?? throw new InvalidOperationException("ConsumeButton was not found in InventoryPanel.");
+        Assert(consumeButton.Visible && !consumeButton.Disabled, $"ConsumeButton was not enabled after selecting {itemId}.");
+        GD.Print($"[UiFeatureSmokeTest] consume button ready for: {itemId}");
+        consumeButton.EmitSignal(Button.SignalName.Pressed);
+        GD.Print($"[UiFeatureSmokeTest] consume emitted for: {itemId}");
     }
 
     private static Button FindButtonContaining(Node root, string displayText)
@@ -318,6 +445,13 @@ public partial class UiFeatureSmokeTest : Node
         return root.FindChildren("*", "ProgressBar", true, false)
             .OfType<ProgressBar>()
             .Any(bar => bar.Visible);
+    }
+
+    private static bool ContainsLabelText(Node root, string displayText)
+    {
+        return root.FindChildren("*", "Label", true, false)
+            .OfType<Label>()
+            .Any(label => label.Visible && label.Text.Contains(displayText, StringComparison.Ordinal));
     }
 
     private static bool HasAreaNewMarker(Node root, string areaDisplayText)

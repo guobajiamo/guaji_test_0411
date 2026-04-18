@@ -23,10 +23,12 @@ Loading resource: res://Scripts/Autoload/GameManager.cs
 Loading resource: res://Scripts/Autoload/SignalBus.cs
 Loaded system CA certificates
 Loading resource: res://Scenes/Main.tscn
-Loading resource: res://Scenes/UI/MainUI.tscn
-Loading resource: res://Scripts/UI/MainUI.cs
+Loading resource: res://Scripts/UI/AppRoot.cs
 Loading resource: res://Scripts/UI/MainUiLayoutSettings.cs
-[GameLog] [21:20:02] 静态配置加载完成：分类 6，物品 11，技能 1，事件 3。
+Loading resource: res://Resources/Scenarios/main_story_scenario.tres
+Loading resource: res://Scripts/Core/Scenario/GameScenarioDefinition.cs
+Loading resource: res://Resources/Scenarios/test_game_scenario.tres
+[GameLog] [12:55:41] 已发现剧本数量：2
 Loading resource: res://Scripts/Systems/IdleSystem.cs
 Loading resource: res://Scripts/Systems/ClickEventSystem.cs
 Loading resource: res://Scripts/Systems/SkillSystem.cs
@@ -40,21 +42,15 @@ Loading resource: res://Scripts/Systems/BattleSystem.cs
 Loading resource: res://Scripts/Systems/AchievementSystem.cs
 Loading resource: res://Scripts/Systems/EquipmentSystem.cs
 Loading resource: res://Scripts/Systems/BuffSystem.cs
-[GameLog] [21:20:02] 初版游戏已完成启动。
+Loading resource: res://Scripts/Systems/StapleFoodSystem.cs
+[GameLog] [12:55:41] 游戏主菜单入口已准备完成。
 Loading resource: res://Resources/UI/main_ui_layout.tres
-Loading resource: res://Scripts/UI/ButtonListPanel.cs
-Loading resource: res://Scripts/UI/TabContainer.cs
-Loading resource: res://Scripts/UI/InventoryPanel.cs
-Loading resource: res://Scripts/UI/SkillPanel.cs
-Loading resource: res://Scripts/UI/LogPanel.cs
-Loading resource: res://Scripts/UI/DictionaryPanel.cs
-Loading resource: res://Scripts/UI/FactionPanel.cs
-Loading resource: res://Scripts/UI/ZoneSelectPanel.cs
-Loading resource: res://Scripts/UI/Placeholder/QuestPanel.cs
-Loading resource: res://Scripts/UI/Placeholder/BattlePanel.cs
-Loading resource: res://Scripts/UI/Placeholder/AchievementPanel.cs
-Loading resource: res://Scripts/UI/CharacterStatusPanel.cs
-Loading resource: res://Scripts/UI/EventButtonItem.cs
+Loading resource: res://Scenes/UI/MainMenuUI.tscn
+Loading resource: res://Scripts/UI/MainMenuUI.cs
+Loading resource: res://Picture_Resource/Main_Menu/Main_Menu_Background_Pic.png
+Loading resource: res://.godot/imported/Main_Menu_Background_Pic.png-9a2b833698a8c26d054233414353d86e.ctex
+Loading resource: res://Scripts/UI/SaveSlotDialog.cs
+Loading resource: res://Scripts/UI/ConfirmActionDialog.cs
 Unloading: Disposing tracked instances...
 Unloading: Finished disposing tracked instances.
 XR: Clearing primary interface

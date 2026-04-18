@@ -941,7 +941,8 @@ protected string BuildCostSummary(EventDefinition definition)
                 _eventDialogPanel?.HideDialog();
                 _storyLoadDialog?.HideDialog();
                 _storySaveDialog?.HideDialog();
-                FindAppRoot()?.ShowMainMenu();
+                _confirmDialog?.HideDialog();
+                CallDeferred(nameof(ShowMainMenuFromGameplay));
             });
     }
 
@@ -959,6 +960,35 @@ protected string BuildCostSummary(EventDefinition definition)
         }
 
         return null;
+    }
+
+    protected void ShowMainMenuFromGameplay()
+    {
+        AppRoot? appRoot = FindAppRoot();
+        if (appRoot != null)
+        {
+            appRoot.ShowMainMenu();
+            return;
+        }
+
+        SceneTree tree = GetTree();
+        Node root = tree.Root;
+        if (root.GetChildCount() <= 0)
+        {
+            return;
+        }
+
+        PackedScene? mainScene = ResourceLoader.Load<PackedScene>("res://Scenes/Main.tscn");
+        if (mainScene == null)
+        {
+            return;
+        }
+
+        Node replacement = mainScene.Instantiate();
+        Node current = root.GetChild(root.GetChildCount() - 1);
+        root.AddChild(replacement);
+        current.QueueFree();
+        tree.CurrentScene = replacement;
     }
 
     protected string Translate(string keyOrText)
