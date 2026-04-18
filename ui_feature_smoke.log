@@ -1,99 +1,57 @@
 Godot Engine v4.6.2.stable.mono.official.71f334935 - https://godotengine.org
-TextServer: Added interface "Dummy"
-TextServer: Added interface "ICU / HarfBuzz / Graphite (Built-in)"
-Unrecognized output string "misc2" in mapping:
-030000008a2e0000dd10000000000000,Hand Held Legend GC Ultimate,a:b0,b:b2,back:b17,dpdown:b5,dpleft:b6,dpright:b7,dpup:b4,guide:b18,leftshoulder:b10,leftstick:b8,lefttrigger:a3,leftx:a0,lefty:a1,misc1:b19,misc2:b24,paddle1:b13,paddle2:b12,rightshoulder:b11,rightstick:b9,righttrigger:a4,rightx:a2,righty:a5,start:b16,x:b1,y:b3,platform:Windows,
-Unrecognized output string "misc2" in mapping:
-030000000d0f00000202000000000000,Horipad O Nintendo Switch 2 Controller,a:b1,b:b0,back:b8,dpdown:h0.4,dpleft:h0.8,dpright:h0.2,dpup:h0.1,guide:b12,leftshoulder:b4,leftstick:b10,lefttrigger:b6,leftx:a0,lefty:a1,misc1:b13,misc2:b14,rightshoulder:b5,rightstick:b11,righttrigger:b7,rightx:a2,righty:a3,start:b9,x:b3,y:b2,platform:Windows,
-Unrecognized output string "misc2" in mapping:
-030000000d0f00009601000000000000,Horipad Steam,a:b0,b:b1,back:b10,dpdown:h0.4,dpleft:h0.8,dpright:h0.2,dpup:h0.1,guide:b12,leftshoulder:b6,leftstick:b13,lefttrigger:b8,leftx:a0,lefty:a1,misc2:b2,paddle1:b5,paddle2:b15,paddle3:b18,paddle4:b19,rightshoulder:b7,rightstick:b14,righttrigger:b9,rightx:a3,righty:a4,start:b11,x:b3,y:b4,platform:Windows,
-Unrecognized output string "misc2" in mapping:
-030000007e0500006920000000000000,Nintendo Switch 2 Pro Controller,a:b0,b:b1,back:b14,dpdown:b8,dpleft:b10,dpright:b9,dpup:b11,guide:b16,leftshoulder:b12,leftstick:b15,lefttrigger:b13,leftx:a0,lefty:a1~,misc1:b17,misc2:b20,paddle1:b18,paddle2:b19,rightshoulder:b4,rightstick:b7,righttrigger:b5,rightx:a2,righty:a3~,start:b6,x:b2,y:b3,platform:Windows,
-Using "default" pen tablet driver...
 
-TextServer: Primary interface set to: "ICU / HarfBuzz / Graphite (Built-in)".
-.NET: Initializing module...
-Found hostfxr: C:/Program Files/dotnet/host/fxr/10.0.5/hostfxr.dll
-.NET: hostfxr initialized
-.NET: GodotPlugins initialized
-CORE API HASH: 1976921970
-EDITOR API HASH: 555353998
-SceneTreeFTI: traversal method DEFAULT
-Loading resource: res://Scripts/Autoload/GameManager.cs
-Loading resource: res://Scripts/Autoload/SignalBus.cs
-Loaded system CA certificates
-Loading resource: res://Scenes/Debug/UiFeatureSmokeTest.tscn
-Loading resource: res://Scripts/Debug/UiFeatureSmokeTest.cs
-Loading resource: res://Resources/Scenarios/main_story_scenario.tres
-Loading resource: res://Scripts/Core/Scenario/GameScenarioDefinition.cs
-Loading resource: res://Resources/Scenarios/test_game_scenario.tres
-[GameLog] [19:57:27] 已发现剧本数量：2
-Loading resource: res://Scripts/Systems/IdleSystem.cs
-Loading resource: res://Scripts/Systems/ClickEventSystem.cs
-Loading resource: res://Scripts/Systems/SkillSystem.cs
-Loading resource: res://Scripts/Systems/ShopSystem.cs
-Loading resource: res://Scripts/Systems/SellSystem.cs
-Loading resource: res://Scripts/Systems/FactionSystem.cs
-Loading resource: res://Scripts/Systems/ZoneSystem.cs
-Loading resource: res://Scripts/Systems/QuestSystem.cs
-Loading resource: res://Scripts/Systems/CraftingSystem.cs
-Loading resource: res://Scripts/Systems/BattleSystem.cs
-Loading resource: res://Scripts/Systems/AchievementSystem.cs
-Loading resource: res://Scripts/Systems/EquipmentSystem.cs
-Loading resource: res://Scripts/Systems/BuffSystem.cs
-[GameLog] [19:57:27] 游戏主菜单入口已准备完成。
-Loading resource: res://Scenes/Main.tscn
-Loading resource: res://Scripts/UI/AppRoot.cs
-Loading resource: res://Scripts/UI/MainUiLayoutSettings.cs
-Loading resource: res://Resources/UI/main_ui_layout.tres
-Loading resource: res://Scenes/UI/MainMenuUI.tscn
-Loading resource: res://Scripts/UI/MainMenuUI.cs
-Loading resource: res://Picture_Resource/Main_Menu/Main_Menu_Background_Pic.png
-Loading resource: res://.godot/imported/Main_Menu_Background_Pic.png-9a2b833698a8c26d054233414353d86e.ctex
-Loading resource: res://Scripts/UI/SaveSlotDialog.cs
-Loading resource: res://Scripts/UI/ConfirmActionDialog.cs
-[YamlConfigLoader] bundle=categories path=res://Configs/Scenarios/TestGame/Items/Categories 已解析 1 个 yaml 文件。
-[YamlConfigLoader] bundle=items path=res://Configs/Scenarios/TestGame/Items/Definitions 已解析 6 个 yaml 文件。
-[YamlConfigLoader] bundle=skills path=res://Configs/Scenarios/TestGame/Skills/Definitions 已解析 3 个 yaml 文件。
+ERROR: Failed to read the root certificate store.
+   at: get_system_ca_certificates (platform/windows/os_windows.cpp:2570)
+[GameLog] [18:04:48] 已发现剧本数量：2
+[GameLog] [18:04:48] 游戏主菜单入口已准备完成。
+[YamlConfigLoader] bundle=categories path=res://Configs/Items/Categories 已解析 3 个 yaml 文件。
+[YamlConfigLoader] bundle=items path=res://Configs/Items/Definitions 已解析 9 个 yaml 文件。
+[YamlConfigLoader] bundle=skills path=res://Configs/Scenarios/TestGame/Skills/Definitions 已解析 5 个 yaml 文件。
 [YamlConfigLoader] bundle=quests path=res://Configs/Scenarios/TestGame/Quests/Definitions 已解析 1 个 yaml 文件。
-[YamlConfigLoader] bundle=events path=res://Configs/Scenarios/TestGame/Events/Oneshot 已解析 3 个 yaml 文件。
-[YamlConfigLoader] bundle=events path=res://Configs/Scenarios/TestGame/Events/Click 已解析 4 个 yaml 文件。
+[YamlConfigLoader] bundle=events path=res://Configs/Scenarios/TestGame/Events/Oneshot 已解析 4 个 yaml 文件。
+[YamlConfigLoader] bundle=events path=res://Configs/Scenarios/TestGame/Events/Click 已解析 5 个 yaml 文件。
 [YamlConfigLoader] bundle=events path=res://Configs/Scenarios/TestGame/Events/Idle 已解析 3 个 yaml 文件。
 [YamlConfigLoader] bundle=factions path=res://Configs/Scenarios/TestGame/Factions/Definitions 已解析 3 个 yaml 文件。
 [YamlConfigLoader] bundle=zones path=res://Configs/Scenarios/TestGame/Zones/Definitions 已解析 3 个 yaml 文件。
+[YamlConfigLoader] bundle=battle_encounters path=res://Configs/Scenarios/TestGame/Battle/Definitions 已解析 1 个 yaml 文件。
 [YamlConfigLoader] bundle=localization path=res://Configs/Scenarios/TestGame/Localization/Bundle 已解析 1 个 yaml 文件。
-[GameLog] [19:57:27] 静态配置加载完成：剧本 游戏测试剧本，分类 9，物品 26，技能 7，事件 28，任务 3。
-[GameLog] [19:57:27] 任务已解锁：初入人间之里
-[GameLog] [19:57:27] 已载入剧本：游戏测试剧本
-Loading resource: res://Scenes/UI/MainUI.tscn
-Loading resource: res://Scripts/UI/MainUI.cs
-Loading resource: res://Scripts/UI/GamePlayUI.cs
-Loading resource: res://Scripts/UI/InventoryPanel.cs
-Loading resource: res://Scripts/UI/SkillPanel.cs
-Loading resource: res://Scripts/UI/Placeholder/BattlePanel.cs
-Loading resource: res://Scripts/UI/Placeholder/ScenarioPlaceholderPanel.cs
-Loading resource: res://Scripts/UI/Placeholder/QuestPanel.cs
-Loading resource: res://Scripts/UI/Placeholder/TutorialPanel.cs
-Loading resource: res://Scripts/UI/Placeholder/AchievementPanel.cs
-Loading resource: res://Scripts/UI/DictionaryPanel.cs
-Loading resource: res://Scripts/UI/LogPanel.cs
-Loading resource: res://Scripts/UI/ConfigurableInfoPanel.cs
-Loading resource: res://Scripts/UI/CharacterStatusPanel.cs
-Loading resource: res://Scripts/UI/EventDialogPanel.cs
+WARNING: [ItemRegistry] 物品树调试文件写入失败：Access to the path 'C:\Users\AA\AppData\Roaming\Godot\app_userdata\test_00_0410\logs\item_tree_dump.txt' is denied.
+   at: void Test00_0410.Core.Registry.ItemRegistry.DumpTreeToDefaultRuntimeFile() (res://Scripts/Core/Registry/ItemRegistry.cs:172)
+   C# backtrace (most recent call first):
+       [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+       [1] void Test00_0410.Core.Registry.ItemRegistry.DumpTreeToDefaultRuntimeFile() (L:\00_godot_project_0410\test-00-0410\Scripts\Core\Registry\ItemRegistry.cs:172)
+       [2] void Test00_0410.Autoload.GameManager.LoadStaticData(Test00_0410.Core.Scenario.GameScenarioDefinition) (L:\00_godot_project_0410\test-00-0410\Scripts\Autoload\GameManager.cs:428)
+       [3] bool Test00_0410.Autoload.GameManager.StartScenario(string, string, bool) (L:\00_godot_project_0410\test-00-0410\Scripts\Autoload\GameManager.cs:158)
+       [4] bool Test00_0410.Autoload.GameManager.StartTestScenario() (L:\00_godot_project_0410\test-00-0410\Scripts\Autoload\GameManager.cs:131)
+       [5] void Test00_0410.UI.AppRoot.OpenTestGame() (L:\00_godot_project_0410\test-00-0410\Scripts\UI\AppRoot.cs:45)
+       [6] void Test00_0410.Debug.UiFeatureSmokeTest+<_Ready>d__0.MoveNext() (L:\00_godot_project_0410\test-00-0410\Scripts\Debug\UiFeatureSmokeTest.cs:27)
+       [7] void System.Threading.ExecutionContext.RunInternal(System.Threading.ExecutionContext, System.Threading.ContextCallback, object)
+       [8] void System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1.MoveNext(System.Threading.Thread)
+       [9] void Godot.SignalAwaiter.SignalCallback(nint, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_bool*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/SignalAwaiter.cs:65)
+[GameLog] [18:04:48] 静态配置加载完成：剧本 游戏测试剧本，分类 24，物品 76，技能 11，事件 50，遭遇 15，任务 3。
+[GameLog] [18:04:48] 任务已解锁：初入人间之里
+[GameLog] [18:04:48] 已载入剧本：游戏测试剧本
 [YamlConfigLoader] bundle=gameplay_layout path=res://Configs/Scenarios/TestGame/UI/GameplayLayout 已解析 8 个 yaml 文件。
 [YamlConfigLoader] bundle=gameplay_layout path=res://Configs/Scenarios/TestGame/UI/GameplayLayout 已解析 8 个 yaml 文件。
 [YamlConfigLoader] bundle=ui_tabs path=res://Configs/Scenarios/TestGame/UI/Tabs 已解析 6 个 yaml 文件。
 [YamlConfigLoader] bundle=ui_tabs path=res://Configs/Scenarios/TestGame/UI/Tabs 已解析 6 个 yaml 文件。
-Loading resource: res://Scripts/UI/SystemPanel.cs
-Loading resource: res://Scripts/UI/EventButtonItem.cs
 [YamlConfigLoader] bundle=info_panel path=res://Configs/Scenarios/TestGame/UI/InfoPanel 已解析 3 个 yaml 文件。
 [YamlConfigLoader] bundle=info_panel path=res://Configs/Scenarios/TestGame/UI/InfoPanel 已解析 3 个 yaml 文件。
-[GameLog] [19:57:29] 任务已完成：初入人间之里
-[GameLog] [19:57:30] 已领取任务奖励：初入人间之里
-[GameLog] [19:57:30] 任务已解锁：山涧钓手
-[GameLog] [19:57:30] 任务已解锁：渔具屋的备用货
-Unloading: Disposing tracked instances...
-Unloading: Finished disposing tracked instances.
-XR: Clearing primary interface
-XR: Removed interface "Native mobile"
-XR: Removed interface "OpenXR"
+[GameLog] [18:04:50] 任务已完成：初入人间之里
+[GameLog] [18:04:50] 已领取任务奖励：初入人间之里
+[GameLog] [18:04:51] 任务已解锁：山涧钓手
+[GameLog] [18:04:51] 任务已解锁：渔具屋的备用货
+[GameLog] [18:04:51] 任务已完成：山涧钓手
+[GameLog] [18:04:52] Idle settled: 挂机钓鱼 x1, item +5 鲤鱼, exp +6.
+[GameLog] [18:04:52] Idle stopped: interaction conditions no longer met.
+ERROR: [UiFeatureSmokeTest] System.InvalidOperationException: 未找到可点击控件：魔法之森外围
+   at Test00_0410.Debug.UiFeatureSmokeTest.FindClickableControl(Node root, String displayText) in L:\00_godot_project_0410\test-00-0410\Scripts\Debug\UiFeatureSmokeTest.cs:line 300
+   at Test00_0410.Debug.UiFeatureSmokeTest.EmitPressOnButton(Node root, String displayText) in L:\00_godot_project_0410\test-00-0410\Scripts\Debug\UiFeatureSmokeTest.cs:line 235
+   at Test00_0410.Debug.UiFeatureSmokeTest._Ready() in L:\00_godot_project_0410\test-00-0410\Scripts\Debug\UiFeatureSmokeTest.cs:line 196
+   at: void Test00_0410.Debug.UiFeatureSmokeTest+<_Ready>d__0.MoveNext() (res://Scripts/Debug/UiFeatureSmokeTest.cs:196)
+   C# backtrace (most recent call first):
+       [0] void Godot.GD.PushError(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:366)
+       [1] void Test00_0410.Debug.UiFeatureSmokeTest+<_Ready>d__0.MoveNext() (L:\00_godot_project_0410\test-00-0410\Scripts\Debug\UiFeatureSmokeTest.cs:196)
+       [2] void System.Threading.ExecutionContext.RunInternal(System.Threading.ExecutionContext, System.Threading.ContextCallback, object)
+       [3] void System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1.MoveNext(System.Threading.Thread)
+       [4] void Godot.SignalAwaiter.SignalCallback(nint, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_bool*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/SignalAwaiter.cs:65)

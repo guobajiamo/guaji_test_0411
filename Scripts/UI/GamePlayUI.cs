@@ -14,6 +14,8 @@ public partial class GamePlayUI : Control
     private const string LayoutSettingsPath = "res://Resources/UI/main_ui_layout.tres";
     private const string TooltipDelaySettingPath = "gui/timers/tooltip_delay_sec";
     private const string NonBlockingTooltipBoundMetaKey = "__nb_tooltip_bound";
+    private const string NonBlockingTooltipEventIdMetaKey = "__nb_tooltip_event_id";
+    private const string NonBlockingTooltipSummaryMetaKey = "__nb_tooltip_summary";
     private const string NonBlockingTooltipTextMetaKey = "__nb_tooltip_text";
     private const int FloatingTooltipZIndex = 260;
     private const double NonBlockingTooltipHarvestIntervalSeconds = 0.25;
@@ -22,6 +24,7 @@ public partial class GamePlayUI : Control
     protected const string TabInventory = "inventory";
     protected const string TabSkills = "skills";
     protected const string TabBattle = "battle";
+    protected const string TabEquipment = "equipment";
     protected const string TabQuest = "quest";
     protected const string TabTutorial = "tutorial";
     protected const string TabAchievement = "achievement";
@@ -44,10 +47,12 @@ public partial class GamePlayUI : Control
     protected Control? _currentRegionPage;
     protected Label? _currentRegionTitleLabel;
     protected Label? _currentRegionHintLabel;
+    protected ScrollContainer? _currentRegionScroll;
     protected VBoxContainer? _currentRegionSceneList;
     protected InventoryPanel? _inventoryPanel;
     protected SkillPanel? _skillPanel;
-    protected BattlePanel? _battlePanel;
+    protected BattlePagePanel? _battlePanel;
+    protected BattleEquipmentPanel? _equipmentPanel;
     protected QuestPanel? _questPanel;
     protected TutorialPanel? _tutorialPanel;
     protected AchievementPanel? _achievementPanel;
@@ -89,6 +94,7 @@ public partial class GamePlayUI : Control
     private RichTextLabel? _floatingHoverTooltipLabel;
     private string _floatingHoverTooltipSummary = string.Empty;
     private string _floatingHoverTooltipContent = string.Empty;
+    private Control? _activeHoverControl;
     private double _nonBlockingTooltipHarvestAccumulator;
     private double _originalTooltipDelaySec;
     private bool _hasCapturedTooltipDelay;
@@ -179,6 +185,7 @@ public partial class GamePlayUI : Control
             HarvestNonBlockingTooltipBindings();
         }
 
+        UpdateFarmingUiTick(delta);
         UpdateFloatingHoverTooltipPosition();
     }
 
@@ -250,10 +257,12 @@ public partial class GamePlayUI : Control
         _currentRegionPage = null;
         _currentRegionTitleLabel = null;
         _currentRegionHintLabel = null;
+        _currentRegionScroll = null;
         _currentRegionSceneList = null;
         _inventoryPanel = null;
         _skillPanel = null;
         _battlePanel = null;
+        _equipmentPanel = null;
         _questPanel = null;
         _tutorialPanel = null;
         _achievementPanel = null;
@@ -295,10 +304,12 @@ public partial class GamePlayUI : Control
             && _currentRegionPage != null
             && _currentRegionTitleLabel != null
             && _currentRegionHintLabel != null
+            && _currentRegionScroll != null
             && _currentRegionSceneList != null
             && _inventoryPanel != null
             && _skillPanel != null
             && _battlePanel != null
+            && _equipmentPanel != null
             && _questPanel != null
             && _tutorialPanel != null
             && _achievementPanel != null
@@ -598,10 +609,23 @@ public partial class GamePlayUI : Control
         _pageHost.AddChild(_skillPanel);
         _tabPagesById[TabSkills] = _skillPanel;
 
-        _battlePanel = new BattlePanel { Name = "战斗" };
+        _battlePanel = new BattlePagePanel { Name = "战斗" };
+        _battlePanel.Configure(
+            _gameManager!,
+            () => _scenarioLayout,
+            () => _theme,
+            IsUsingStitchUiTheme,
+            SetActiveTab,
+            RefreshAllPanels);
         _battlePanel.SetAnchorsPreset(LayoutPreset.FullRect);
         _pageHost.AddChild(_battlePanel);
         _tabPagesById[TabBattle] = _battlePanel;
+
+        _equipmentPanel = new BattleEquipmentPanel { Name = "装备" };
+        _equipmentPanel.Configure(_gameManager!, IsUsingStitchUiTheme());
+        _equipmentPanel.SetAnchorsPreset(LayoutPreset.FullRect);
+        _pageHost.AddChild(_equipmentPanel);
+        _tabPagesById[TabEquipment] = _equipmentPanel;
 
         _questPanel = new QuestPanel { Name = "任务" };
         _questPanel.Configure(
@@ -668,7 +692,7 @@ public partial class GamePlayUI : Control
         _currentRegionHintLabel.AddThemeFontSizeOverride("font_size", _theme.BodyFontSize - 1);
         root.AddChild(_currentRegionHintLabel);
 
-        ScrollContainer scroll = new()
+        _currentRegionScroll = new ScrollContainer
         {
             Name = "CurrentRegionScroll",
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
@@ -676,7 +700,7 @@ public partial class GamePlayUI : Control
             HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled,
             VerticalScrollMode = ScrollContainer.ScrollMode.Auto
         };
-        root.AddChild(scroll);
+        root.AddChild(_currentRegionScroll);
 
         _currentRegionSceneList = new VBoxContainer
         {
@@ -684,7 +708,7 @@ public partial class GamePlayUI : Control
             SizeFlagsHorizontal = SizeFlags.ExpandFill
         };
         _currentRegionSceneList.AddThemeConstantOverride("separation", _theme.InnerGap + 4);
-        scroll.AddChild(_currentRegionSceneList);
+        _currentRegionScroll.AddChild(_currentRegionSceneList);
 
         return root;
     }
@@ -1057,6 +1081,7 @@ public partial class GamePlayUI : Control
     {
         _floatingHoverTooltipSummary = string.Empty;
         _floatingHoverTooltipContent = string.Empty;
+        _activeHoverControl = null;
         if (_floatingHoverTooltip != null)
         {
             _floatingHoverTooltip.Visible = false;
@@ -1266,6 +1291,8 @@ public partial class GamePlayUI : Control
         }
 
         _signalBus.ActiveIdleEventChanged += OnActiveIdleEventChanged;
+        _signalBus.GatheringNodeStateChanged += OnGatheringNodeStateChanged;
+        _signalBus.SkillChanged += OnSkillChanged;
         _signalBus.LogMessageRequested += OnLogMessageRequested;
     }
 
@@ -1277,6 +1304,8 @@ public partial class GamePlayUI : Control
         }
 
         _signalBus.ActiveIdleEventChanged -= OnActiveIdleEventChanged;
+        _signalBus.GatheringNodeStateChanged -= OnGatheringNodeStateChanged;
+        _signalBus.SkillChanged -= OnSkillChanged;
         _signalBus.LogMessageRequested -= OnLogMessageRequested;
         _signalBus = null;
     }
@@ -1311,6 +1340,18 @@ public partial class GamePlayUI : Control
         {
             RefreshAllVisibleEventWidgets();
         }
+    }
+
+    private void OnGatheringNodeStateChanged(string eventId)
+    {
+        RefreshActiveIdleEventWidgetInfo(eventId);
+    }
+
+    private void OnSkillChanged(string skillId)
+    {
+        _skillPanel?.RefreshSkills();
+        _statusPanel?.RefreshStatus();
+        RefreshAllVisibleEventWidgets();
     }
 
     protected void RequestEventDrivenRefresh()
@@ -1427,6 +1468,46 @@ public partial class GamePlayUI : Control
 
             EventButtonViewData data = BuildEventButtonData(definition);
             widget.UpdateView(data, _layoutSettings, _theme.ProgressBarHeight);
+            if (widget.ActionButton != null)
+            {
+                BindHoverInfo(widget.ActionButton, data.DisplayName, data.TooltipText, eventId);
+            }
+
+            if (widget.ProgressSlot != null)
+            {
+                BindHoverInfo(widget.ProgressSlot, data.DisplayName, data.TooltipText, eventId);
+            }
+        }
+    }
+
+    private void RefreshActiveIdleEventWidgetInfo(string eventId)
+    {
+        if (_gameManager == null || string.IsNullOrWhiteSpace(eventId))
+        {
+            return;
+        }
+
+        if (!TryGetValidEventButtonWidget(eventId, out EventButtonItem widget))
+        {
+            return;
+        }
+
+        EventDefinition? definition = _gameManager.EventRegistry.GetEvent(eventId);
+        if (definition == null)
+        {
+            return;
+        }
+
+        EventButtonViewData data = BuildEventButtonData(definition);
+        widget.UpdateView(data, _layoutSettings, _theme.ProgressBarHeight);
+        if (widget.ActionButton != null)
+        {
+            BindHoverInfo(widget.ActionButton, data.DisplayName, data.TooltipText, eventId);
+        }
+
+        if (widget.ProgressSlot != null)
+        {
+            BindHoverInfo(widget.ProgressSlot, data.DisplayName, data.TooltipText, eventId);
         }
     }
 
@@ -1465,13 +1546,17 @@ public partial class GamePlayUI : Control
             staleWidget.SetLiveProgress(0.0, false);
         }
 
-        double targetRatio = _gameManager.IdleSystem.GetProgressRatio(activeEventId);
+        bool isWaitingForRecovery = _gameManager.IdleSystem.IsWaitingForGatheringRecovery(activeEventId);
+        bool shouldShowProgress = !isWaitingForRecovery;
+        double targetRatio = shouldShowProgress
+            ? _gameManager.IdleSystem.GetProgressRatio(activeEventId)
+            : 0.0;
         if (TryGetValidEventButtonWidget(activeEventId, out EventButtonItem activeWidget))
         {
-            activeWidget.SetLiveProgress(targetRatio, true);
+            activeWidget.SetLiveProgress(targetRatio, shouldShowProgress);
         }
 
-        _statusPanel?.UpdateTargetProgress(targetRatio, true);
+        _statusPanel?.UpdateTargetProgress(targetRatio, shouldShowProgress);
         _lastProgressVisualEventId = activeEventId;
     }
 

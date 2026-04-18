@@ -13,9 +13,9 @@ skills:
     primary_output_item_id: "mat_iron_ore"
     inherit_level_table_from: "skill_chopping"
 
-  - id: "skill_woodworking"
-    name_key: "木工"
-    description_key: "加工木材与木制构件的工艺技能"
+  - id: "skill_manufacturing"
+    name_key: "制造"
+    description_key: "加工木材与基础构件的工艺技能"
     group_id: "craft"
     group_name: "工艺技能"
     group_order: 200

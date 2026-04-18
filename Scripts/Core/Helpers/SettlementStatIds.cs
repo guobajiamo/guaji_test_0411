@@ -10,6 +10,14 @@ public static class SettlementStatIds
 
     public const string IdleSpeedMultiplier = "idle.speed.multiplier";
 
+    public const string BattlePlayerMaxHpMultiplier = "battle.player.max_hp.multiplier";
+
+    public const string BattlePlayerActionSpeedMultiplier = "battle.player.action_speed.multiplier";
+
+    public const string DropChanceMultiplier = "drop.chance.multiplier";
+
+    public const string DropRareChanceMultiplier = "drop.rare_chance.multiplier";
+
     public const string TradeBuyPriceMultiplier = "trade.buy_price.multiplier";
 
     public const string TradeSellPriceMultiplier = "trade.sell_price.multiplier";
@@ -39,5 +47,10 @@ public static class SettlementStatIds
     public static string ItemTradeSellMultiplier(string itemId)
     {
         return $"trade.sell_price.{itemId}.multiplier";
+    }
+
+    public static string ItemDropChanceMultiplier(string itemId)
+    {
+        return $"drop.chance.{itemId}.multiplier";
     }
 }

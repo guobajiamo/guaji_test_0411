@@ -1,16 +1,4 @@
-# 本文件是“正式剧本专用物品表”。
-# 先保留货币实体配置，便于后续扩展更多正式内容。
-items:
-  - id: "currency_gold"
-    parent_id: "currency"
-    name_key: "金币"
-    description_key: "通用货币实体，可用于交易与系统结算"
-    definition_order: 100
-    base_rarity: "Common"
-    buy_price: 0
-    sell_price: 0
-    is_stackable: true
-    tags: ["Currency"]
-    has_durability: false
-    acquisition_hint_key: "通过交易、任务奖励、事件奖励等获得"
-    detail_description_key: "既作为货币系统中的结算数值，也作为背包中的实体货币保存。"
+# Legacy stub only.
+# Shared item definitions now live in res://Configs/Items/Definitions and are scenario-independent.
+# Keep this file empty so MainStory does not redefine global items such as currency_gold.
+items: []

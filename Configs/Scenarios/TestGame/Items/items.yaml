@@ -1,3 +1,7 @@
+# Legacy scenario-local reference only.
+# The authoritative shared item library lives in res://Configs/Items/Definitions.
+# Keep UTF-8 when editing so existing Chinese text stays intact.
+#
 # 本文件是“测试剧本专用物品表”。
 # 字段含义与 Configs/Items/items.yaml 相同，只是这里的数据只会被测试剧本读取。
 #

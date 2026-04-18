@@ -1,32 +1,33 @@
 # Magic Forest idle events.
 events:
-  - id: "evt_idle_chop"
-    name_key: "挂机砍树"
-    description_key: "自动持续砍树，获得原木和砍树经验。"
-    hover_info_key: "持续自动砍树。开始后会在状态栏显示当前挂机项目和读条进度，并有概率额外掉落果实。"
-    type: "IdleLoop"
-    display_condition_count: 0
-    display_conditions: []
-    interaction_condition_count: 1
-    interaction_conditions:
-      - { condition_type: "HasItem", target_id: "tool_stone_axe", required_value: 1 }
-    hide_condition_count: 0
-    hide_conditions: []
-    resource_cap: 20
-    resource_recover_seconds_per_point: 10
-    costs: []
-    rewards:
-      - { item_id: "mat_plum", amount: 1, drop_chance: 0.12 }
-      - { item_id: "mat_peach", amount: 1, drop_chance: 0.12 }
-      - { item_id: "mat_apple", amount: 1, drop_chance: 0.08 }
-      - { item_id: "mat_red_date", amount: 1, drop_chance: 0.08 }
-    linked_skill_id: "skill_chopping"
-    button_list_group: "MainIdle"
+  # 过期测试事件（已停用）：
+  # - id: "evt_idle_chop"
+  #   name_key: "挂机砍树"
+  #   description_key: "自动持续砍树，获得原木和砍树经验。"
+  #   hover_info_key: "持续自动砍树。开始后会在状态栏显示当前挂机项目和读条进度，并有概率额外掉落果实。"
+  #   type: "IdleLoop"
+  #   display_condition_count: 0
+  #   display_conditions: []
+  #   interaction_condition_count: 1
+  #   interaction_conditions:
+  #     - { condition_type: "HasItem", target_id: "tool_stone_axe", required_value: 1 }
+  #   hide_condition_count: 0
+  #   hide_conditions: []
+  #   resource_cap: 20
+  #   resource_recover_seconds_per_point: 10
+  #   costs: []
+  #   rewards:
+  #     - { item_id: "mat_plum", amount: 1, drop_chance: 0.12 }
+  #     - { item_id: "mat_peach", amount: 1, drop_chance: 0.12 }
+  #     - { item_id: "mat_apple", amount: 1, drop_chance: 0.08 }
+  #     - { item_id: "mat_red_date", amount: 1, drop_chance: 0.08 }
+  #   linked_skill_id: "skill_chopping"
+  #   button_list_group: "MainIdle"
 
   - id: "evt_idle_chop_apple_tree"
     name_key: "挂机砍苹果树"
-    description_key: "在林间空地持续砍伐苹果树，当前仅用于技能聚合测试。"
-    hover_info_key: "用于测试技能模式下跨区域聚合显示。当前掉落仅包含原木。"
+    description_key: "在林间空地持续砍伐苹果树，可产出原木并概率掉落苹果树种子。"
+    hover_info_key: "用于测试技能模式下跨区域聚合显示。每次固定产出原木，并有小概率掉落苹果树种子。"
     type: "IdleLoop"
     display_condition_count: 0
     display_conditions: []
@@ -40,6 +41,7 @@ events:
     costs: []
     rewards:
       - { item_id: "mat_wood_log", amount: 1, drop_chance: 1.0 }
+      - { item_id: "mat_apple_seed", amount: 1, drop_chance: 0.1 }
     linked_skill_id: "skill_chopping"
     button_list_group: "MainIdle"
 

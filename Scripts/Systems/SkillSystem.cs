@@ -1,6 +1,7 @@
 using Godot;
 using System;
 using System.Collections.Generic;
+using Test00_0410.Autoload;
 using Test00_0410.Core.Definitions;
 using Test00_0410.Core.Registry;
 using Test00_0410.Core.Runtime;
@@ -16,12 +17,14 @@ public partial class SkillSystem : Node
     private PlayerProfile? _profile;
     private SkillRegistry? _skillRegistry;
     private ClickEventSystem? _clickEventSystem;
+    private SignalBus? _signalBus;
 
     public void Configure(PlayerProfile profile, SkillRegistry skillRegistry, ClickEventSystem? clickEventSystem = null)
     {
         _profile = profile;
         _skillRegistry = skillRegistry;
         _clickEventSystem = clickEventSystem;
+        _signalBus ??= GetNodeOrNull<SignalBus>("/root/SignalBus");
 
         foreach (KeyValuePair<string, PlayerSkillState> pair in profile.SkillStates)
         {
@@ -45,8 +48,15 @@ public partial class SkillSystem : Node
         }
 
         state.TotalEarnedExp = nextTotalExp;
-        state.StoredExp = nextTotalExp;
+        double nextStoredExp = state.StoredExp + exp;
+        if (definition != null && definition.MaxTotalExp > 0)
+        {
+            nextStoredExp = Math.Min(nextStoredExp, definition.MaxTotalExp);
+        }
+
+        state.StoredExp = Math.Max(0.0, nextStoredExp);
         RefreshCanLevelUp(skillId, state);
+        EmitSkillChanged(skillId);
     }
 
     public bool TryLearnSkill(string skillId, int targetLevel = 1)
@@ -75,6 +85,7 @@ public partial class SkillSystem : Node
         state.TotalEarnedExp = Math.Max(state.TotalEarnedExp, definition.GetRequiredTotalExpForLevel(state.Level));
         state.StoredExp = state.TotalEarnedExp;
         RefreshCanLevelUp(skillId, state);
+        EmitSkillChanged(skillId);
         return true;
     }
 
@@ -92,15 +103,17 @@ public partial class SkillSystem : Node
             return false;
         }
 
-        if (state.TotalEarnedExp < definition.GetRequiredTotalExpForNextLevel(state.Level))
+        int requiredExpForNextLevel = definition.GetRequiredTotalExpForNextLevel(state.Level);
+        if (requiredExpForNextLevel <= 0 || state.StoredExp < requiredExpForNextLevel)
         {
             return false;
         }
 
+        state.StoredExp = Math.Max(0.0, state.StoredExp - requiredExpForNextLevel);
         state.Level += 1;
-        state.StoredExp = state.TotalEarnedExp;
         TriggerLevelUpHooks(definition, state.Level);
         RefreshCanLevelUp(skillId, state);
+        EmitSkillChanged(skillId);
         return true;
     }
 
@@ -110,8 +123,6 @@ public partial class SkillSystem : Node
     /// </summary>
     private void RefreshCanLevelUp(string skillId, PlayerSkillState state)
     {
-        state.StoredExp = state.TotalEarnedExp;
-
         if (_skillRegistry == null)
         {
             state.CanLevelUp = false;
@@ -126,7 +137,18 @@ public partial class SkillSystem : Node
         }
 
         int requiredTotalExp = definition.GetRequiredTotalExpForNextLevel(state.Level);
-        state.CanLevelUp = requiredTotalExp > 0 && state.TotalEarnedExp >= requiredTotalExp;
+        state.CanLevelUp = requiredTotalExp > 0 && state.StoredExp >= requiredTotalExp;
+    }
+
+    private void EmitSkillChanged(string skillId)
+    {
+        if (string.IsNullOrWhiteSpace(skillId))
+        {
+            return;
+        }
+
+        _signalBus ??= GetNodeOrNull<SignalBus>("/root/SignalBus");
+        _signalBus?.EmitSignal(SignalBus.SignalName.SkillChanged, skillId);
     }
 
     private void TriggerLevelUpHooks(SkillDefinition definition, int reachedLevel)

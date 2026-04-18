@@ -9,6 +9,7 @@
     ".NETCoreApp,Version=v8.0/win-x64": {
       "test_00_0410/1.0.0": {
         "dependencies": {
+          "Godot.SourceGenerators": "4.6.2",
           "GodotSharp": "4.6.2",
           "runtimepack.Microsoft.NETCore.App.Runtime.win-x64": "8.0.25"
         },
@@ -736,6 +737,7 @@
           }
         }
       },
+      "Godot.SourceGenerators/4.6.2": {},
       "GodotSharp/4.6.2": {
         "runtime": {
           "lib/net8.0/GodotSharp.dll": {
@@ -756,6 +758,13 @@
       "type": "runtimepack",
       "serviceable": false,
       "sha512": ""
+    },
+    "Godot.SourceGenerators/4.6.2": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-CqSn9E38CqCvHARIpZXzYw/KkDKkrGjCYjRrKq3kTAIsDGOOZ/W9wiVnfbvmTpER7gbbrFKAd6WA201ELBynQw==",
+      "path": "godot.sourcegenerators/4.6.2",
+      "hashPath": "godot.sourcegenerators.4.6.2.nupkg.sha512"
     },
     "GodotSharp/4.6.2": {
       "type": "package",

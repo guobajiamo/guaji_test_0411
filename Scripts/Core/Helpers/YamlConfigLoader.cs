@@ -99,6 +99,10 @@ public class YamlConfigLoader
         return new List<T>();
     }
 
+    // AI reminder:
+    // - Categories/items are global shared data under res://Configs/Items.
+    // - Different scenarios may reference the same bundle, but should not redefine shared ids in scenario folders.
+    // - Preserve UTF-8 when editing YAML files so existing Chinese content stays readable.
     public List<CategoryDefinition> LoadCategories(string path)
     {
         List<CategoryDefinition> categories = new();
@@ -166,6 +170,8 @@ public class YamlConfigLoader
                     DetailDescriptionKey = GetString(entry, "detail_description_key"),
                     IconTexturePath = GetString(entry, "icon_texture_path"),
                     OwnedUnlockSkillId = GetString(entry, "owned_unlock_skill_id"),
+                    EquipmentLevel = GetInt(entry, "equipment_level", GetInt(entry, "item_level", 0)),
+                    EquipmentQuality = GetInt(entry, "equipment_quality", 0),
                     IsVisible = GetBool(entry, "is_visible", true),
                     Deprecated = GetBool(entry, "deprecated", false),
                     DeprecatedSince = GetString(entry, "deprecated_since"),
@@ -184,6 +190,8 @@ public class YamlConfigLoader
                 item.DetailInfoFields.AddRange(GetStringList(entry, "detail_info_fields"));
                 item.HoverExtraLines.AddRange(GetStringList(entry, "hover_extra_lines"));
                 item.DetailExtraLines.AddRange(GetStringList(entry, "detail_extra_lines"));
+                item.EquipSlotIds.AddRange(GetStringList(entry, "equip_slot_ids"));
+                item.EquipSlotIds.AddRange(GetStringList(entry, "equipment_slot_ids"));
 
                 if (entry.TryGetValue("tool_bonuses", out object? toolBonusValue) && toolBonusValue is Dictionary<string, object?> toolBonusMap)
                 {
@@ -212,6 +220,76 @@ public class YamlConfigLoader
                     }
 
                     item.ConsumeBuff = consumeBuff;
+                }
+
+                if (entry.TryGetValue("staple_food", out object? stapleFoodValue) && stapleFoodValue is Dictionary<string, object?> stapleFoodMap)
+                {
+                    StapleFoodDefinition stapleFood = new()
+                    {
+                        StapleId = GetString(stapleFoodMap, "staple_id"),
+                        DisplayName = GetString(stapleFoodMap, "display_name"),
+                        Description = GetString(stapleFoodMap, "description"),
+                        DurationSeconds = GetDouble(stapleFoodMap, "duration_seconds", 1800.0),
+                        ExtendDurationOnReapply = GetBool(stapleFoodMap, "extend_duration_on_reapply", true),
+                        MaxStackedDurationSeconds = GetDouble(stapleFoodMap, "max_stacked_duration_seconds", 86400.0),
+                        Tier = GetInt(stapleFoodMap, "tier", 0),
+                        Branch = GetString(stapleFoodMap, "branch")
+                    };
+
+                    if (stapleFoodMap.TryGetValue("battle_stats", out object? stapleBattleStatsValue)
+                        && stapleBattleStatsValue is Dictionary<string, object?> stapleBattleStatsMap)
+                    {
+                        BattleStatBlockDefinition stats = stapleFood.BattleStats?.Clone() ?? new BattleStatBlockDefinition();
+                        ApplyBattleStatsDefinition(stats, stapleBattleStatsMap);
+                        stapleFood.BattleStats = stats;
+                    }
+
+                    item.StapleFood = stapleFood;
+                }
+
+                if ((entry.TryGetValue("inventory_use_action", out object? inventoryActionValue)
+                        || entry.TryGetValue("inventory_action", out inventoryActionValue))
+                    && inventoryActionValue is Dictionary<string, object?> inventoryActionMap)
+                {
+                    InventoryUseActionDefinition action = new()
+                    {
+                        ButtonText = GetString(inventoryActionMap, "button_text"),
+                        TooltipText = GetString(inventoryActionMap, "tooltip_text"),
+                        ConsumeAmount = Math.Max(0, GetInt(inventoryActionMap, "consume_amount", 1)),
+                        SuccessLogText = GetString(inventoryActionMap, "success_log_text")
+                    };
+
+                    foreach (Dictionary<string, object?> costMap in GetListOfMaps(inventoryActionMap, "costs"))
+                    {
+                        action.Costs.Add(new ItemCostEntry
+                        {
+                            ItemId = GetString(costMap, "item_id"),
+                            Amount = GetInt(costMap, "amount", 0)
+                        });
+                    }
+
+                    foreach (Dictionary<string, object?> rewardMap in GetListOfMaps(inventoryActionMap, "rewards"))
+                    {
+                        action.Rewards.Add(new EventRewardEntry
+                        {
+                            ItemId = GetString(rewardMap, "item_id"),
+                            Amount = GetInt(rewardMap, "amount", 0),
+                            DropChance = GetDouble(rewardMap, "drop_chance", 1.0)
+                        });
+                    }
+
+                    item.InventoryUseAction = action;
+                }
+                if (entry.TryGetValue("battle_equipment", out object? battleEquipmentValue)
+                    && battleEquipmentValue is Dictionary<string, object?> battleEquipmentMap)
+                {
+                    ApplyBattleEquipmentDefinition(item, battleEquipmentMap);
+                }
+
+                if (entry.TryGetValue("battle_stats", out object? battleStatsValue)
+                    && battleStatsValue is Dictionary<string, object?> battleStatsMap)
+                {
+                    ApplyBattleStatsDefinition(item, battleStatsMap);
                 }
 
                 WarnIfDuplicateId(idSources, "物品", item.Id, files[fileIndex]);
@@ -336,6 +414,8 @@ public class YamlConfigLoader
                     ResourceCap = GetInt(entry, "resource_cap", 0),
                     ResourceRecoverSecondsPerPoint = GetDouble(entry, "resource_recover_seconds_per_point", 0.0),
                     LinkedSkillId = GetString(entry, "linked_skill_id"),
+                    BaseIntervalSeconds = GetDouble(entry, "base_interval_seconds", 0.0),
+                    BaseOutputAmount = GetDouble(entry, "base_output_amount", 1.0),
                     ButtonListGroup = GetEnum(entry, "button_list_group", ButtonListGroup.MainClick),
                     RemoveAfterTriggered = GetBool(entry, "remove_after_triggered", false),
                     SourceFilePath = files[fileIndex],
@@ -650,6 +730,72 @@ public class YamlConfigLoader
         return zones;
     }
 
+    public List<BattleEncounterDefinition> LoadBattleEncounters(string path)
+    {
+        List<BattleEncounterDefinition> encounters = new();
+        Dictionary<string, string> idSources = new(StringComparer.Ordinal);
+        IReadOnlyList<string> files = ResolveYamlFileBundle(path, "battle_encounters");
+
+        for (int fileIndex = 0; fileIndex < files.Count; fileIndex++)
+        {
+            List<Dictionary<string, object?>> entries = GetRootListEntriesFromFile(files[fileIndex], "encounters");
+            for (int entryIndex = 0; entryIndex < entries.Count; entryIndex++)
+            {
+                Dictionary<string, object?> entry = entries[entryIndex];
+                BattleEncounterDefinition encounter = new()
+                {
+                    Id = GetString(entry, "id"),
+                    NameKey = GetString(entry, "name_key"),
+                    DescriptionKey = GetString(entry, "description_key"),
+                    EncounterType = GetString(entry, "encounter_type", GetString(entry, "type", "Normal")),
+                    MonsterLevel = Math.Max(1, GetInt(entry, "monster_level", GetInt(entry, "level", 1))),
+                    MaxHp = Math.Max(1.0, GetDouble(entry, "max_hp", GetDouble(entry, "hp", 1.0))),
+                    AttackIntervalSeconds = Math.Max(0.2, GetDouble(entry, "attack_interval_seconds", GetDouble(entry, "attack_interval", 2.0))),
+                    Accuracy = GetDouble(entry, "accuracy", GetDouble(entry, "acc", 0.0)),
+                    Evasion = GetDouble(entry, "evasion", GetDouble(entry, "eva", 0.0)),
+                    Defense = GetDouble(entry, "defense", GetDouble(entry, "def", 0.0)),
+                    PhysicalResistance = GetDouble(entry, "physical_resistance", GetDouble(entry, "res_physical", 0.0)),
+                    CritChance = GetDouble(entry, "crit_chance", 0.0),
+                    CritMultiplier = GetDouble(entry, "crit_multiplier", 1.5),
+                    WeaponPower = GetDouble(entry, "weapon_power", 0.0),
+                    SkillLevel = GetDouble(entry, "skill_level", 0.0),
+                    MainAttribute = GetDouble(entry, "main_attribute", GetDouble(entry, "main_attr", 0.0)),
+                    DamageAddPercent = GetDouble(entry, "damage_add_percent", GetDouble(entry, "power_add_pct", 0.0)),
+                    RegenHps = GetDouble(entry, "regen_hps", 0.0),
+                    KillSkillExp = GetDouble(entry, "kill_skill_exp", GetDouble(entry, "exp_reward", 12.0)),
+                    GoldReward = GetInt(entry, "gold_reward", GetInt(entry, "gold", 0)),
+                    PortraitTexturePath = GetString(entry, "portrait_texture_path"),
+                    PortraitTextureHighHpPath = GetString(entry, "portrait_texture_high_hp_path", GetString(entry, "portrait_texture_path")),
+                    PortraitTextureMidHpPath = GetString(entry, "portrait_texture_mid_hp_path", GetString(entry, "portrait_texture_path")),
+                    PortraitTextureLowHpPath = GetString(entry, "portrait_texture_low_hp_path", GetString(entry, "portrait_texture_path")),
+                    DialogueBeforeBattle = GetString(entry, "dialogue_before_battle", GetString(entry, "pre_battle_dialogue", string.Empty)),
+                    DialogueHighHp = GetString(entry, "dialogue_high_hp", GetString(entry, "phase_dialogue_high", string.Empty)),
+                    DialogueMidHp = GetString(entry, "dialogue_mid_hp", GetString(entry, "phase_dialogue_mid", string.Empty)),
+                    DialogueLowHp = GetString(entry, "dialogue_low_hp", GetString(entry, "phase_dialogue_low", string.Empty)),
+                    Notes = GetString(entry, "notes", GetString(entry, "description", string.Empty)),
+                    SourceFilePath = files[fileIndex],
+                    SourceFileOrder = fileIndex,
+                    SourceEntryOrder = entryIndex
+                };
+
+                foreach (Dictionary<string, object?> dropMap in GetListOfMaps(entry, "drops"))
+                {
+                    encounter.DropEntries.Add(new EventRewardEntry
+                    {
+                        ItemId = GetString(dropMap, "item_id"),
+                        Amount = GetInt(dropMap, "amount", 0),
+                        DropChance = GetDouble(dropMap, "drop_chance", 1.0)
+                    });
+                }
+
+                WarnIfDuplicateId(idSources, "战斗遭遇", encounter.Id, files[fileIndex]);
+                encounters.Add(encounter);
+            }
+        }
+
+        return encounters;
+    }
+
     public LocalizationConfig LoadLocalization(string path)
     {
         LocalizationConfig result = new();
@@ -831,6 +977,205 @@ public class YamlConfigLoader
     {
         string text = GetString(map, key);
         return Enum.TryParse(text, true, out TEnum parsed) ? parsed : defaultValue;
+    }
+
+    private static void ApplyBattleEquipmentDefinition(ItemDefinition item, Dictionary<string, object?> map)
+    {
+        BattleEquipmentBindingDefinition binding = item.BattleEquipment?.Clone() ?? new BattleEquipmentBindingDefinition();
+        binding.Family = GetEnum(map, "family", binding.Family);
+        binding.IsUniqueEquip = GetBool(map, "is_unique_equip", GetBool(map, "unique", binding.IsUniqueEquip));
+        binding.UniqueEquipGroupId = GetString(map, "unique_equip_group_id", binding.UniqueEquipGroupId);
+
+        if (map.TryGetValue("wearable", out object? wearableValue) && wearableValue is Dictionary<string, object?> wearableMap)
+        {
+            binding.Wearable = ParseWearableBinding(wearableMap, binding);
+            if (binding.Family == BattleEquipmentFamily.None)
+            {
+                binding.Family = ResolveWearableFamily(binding.Wearable.Archetype);
+            }
+        }
+
+        if (map.TryGetValue("weapon", out object? weaponValue) && weaponValue is Dictionary<string, object?> weaponMap)
+        {
+            binding.Weapon = ParseWeaponBinding(weaponMap, binding);
+            if (binding.Family == BattleEquipmentFamily.None)
+            {
+                binding.Family = BattleEquipmentFamily.Weapon;
+            }
+        }
+
+        if (map.TryGetValue("ammo", out object? ammoValue) && ammoValue is Dictionary<string, object?> ammoMap)
+        {
+            binding.Ammo = ParseAmmoBinding(ammoMap, binding);
+            if (binding.Family == BattleEquipmentFamily.None)
+            {
+                binding.Family = BattleEquipmentFamily.Ammo;
+            }
+        }
+
+        item.BattleEquipment = binding;
+    }
+
+    private static void ApplyBattleStatsDefinition(ItemDefinition item, Dictionary<string, object?> map)
+    {
+        BattleStatBlockDefinition stats = item.BattleStats?.Clone() ?? new BattleStatBlockDefinition();
+        ApplyBattleStatsDefinition(stats, map);
+        item.BattleStats = stats;
+    }
+
+    private static void ApplyBattleStatsDefinition(BattleStatBlockDefinition stats, Dictionary<string, object?> map)
+    {
+        stats.MaxHpFlat = GetDouble(map, "max_hp_flat", stats.MaxHpFlat);
+        stats.RegenHps = GetDouble(map, "regen_hps", stats.RegenHps);
+        stats.AccuracyFlat = GetDouble(map, "accuracy_flat", stats.AccuracyFlat);
+        stats.AccuracyPercent = GetDouble(map, "accuracy_percent", stats.AccuracyPercent);
+        stats.EvasionFlat = GetDouble(map, "evasion_flat", stats.EvasionFlat);
+        stats.DefenseFlat = GetDouble(map, "defense_flat", GetDouble(map, "defense", stats.DefenseFlat));
+        stats.DefensePercent = GetDouble(map, "defense_percent", stats.DefensePercent);
+        stats.PhysicalResistance = GetDouble(map, "physical_resistance", GetDouble(map, "res_physical", stats.PhysicalResistance));
+        stats.DamageReductionFlat = GetDouble(map, "damage_reduction_flat", stats.DamageReductionFlat);
+        stats.DamageAddPercent = GetDouble(map, "damage_add_percent", stats.DamageAddPercent);
+        stats.CritChance = GetDouble(map, "crit_chance", stats.CritChance);
+        stats.CritMultiplierBonus = GetDouble(map, "crit_multiplier_bonus", stats.CritMultiplierBonus);
+        stats.AttackIntervalPercent = GetDouble(map, "attack_interval_percent", stats.AttackIntervalPercent);
+        stats.ArmorPenetration = GetDouble(map, "armor_penetration", stats.ArmorPenetration);
+    }
+
+    private static WearableBindingDefinition ParseWearableBinding(
+        Dictionary<string, object?> map,
+        BattleEquipmentBindingDefinition parentBinding)
+    {
+        BattleWearableArchetype archetype = GetEnum(map, "archetype", BattleWearableArchetype.None);
+        WearableBindingDefinition binding = archetype != BattleWearableArchetype.None
+            ? BattleEquipmentTypeCatalog.CreateWearableBinding(archetype, parentBinding.IsUniqueEquip, parentBinding.UniqueEquipGroupId).Wearable
+            : parentBinding.Wearable.Clone();
+
+        if (archetype != BattleWearableArchetype.None)
+        {
+            binding.Archetype = archetype;
+        }
+
+        List<string> slotIds = GetStringList(map, "supported_slots");
+        if (slotIds.Count == 0)
+        {
+            slotIds = GetStringList(map, "slots");
+        }
+
+        if (slotIds.Count > 0)
+        {
+            binding.SupportedSlots.Clear();
+            foreach (string slotText in slotIds)
+            {
+                if (EquipmentSlotCatalog.TryParse(slotText, out EquipmentSlotId slotId))
+                {
+                    AddUniqueSlot(binding.SupportedSlots, slotId);
+                }
+            }
+        }
+
+        return binding;
+    }
+
+    private static WeaponBindingDefinition ParseWeaponBinding(
+        Dictionary<string, object?> map,
+        BattleEquipmentBindingDefinition parentBinding)
+    {
+        WeaponArchetype archetype = GetEnum(map, "archetype", WeaponArchetype.None);
+        WeaponBindingDefinition binding = archetype != WeaponArchetype.None
+            ? BattleEquipmentTypeCatalog.CreateWeaponBinding(archetype, parentBinding.IsUniqueEquip, parentBinding.UniqueEquipGroupId).Weapon
+            : parentBinding.Weapon.Clone();
+
+        if (archetype != WeaponArchetype.None)
+        {
+            binding.Archetype = archetype;
+        }
+
+        binding.DamageChannel = GetEnum(map, "damage_channel", binding.DamageChannel);
+        binding.HandlingMode = GetEnum(map, "handling_mode", binding.HandlingMode);
+        binding.DefaultAttackStyle = GetEnum(map, "default_attack_style", binding.DefaultAttackStyle);
+        binding.CanToggleAttackStyle = GetBool(map, "can_toggle_attack_style", binding.CanToggleAttackStyle);
+        binding.DefaultPassiveSkillId = GetString(map, "default_passive_skill_id", binding.DefaultPassiveSkillId);
+        binding.IntrinsicAttackSkillId = GetString(map, "intrinsic_attack_skill_id", binding.IntrinsicAttackSkillId);
+        binding.CanEquipInOffHand = GetBool(map, "can_equip_in_off_hand", binding.CanEquipInOffHand);
+        binding.CanDualWield = GetBool(map, "can_dual_wield", binding.CanDualWield);
+        binding.RequiredMainHandArchetype = GetEnum(map, "required_main_hand_archetype", binding.RequiredMainHandArchetype);
+        binding.RequiredAmmoKind = GetEnum(map, "required_ammo_kind", binding.RequiredAmmoKind);
+        binding.AmmoPerAttack = GetInt(map, "ammo_per_attack", binding.AmmoPerAttack);
+        binding.SupportsArmorPenetration = GetBool(map, "supports_armor_penetration", binding.SupportsArmorPenetration);
+        binding.ArmorPenetrationPercent = GetDouble(map, "armor_penetration_percent", binding.ArmorPenetrationPercent);
+        binding.BaseAttackIntervalSeconds = GetDouble(map, "attack_interval_seconds", binding.BaseAttackIntervalSeconds);
+        binding.WeaponPower = GetDouble(map, "weapon_power", binding.WeaponPower);
+        binding.MinHitRatio = GetDouble(map, "min_hit_ratio", binding.MinHitRatio);
+        binding.MaxHitRatio = GetDouble(map, "max_hit_ratio", binding.MaxHitRatio);
+        binding.AccuracyFlat = GetDouble(map, "accuracy_flat", binding.AccuracyFlat);
+        binding.AccuracyPercent = GetDouble(map, "accuracy_percent", binding.AccuracyPercent);
+        binding.DamageAddPercent = GetDouble(map, "damage_add_percent", binding.DamageAddPercent);
+        binding.CritChance = GetDouble(map, "crit_chance", binding.CritChance);
+        binding.CritMultiplierBonus = GetDouble(map, "crit_multiplier_bonus", binding.CritMultiplierBonus);
+        binding.DoubleStrikeChance = GetDouble(map, "double_strike_chance", binding.DoubleStrikeChance);
+        binding.DoubleStrikeDamageMultiplier = GetDouble(map, "double_strike_damage_multiplier", binding.DoubleStrikeDamageMultiplier);
+        binding.ResourceSystemId = GetString(map, "resource_system_id", binding.ResourceSystemId);
+
+        List<string> attackStyles = GetStringList(map, "supported_attack_styles");
+        if (attackStyles.Count > 0)
+        {
+            binding.SupportedAttackStyles.Clear();
+            foreach (string styleText in attackStyles)
+            {
+                if (Enum.TryParse(styleText, true, out CombatAttackStyle attackStyle))
+                {
+                    AddUniqueAttackStyle(binding.SupportedAttackStyles, attackStyle);
+                }
+            }
+        }
+
+        return binding;
+    }
+
+    private static AmmoBindingDefinition ParseAmmoBinding(
+        Dictionary<string, object?> map,
+        BattleEquipmentBindingDefinition parentBinding)
+    {
+        AmmoKind ammoKind = GetEnum(map, "ammo_kind", AmmoKind.None);
+        AmmoBindingDefinition binding = ammoKind != AmmoKind.None
+            ? BattleEquipmentTypeCatalog.CreateAmmoBinding(ammoKind, parentBinding.IsUniqueEquip, parentBinding.UniqueEquipGroupId).Ammo
+            : parentBinding.Ammo.Clone();
+
+        if (ammoKind != AmmoKind.None)
+        {
+            binding.AmmoKind = ammoKind;
+        }
+
+        binding.CountsAsEquipment = GetBool(map, "counts_as_equipment", binding.CountsAsEquipment);
+        binding.CountsAsConsumable = GetBool(map, "counts_as_consumable", binding.CountsAsConsumable);
+        return binding;
+    }
+
+    private static BattleEquipmentFamily ResolveWearableFamily(BattleWearableArchetype archetype)
+    {
+        return archetype switch
+        {
+            BattleWearableArchetype.Necklace or BattleWearableArchetype.Ring => BattleEquipmentFamily.Accessory,
+            BattleWearableArchetype.Cloak => BattleEquipmentFamily.SpecialGear,
+            BattleWearableArchetype.None => BattleEquipmentFamily.None,
+            _ => BattleEquipmentFamily.Armor
+        };
+    }
+
+    private static void AddUniqueSlot(List<EquipmentSlotId> slots, EquipmentSlotId slotId)
+    {
+        if (!slots.Contains(slotId))
+        {
+            slots.Add(slotId);
+        }
+    }
+
+    private static void AddUniqueAttackStyle(List<CombatAttackStyle> styles, CombatAttackStyle attackStyle)
+    {
+        if (!styles.Contains(attackStyle))
+        {
+            styles.Add(attackStyle);
+        }
     }
 
     private static ItemTag ParseItemTags(object? value)

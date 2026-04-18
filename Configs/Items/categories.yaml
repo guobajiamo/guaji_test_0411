@@ -1,3 +1,7 @@
+# Legacy reference file only.
+# The authoritative shared runtime category library lives in Configs/Items/Categories.
+# Do not add scenario-specific overrides here. Keep UTF-8 when editing Chinese text.
+#
 # 物品分类定义
 # id: 全小写下划线，唯一标识
 # parent_id: 父分类ID，根分类留空

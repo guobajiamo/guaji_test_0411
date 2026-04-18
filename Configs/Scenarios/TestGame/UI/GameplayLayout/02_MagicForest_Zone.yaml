@@ -18,8 +18,13 @@ regions:
             visibility_condition_count: 0
             visibility_conditions: []
             event_ids:
-              - "evt_click_chop"
-              - "evt_idle_chop"
+              - "evt_battle_wolf_beast"
+              - "evt_battle_crow_beast"
+              - "evt_battle_daiyousei"
+              - "evt_battle_cirno"
+              # 过期测试事件（已停用）：
+              # - "evt_click_chop"
+              # - "evt_idle_chop"
               - "evt_idle_chop_apple_tree"
       - id: "forest_depths"
         title: "魔法之森深处"
@@ -33,4 +38,6 @@ regions:
             visibility_condition_count: 0
             visibility_conditions: []
             event_ids:
+              - "evt_battle_lesser_youkai"
+              - "evt_battle_three_fairies"
               - "evt_idle_chop_miasma_tree"

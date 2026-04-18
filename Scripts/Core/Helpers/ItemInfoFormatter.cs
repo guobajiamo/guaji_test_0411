@@ -26,8 +26,11 @@ public static class ItemInfoFormatter
     private static readonly string[] DefaultHoverFields =
     {
         "name",
+        "equipment_level",
+        "equipment_quality",
         "description",
         "acquisition_hint",
+        "latest_acquired_time",
         "base_rarity",
         "sell_price",
         "tags"
@@ -37,10 +40,13 @@ public static class ItemInfoFormatter
     {
         "item_id",
         "name",
+        "equipment_level",
+        "equipment_quality",
         "category",
         "description",
         "detail_description",
         "quantity",
+        "latest_acquired_time",
         "base_rarity",
         "is_stackable",
         "base_max_stack",
@@ -170,8 +176,17 @@ public static class ItemInfoFormatter
             "parent_id" => CreateEntry(fieldId, "父分类ID", item.ParentId),
             "category" => CreateEntry(fieldId, "所属分类", ResolveCategoryName(item.ParentId, categoryNameResolver)),
             "name" => CreateEntry(fieldId, "名称", item.GetDisplayName(translator)),
+            "equipment_level" => item.EquipmentLevel > 0
+                ? CreateEntry(fieldId, "装备等级", item.EquipmentLevel.ToString(CultureInfo.InvariantCulture))
+                : null,
+            "equipment_quality" => item.EquipmentQuality > 0
+                ? CreateEntry(fieldId, "装备品质", item.EquipmentQuality.ToString(CultureInfo.InvariantCulture))
+                : null,
             "description" => CreateEntry(fieldId, "简介", item.GetDisplayDescription(translator)),
             "detail_description" => CreateEntry(fieldId, "详细描述", ResolveDetailDescription(item, translator)),
+            "staple_food" => item.StapleFood != null
+                ? CreateEntry(fieldId, "主食效果", ResolveStapleFoodDescription(item.StapleFood))
+                : null,
             "acquisition_hint" => CreateEntry(fieldId, "获取提示", ResolveAcquisitionHint(item, translator)),
             "quantity" => CreateEntry(fieldId, "数量", quantity.ToString(CultureInfo.InvariantCulture)),
             "base_rarity" => CreateEntry(fieldId, "稀有度", item.BaseRarity.ToString()),
@@ -189,6 +204,9 @@ public static class ItemInfoFormatter
             "is_favorite" => CreateEntry(fieldId, "收藏标记", (state?.IsFavorite ?? false) ? "是" : "否"),
             "is_junk" => CreateEntry(fieldId, "垃圾标记", (state?.IsJunkMarked ?? false) ? "是" : "否"),
             "arrival_order" => CreateEntry(fieldId, "入袋序号", (state?.AcquiredSequence ?? 0).ToString(CultureInfo.InvariantCulture)),
+            "latest_acquired_time" => state?.LatestAcquiredUnixSeconds is long unixSeconds && unixSeconds > 0
+                ? CreateEntry(fieldId, "最近获取时间", FormatUnixSeconds(unixSeconds))
+                : null,
             "display_order" => CreateEntry(fieldId, "显示序号", (state?.PlayerDisplayOrder ?? 0).ToString(CultureInfo.InvariantCulture)),
             _ => null
         };
@@ -234,6 +252,47 @@ public static class ItemInfoFormatter
         }
 
         return "暂无获取途径说明。";
+    }
+
+    private static string ResolveStapleFoodDescription(StapleFoodDefinition stapleFood)
+    {
+        List<string> parts = new()
+        {
+            $"持续 {Math.Max(1.0, stapleFood.DurationSeconds) / 60.0:0} 分钟",
+            $"生命上限 +{stapleFood.BattleStats.MaxHpFlat:0.##}"
+        };
+
+        if (stapleFood.BattleStats.RegenHps > 0.0)
+        {
+            parts.Add($"生命回复 +{stapleFood.BattleStats.RegenHps:0.##}/秒");
+        }
+
+        if (stapleFood.BattleStats.DamageAddPercent != 0.0)
+        {
+            parts.Add($"伤害加成 {stapleFood.BattleStats.DamageAddPercent:P0}");
+        }
+
+        if (stapleFood.BattleStats.CritChance != 0.0)
+        {
+            parts.Add($"暴击率 {stapleFood.BattleStats.CritChance:P0}");
+        }
+
+        if (stapleFood.BattleStats.AttackIntervalPercent != 0.0)
+        {
+            double speedPercent = -stapleFood.BattleStats.AttackIntervalPercent;
+            parts.Add(speedPercent >= 0.0
+                ? $"攻速加成 {speedPercent:P0}"
+                : $"攻击间隔增加 {Math.Abs(speedPercent):P0}");
+        }
+
+        return string.Join("，", parts);
+    }
+
+    private static string FormatUnixSeconds(long unixSeconds)
+    {
+        return DateTimeOffset.FromUnixTimeSeconds(unixSeconds)
+            .ToLocalTime()
+            .ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
     }
 
     private static string ResolveTagText(ItemTag tags)

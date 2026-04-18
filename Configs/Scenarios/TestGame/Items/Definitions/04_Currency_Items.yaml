@@ -1,6 +1,9 @@
 # Currency entities in inventory.
 # Currency is still used as numeric economy value, and is mirrored into these item stacks.
 items:
+# Legacy scenario-local copy only.
+# The authoritative shared item library lives in res://Configs/Items/Definitions.
+# Keep UTF-8 when editing so existing Chinese text stays intact.
   - id: "currency_gold"
     parent_id: "currency"
     name_key: "金币"

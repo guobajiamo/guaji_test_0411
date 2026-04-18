@@ -1,4 +1,7 @@
 items:
+# Legacy scenario-local copy only.
+# The authoritative shared item library lives in res://Configs/Items/Definitions.
+# Keep UTF-8 when editing so existing Chinese text stays intact.
   - id: "food_tricolor_dango"
     parent_id: "consumable_cooking"
     name_key: "三色团子"
@@ -93,7 +96,7 @@ items:
     base_rarity: "Uncommon"
     is_stackable: true
     sell_price: 5
-    tags: ["Material", "Consumable"]
+    tags: ["Material", "Consumable", "Seed"]
 
   - id: "mat_peach_seed"
     parent_id: "consumable_ingredient"
@@ -103,7 +106,7 @@ items:
     base_rarity: "Uncommon"
     is_stackable: true
     sell_price: 5
-    tags: ["Material", "Consumable"]
+    tags: ["Material", "Consumable", "Seed"]
 
   - id: "mat_charcoal"
     parent_id: "mat_wood"

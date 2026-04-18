@@ -1,4 +1,20 @@
 events:
+  - id: "evt_go_to_my_farmland"
+    name_key: "前往我的农田"
+    description_key: "前往农务技能管理界面。"
+    hover_info_key: "点击后自动切换到左侧技能模式，并定位到“种田”技能页。"
+    type: "RepeatableClick"
+    display_condition_count: 0
+    display_conditions: []
+    interaction_condition_count: 0
+    interaction_conditions: []
+    hide_condition_count: 0
+    hide_conditions: []
+    costs: []
+    effects:
+      - { effect_type: "SwitchToSkillMode", target_id: "skill_farming", int_value: 1 }
+    button_list_group: "MainClick"
+
   - id: "evt_buy_tricolor_dango"
     name_key: "购买三色团子(x1)"
     description_key: "花费 3 枚金币购买 1 个三色团子。"
@@ -15,4 +31,184 @@ events:
     effects:
       - { effect_type: "RemoveGold", target_id: "", int_value: 3 }
       - { effect_type: "GrantItem", target_id: "food_tricolor_dango", int_value: 1 }
+    button_list_group: "MainClick"
+
+  - id: "evt_buy_rice_seed"
+    name_key: "购买水稻种子x1"
+    description_key: "花费 1 金币购买 1 个水稻种子。"
+    hover_info_key: "用于测试主食作物种植链路。"
+    type: "RepeatableClick"
+    display_condition_count: 0
+    display_conditions: []
+    interaction_condition_count: 1
+    interaction_conditions:
+      - { condition_type: "HasGold", target_id: "", required_value: 1 }
+    hide_condition_count: 0
+    hide_conditions: []
+    costs: []
+    effects:
+      - { effect_type: "RemoveGold", target_id: "", int_value: 1 }
+      - { effect_type: "GrantItem", target_id: "seed_rice", int_value: 1 }
+    button_list_group: "MainClick"
+
+  - id: "evt_buy_chili_seed"
+    name_key: "购买辣椒种子x1"
+    description_key: "花费 2 金币购买 1 个辣椒种子。"
+    hover_info_key: "用于测试主食作物种植链路。"
+    type: "RepeatableClick"
+    display_condition_count: 0
+    display_conditions: []
+    interaction_condition_count: 1
+    interaction_conditions:
+      - { condition_type: "HasGold", target_id: "", required_value: 2 }
+    hide_condition_count: 0
+    hide_conditions: []
+    costs: []
+    effects:
+      - { effect_type: "RemoveGold", target_id: "", int_value: 2 }
+      - { effect_type: "GrantItem", target_id: "seed_chili", int_value: 1 }
+    button_list_group: "MainClick"
+
+  - id: "evt_buy_buckwheat_seed"
+    name_key: "购买荞麦种子x1"
+    description_key: "花费 3 金币购买 1 个荞麦种子。"
+    hover_info_key: "用于测试主食作物种植链路。"
+    type: "RepeatableClick"
+    display_condition_count: 0
+    display_conditions: []
+    interaction_condition_count: 1
+    interaction_conditions:
+      - { condition_type: "HasGold", target_id: "", required_value: 3 }
+    hide_condition_count: 0
+    hide_conditions: []
+    costs: []
+    effects:
+      - { effect_type: "RemoveGold", target_id: "", int_value: 3 }
+      - { effect_type: "GrantItem", target_id: "seed_buckwheat", int_value: 1 }
+    button_list_group: "MainClick"
+
+  - id: "evt_buy_cucumber_seed"
+    name_key: "购买黄瓜种子x1"
+    description_key: "花费 3 金币购买 1 个黄瓜种子。"
+    hover_info_key: "用于测试主食作物种植链路。"
+    type: "RepeatableClick"
+    display_condition_count: 0
+    display_conditions: []
+    interaction_condition_count: 1
+    interaction_conditions:
+      - { condition_type: "HasGold", target_id: "", required_value: 3 }
+    hide_condition_count: 0
+    hide_conditions: []
+    costs: []
+    effects:
+      - { effect_type: "RemoveGold", target_id: "", int_value: 3 }
+      - { effect_type: "GrantItem", target_id: "seed_cucumber", int_value: 1 }
+    button_list_group: "MainClick"
+
+  - id: "evt_buy_soybean_seed"
+    name_key: "购买大豆种子x1"
+    description_key: "花费 5 金币购买 1 个大豆种子。"
+    hover_info_key: "用于测试主食作物种植链路。"
+    type: "RepeatableClick"
+    display_condition_count: 0
+    display_conditions: []
+    interaction_condition_count: 1
+    interaction_conditions:
+      - { condition_type: "HasGold", target_id: "", required_value: 5 }
+    hide_condition_count: 0
+    hide_conditions: []
+    costs: []
+    effects:
+      - { effect_type: "RemoveGold", target_id: "", int_value: 5 }
+      - { effect_type: "GrantItem", target_id: "seed_soybean", int_value: 1 }
+    button_list_group: "MainClick"
+
+  - id: "evt_buy_tomato_seed"
+    name_key: "购买番茄种子x1"
+    description_key: "花费 10 金币购买 1 个番茄种子。"
+    hover_info_key: "用于测试主食作物种植链路。"
+    type: "RepeatableClick"
+    display_condition_count: 0
+    display_conditions: []
+    interaction_condition_count: 1
+    interaction_conditions:
+      - { condition_type: "HasGold", target_id: "", required_value: 10 }
+    hide_condition_count: 0
+    hide_conditions: []
+    costs: []
+    effects:
+      - { effect_type: "RemoveGold", target_id: "", int_value: 10 }
+      - { effect_type: "GrantItem", target_id: "seed_tomato", int_value: 1 }
+    button_list_group: "MainClick"
+
+  - id: "evt_buy_water_bundle"
+    name_key: "购买清水x10"
+    description_key: "花费 10 金币购买 10 份清水。"
+    hover_info_key: "用于测试主食料理和料理前置材料。"
+    type: "RepeatableClick"
+    display_condition_count: 0
+    display_conditions: []
+    interaction_condition_count: 1
+    interaction_conditions:
+      - { condition_type: "HasGold", target_id: "", required_value: 10 }
+    hide_condition_count: 0
+    hide_conditions: []
+    costs: []
+    effects:
+      - { effect_type: "RemoveGold", target_id: "", int_value: 10 }
+      - { effect_type: "GrantItem", target_id: "mat_water", int_value: 10 }
+    button_list_group: "MainClick"
+
+  - id: "evt_buy_salt_bundle"
+    name_key: "购买盐x10"
+    description_key: "花费 10 金币购买 10 份盐。"
+    hover_info_key: "用于测试主食料理和调味前置材料。"
+    type: "RepeatableClick"
+    display_condition_count: 0
+    display_conditions: []
+    interaction_condition_count: 1
+    interaction_conditions:
+      - { condition_type: "HasGold", target_id: "", required_value: 10 }
+    hide_condition_count: 0
+    hide_conditions: []
+    costs: []
+    effects:
+      - { effect_type: "RemoveGold", target_id: "", int_value: 10 }
+      - { effect_type: "GrantItem", target_id: "mat_salt", int_value: 10 }
+    button_list_group: "MainClick"
+
+  - id: "evt_buy_seafood_cup_noodles"
+    name_key: "购买海鲜杯面x1"
+    description_key: "花费 50 金币购买 1 个海鲜杯面。"
+    hover_info_key: "特殊主食：低生命上限，高回复。"
+    type: "RepeatableClick"
+    display_condition_count: 0
+    display_conditions: []
+    interaction_condition_count: 1
+    interaction_conditions:
+      - { condition_type: "HasGold", target_id: "", required_value: 50 }
+    hide_condition_count: 0
+    hide_conditions: []
+    costs: []
+    effects:
+      - { effect_type: "RemoveGold", target_id: "", int_value: 50 }
+      - { effect_type: "GrantItem", target_id: "food_seafood_cup_noodles", int_value: 1 }
+    button_list_group: "MainClick"
+
+  - id: "evt_buy_spicy_cup_noodles"
+    name_key: "购买味辛杯面x1"
+    description_key: "花费 200 金币购买 1 个味辛杯面。"
+    hover_info_key: "特殊主食：兼顾回复与输出。"
+    type: "RepeatableClick"
+    display_condition_count: 0
+    display_conditions: []
+    interaction_condition_count: 1
+    interaction_conditions:
+      - { condition_type: "HasGold", target_id: "", required_value: 200 }
+    hide_condition_count: 0
+    hide_conditions: []
+    costs: []
+    effects:
+      - { effect_type: "RemoveGold", target_id: "", int_value: 200 }
+      - { effect_type: "GrantItem", target_id: "food_spicy_cup_noodles", int_value: 1 }
     button_list_group: "MainClick"

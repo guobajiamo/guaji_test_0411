@@ -21,16 +21,14 @@ EDITOR API HASH: 555353998
 SceneTreeFTI: traversal method DEFAULT
 Loading resource: res://Scripts/Autoload/GameManager.cs
 Loading resource: res://Scripts/Autoload/SignalBus.cs
-ERROR: Failed to read the root certificate store.
-   at: get_system_ca_certificates (platform/windows/os_windows.cpp:2570)
-Loaded builtin CA certificates
+Loaded system CA certificates
 Loading resource: res://Scenes/Main.tscn
 Loading resource: res://Scripts/UI/AppRoot.cs
 Loading resource: res://Scripts/UI/MainUiLayoutSettings.cs
 Loading resource: res://Resources/Scenarios/main_story_scenario.tres
 Loading resource: res://Scripts/Core/Scenario/GameScenarioDefinition.cs
 Loading resource: res://Resources/Scenarios/test_game_scenario.tres
-[GameLog] [15:48:55] 已发现剧本数量：2
+[GameLog] [12:43:24] 已发现剧本数量：2
 Loading resource: res://Scripts/Systems/IdleSystem.cs
 Loading resource: res://Scripts/Systems/ClickEventSystem.cs
 Loading resource: res://Scripts/Systems/SkillSystem.cs
@@ -44,10 +42,12 @@ Loading resource: res://Scripts/Systems/BattleSystem.cs
 Loading resource: res://Scripts/Systems/AchievementSystem.cs
 Loading resource: res://Scripts/Systems/EquipmentSystem.cs
 Loading resource: res://Scripts/Systems/BuffSystem.cs
-[GameLog] [15:48:55] 游戏主菜单入口已准备完成。
+[GameLog] [12:43:24] 游戏主菜单入口已准备完成。
 Loading resource: res://Resources/UI/main_ui_layout.tres
 Loading resource: res://Scenes/UI/MainMenuUI.tscn
 Loading resource: res://Scripts/UI/MainMenuUI.cs
+Loading resource: res://Picture_Resource/Main_Menu/Main_Menu_Background_Pic.png
+Loading resource: res://.godot/imported/Main_Menu_Background_Pic.png-9a2b833698a8c26d054233414353d86e.ctex
 Loading resource: res://Scripts/UI/SaveSlotDialog.cs
 Loading resource: res://Scripts/UI/ConfirmActionDialog.cs
 Unloading: Disposing tracked instances...

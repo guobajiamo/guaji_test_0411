@@ -17,7 +17,10 @@ regions:
             description: "预留给后续区域。"
             visibility_condition_count: 0
             visibility_conditions: []
-            event_ids: []
+            event_ids:
+              - "evt_battle_nameless_tengu"
+              - "evt_battle_kappa_worker"
+              - "evt_battle_nitori"
       - id: "genbu_glen"
         title: "玄武涧"
         accent: "secondary_battle"
@@ -30,6 +33,8 @@ regions:
             visibility_condition_count: 0
             visibility_conditions: []
             event_ids:
+              - "evt_battle_yamawaro"
+              - "evt_battle_momiji"
               - "evt_talk_to_taigongwang"
               - "evt_empty_hook_fishing"
               - "evt_idle_fishing"

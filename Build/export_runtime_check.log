@@ -30,7 +30,7 @@ Loading resource: res://Scripts/UI/MainUiLayoutSettings.cs
 Loading resource: res://.godot/exported/133200997/export-5da400bc6c66a2979a2f2c5345437c7c-main_story_scenario.res
 Loading resource: res://Scripts/Core/Scenario/GameScenarioDefinition.cs
 Loading resource: res://.godot/exported/133200997/export-bb56db8940e6021488f1a49d640c065f-test_game_scenario.res
-[GameLog] [17:39:03] 已发现剧本数量：2
+[GameLog] [10:56:04] 已发现剧本数量：2
 Loading resource: res://Scripts/Systems/IdleSystem.cs
 Loading resource: res://Scripts/Systems/ClickEventSystem.cs
 Loading resource: res://Scripts/Systems/SkillSystem.cs
@@ -44,10 +44,12 @@ Loading resource: res://Scripts/Systems/BattleSystem.cs
 Loading resource: res://Scripts/Systems/AchievementSystem.cs
 Loading resource: res://Scripts/Systems/EquipmentSystem.cs
 Loading resource: res://Scripts/Systems/BuffSystem.cs
-[GameLog] [17:39:03] 游戏主菜单入口已准备完成。
+[GameLog] [10:56:04] 游戏主菜单入口已准备完成。
 Loading resource: res://.godot/exported/133200997/export-a68de40eb2f763143ca57aa5c8e1df70-main_ui_layout.res
 Loading resource: res://.godot/exported/133200997/export-6f7caacab43e96fa7e38dc6b7c793907-MainMenuUI.scn
 Loading resource: res://Scripts/UI/MainMenuUI.cs
+Loading resource: res://Picture_Resource/Main_Menu/Main_Menu_Background_Pic.png
+Loading resource: res://.godot/imported/Main_Menu_Background_Pic.png-9a2b833698a8c26d054233414353d86e.ctex
 Loading resource: res://Scripts/UI/SaveSlotDialog.cs
 Loading resource: res://Scripts/UI/ConfirmActionDialog.cs
 Unloading: Disposing tracked instances...

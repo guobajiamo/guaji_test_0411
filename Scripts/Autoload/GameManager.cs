@@ -39,6 +39,8 @@ public partial class GameManager : Node
 
     public ZoneRegistry ZoneRegistry { get; private set; } = new();
 
+    public BattleEncounterRegistry BattleEncounterRegistry { get; private set; } = new();
+
     public LocalizationManager LocalizationManager { get; private set; } = new();
 
     public SaveManager SaveManager { get; private set; } = new();
@@ -76,6 +78,8 @@ public partial class GameManager : Node
     public EquipmentSystem? EquipmentSystem { get; private set; }
 
     public BuffSystem? BuffSystem { get; private set; }
+
+    public StapleFoodSystem? StapleFoodSystem { get; private set; }
 
     /// <summary>
     /// 运行时日志。
@@ -342,6 +346,7 @@ public partial class GameManager : Node
         AchievementSystem = AddSystemNode<AchievementSystem>("AchievementSystem");
         EquipmentSystem = AddSystemNode<EquipmentSystem>("EquipmentSystem");
         BuffSystem = AddSystemNode<BuffSystem>("BuffSystem");
+        StapleFoodSystem = AddSystemNode<StapleFoodSystem>("StapleFoodSystem");
 
         ConfigureSystems();
     }
@@ -356,7 +361,9 @@ public partial class GameManager : Node
         SellSystem?.Configure(PlayerProfile, ItemRegistry, SettlementService);
         FactionSystem?.Configure(PlayerProfile, FactionRegistry);
         ZoneSystem?.Configure(PlayerProfile, ZoneRegistry);
-        BattleSystem?.Configure(PlayerProfile);
+        EquipmentSystem?.Configure(PlayerProfile, ItemRegistry, SkillSystem);
+        StapleFoodSystem?.Configure(PlayerProfile, ItemRegistry, SettlementService);
+        BattleSystem?.Configure(PlayerProfile, ItemRegistry, EquipmentSystem, SettlementService, SkillRegistry, BattleEncounterRegistry, BuffSystem);
         AchievementSystem?.Configure(PlayerProfile);
         QuestSystem?.Configure(this, PlayerProfile, SettlementService, _questDefinitions);
         QuestSystem?.RefreshQuestState();
@@ -379,9 +386,14 @@ public partial class GameManager : Node
             EventRegistry = new EventRegistry();
             FactionRegistry = new FactionRegistry();
             ZoneRegistry = new ZoneRegistry();
+            BattleEncounterRegistry = new BattleEncounterRegistry();
             LocalizationManager = new LocalizationManager();
             _questDefinitions.Clear();
 
+            // AI reminder:
+            // - All item categories/items live in the shared library under res://Configs/Items.
+            // - Scenario config paths select that shared library; they should not point to per-scenario overrides.
+            // - Keep UTF-8 when editing YAML/comment files so existing Chinese text does not become mojibake.
             List<CategoryDefinition> categories = _configLoader.LoadCategories(scenario.CategoriesConfigPath);
             List<ItemDefinition> items = _configLoader.LoadItems(scenario.ItemsConfigPath);
             List<SkillDefinition> skills = _configLoader.LoadSkills(scenario.SkillsConfigPath);
@@ -394,6 +406,7 @@ public partial class GameManager : Node
 
             YamlConfigLoader.FactionConfigSet factionConfig = _configLoader.LoadFactions(scenario.FactionsConfigPath);
             List<ZoneDefinition> zones = _configLoader.LoadZones(scenario.ZonesConfigPath);
+            List<BattleEncounterDefinition> encounters = _configLoader.LoadBattleEncounters(scenario.BattleEncountersConfigPath);
             YamlConfigLoader.LocalizationConfig localization = _configLoader.LoadLocalization(scenario.LocalizationPath);
 
             ItemRegistry.LoadDefinitions(categories, items);
@@ -401,6 +414,7 @@ public partial class GameManager : Node
             EventRegistry.LoadDefinitions(events);
             FactionRegistry.LoadDefinitions(factionConfig.Factions, factionConfig.Npcs);
             ZoneRegistry.LoadDefinitions(zones);
+            BattleEncounterRegistry.LoadDefinitions(encounters);
 
             LocalizationManager.SetLocale(localization.Locale);
             LocalizationManager.LoadTranslations(localization.Translations);
@@ -416,7 +430,7 @@ public partial class GameManager : Node
             }
 
             ItemRegistry.DumpTreeToDefaultRuntimeFile();
-            AddGameLog($"静态配置加载完成：剧本 {scenario.DisplayName}，分类 {categories.Count}，物品 {items.Count}，技能 {skills.Count}，事件 {events.Count}，任务 {_questDefinitions.Count}。");
+            AddGameLog($"静态配置加载完成：剧本 {scenario.DisplayName}，分类 {categories.Count}，物品 {items.Count}，技能 {skills.Count}，事件 {events.Count}，遭遇 {encounters.Count}，任务 {_questDefinitions.Count}。");
         }
         catch (Exception exception)
         {

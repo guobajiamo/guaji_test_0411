@@ -30,6 +30,10 @@ public partial class GameScenarioDefinition : Resource
     [Export]
     public bool EnableSystemTab { get; set; } = true;
 
+    // AI reminder:
+    // - Item categories/items must point to the shared global library under res://Configs/Items/.
+    // - Scenarios may selectively use shared items, but must not redefine the same ids per scenario.
+    // - Keep UTF-8 when editing config files so existing Chinese text stays intact.
     [Export]
     public string CategoriesConfigPath { get; set; } = string.Empty;
 
@@ -53,6 +57,9 @@ public partial class GameScenarioDefinition : Resource
 
     [Export]
     public string ZonesConfigPath { get; set; } = string.Empty;
+
+    [Export]
+    public string BattleEncountersConfigPath { get; set; } = string.Empty;
 
     [Export]
     public string LocalizationPath { get; set; } = string.Empty;

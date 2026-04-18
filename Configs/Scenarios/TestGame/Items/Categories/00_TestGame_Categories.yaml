@@ -4,6 +4,9 @@
 # - Files are loaded by filename order.
 # - Entries from all files are appended into one logical categories list.
 categories:
+# Legacy scenario-local copy only.
+# The authoritative shared category library lives in res://Configs/Items/Categories.
+# Keep UTF-8 when editing so existing Chinese text stays intact.
   - id: "gathering_material"
     parent_id: ""
     name_key: "采集素材"
@@ -65,4 +68,18 @@ categories:
     name_key: "货币"
     description_key: "用于交易结算的货币实体"
     definition_order: 400
+    is_visible: true
+
+  - id: "special_item"
+    parent_id: ""
+    name_key: "特殊道具"
+    description_key: "用于任务推进、功能开关或特殊交互的道具"
+    definition_order: 500
+    is_visible: true
+
+  - id: "quest_item"
+    parent_id: "special_item"
+    name_key: "任务道具"
+    description_key: "不可出售，通常用于任务与阶段性系统解锁"
+    definition_order: 100
     is_visible: true

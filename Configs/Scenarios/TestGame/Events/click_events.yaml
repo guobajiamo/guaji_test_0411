@@ -33,22 +33,23 @@
 #   用 display_conditions 控制“持有鱼竿且完成对话后才显示”。
 #
 events:
-  - id: "evt_click_chop"
-    name_key: "点击砍树"
-    description_key: "手动砍一下树，立刻获得 1 个原木。"
-    hover_info_key: "手动执行一次砍树动作，适合一点点体验流程时使用。"
-    type: "RepeatableClick"
-    display_condition_count: 0
-    display_conditions: []
-    interaction_condition_count: 1
-    interaction_conditions:
-      - { condition_type: "HasItem", target_id: "tool_stone_axe", required_value: 1 }
-    hide_condition_count: 0
-    hide_conditions: []
-    costs: []
-    effects:
-      - { effect_type: "GrantItem", target_id: "mat_wood_log", int_value: 1 }
-    button_list_group: "MainClick"
+  # 过期测试事件（已停用）：
+  # - id: "evt_click_chop"
+  #   name_key: "点击砍树"
+  #   description_key: "手动砍一下树，立刻获得 1 个原木。"
+  #   hover_info_key: "手动执行一次砍树动作，适合一点点体验流程时使用。"
+  #   type: "RepeatableClick"
+  #   display_condition_count: 0
+  #   display_conditions: []
+  #   interaction_condition_count: 1
+  #   interaction_conditions:
+  #     - { condition_type: "HasItem", target_id: "tool_stone_axe", required_value: 1 }
+  #   hide_condition_count: 0
+  #   hide_conditions: []
+  #   costs: []
+  #   effects:
+  #     - { effect_type: "GrantItem", target_id: "mat_wood_log", int_value: 1 }
+  #   button_list_group: "MainClick"
 
   - id: "evt_get_worm_bait"
     name_key: "获取 3 个蚯蚓鱼饵"

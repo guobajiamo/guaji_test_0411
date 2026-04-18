@@ -39,13 +39,13 @@ public partial class UiFeatureSmokeTest : Node
             Assert(mainTabs.GetChildren().All(child => child.Name != "日志"), "日志页不应该存在于中间区域。");
             Assert(mainTabs.GetChildren().Any(child => child.Name == "系统"), "测试剧本应该显示系统页。");
             Assert(mainTabs.GetChildren().Any(child => child.Name == "当前场景"), "中间区域应该存在“当前场景”页。");
-            Assert(mainTabs.GetChildren().Any(child => child.Name == "战斗"), "中间区域应该存在“战斗”页。");
+            Assert(mainTabs.GetChildren().Any(child => child.Name == "装备"), "中间区域应该存在“装备”页。");
             Assert(mainTabs.GetChildren().Any(child => child.Name == "任务"), "中间区域应该存在“任务”页。");
             Assert(mainTabs.GetChildren().Any(child => child.Name == "教学"), "中间区域应该存在“教学”页。");
             Assert(mainTabs.GetChildren().Any(child => child.Name == "成就"), "中间区域应该存在“成就”页。");
             Assert(!HasButtonContaining(mainUi, "图鉴"), "图鉴页签当前不应显示。");
             Assert(HasButtonContaining(mainUi, "当前场景"), "当前场景页签未显示。");
-            Assert(HasButtonContaining(mainUi, "战斗"), "战斗页签未显示。");
+            Assert(HasButtonContaining(mainUi, "装备"), "装备页签未显示。");
             Assert(HasButtonContaining(mainUi, "任务"), "任务页签未显示。");
             Assert(HasButtonContaining(mainUi, "教学"), "教学页签未显示。");
             Assert(HasButtonContaining(mainUi, "成就"), "成就页签未显示。");
@@ -198,17 +198,17 @@ public partial class UiFeatureSmokeTest : Node
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
             Assert(currentRegionTitleLabel.Text.Contains("魔法之森外围", StringComparison.Ordinal), "切换到“魔法之森外围”后，中间区域标题未同步更新。");
 
-            bool idleStartOk = gameManager.IdleSystem?.StartIdleEvent("evt_idle_chop") ?? false;
-            Assert(idleStartOk, "挂机砍树事件启动失败。");
+            bool idleStartOk = gameManager.IdleSystem?.StartIdleEvent("evt_idle_chop_apple_tree") ?? false;
+            Assert(idleStartOk, "挂机砍苹果树事件启动失败。");
             typedMainUi.RefreshAllPanels();
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-            Assert(gameManager.PlayerProfile.IdleState.IsRunning, "挂机砍树启动后未进入运行状态。");
-            Assert(string.Equals(gameManager.PlayerProfile.IdleState.ActiveEventId, "evt_idle_chop", StringComparison.Ordinal), "挂机砍树启动后记录的活动事件不正确。");
+            Assert(gameManager.PlayerProfile.IdleState.IsRunning, "挂机砍苹果树启动后未进入运行状态。");
+            Assert(string.Equals(gameManager.PlayerProfile.IdleState.ActiveEventId, "evt_idle_chop_apple_tree", StringComparison.Ordinal), "挂机砍苹果树启动后记录的活动事件不正确。");
 
-            bool clickWhileIdleOk = gameManager.ClickEventSystem?.TryTriggerEvent("evt_click_chop") ?? false;
-            Assert(clickWhileIdleOk, "挂机进行中执行点击砍树事件失败。");
+            bool clickWhileIdleOk = gameManager.ClickEventSystem?.TryTriggerEvent("evt_get_worm_bait") ?? false;
+            Assert(clickWhileIdleOk, "挂机进行中执行点击事件失败。");
             Assert(gameManager.PlayerProfile.IdleState.IsRunning, "点击事件错误中断了挂机。");
-            Assert(string.Equals(gameManager.PlayerProfile.IdleState.ActiveEventId, "evt_idle_chop", StringComparison.Ordinal), "点击事件错误切换了挂机目标。");
+            Assert(string.Equals(gameManager.PlayerProfile.IdleState.ActiveEventId, "evt_idle_chop_apple_tree", StringComparison.Ordinal), "点击事件错误切换了挂机目标。");
 
             Assert(gameManager.EventRegistry.Events.Count >= 11, "测试剧本事件配置未成功加载完整。");
 

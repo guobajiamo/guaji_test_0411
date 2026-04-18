@@ -51,7 +51,7 @@ public class PlayerInventory
         return state;
     }
 
-    public void AddItem(string itemId, int amount)
+    public void AddItem(string itemId, int amount, long? acquiredUnixSeconds = null)
     {
         if (amount <= 0)
         {
@@ -63,9 +63,11 @@ public class PlayerInventory
         ItemStack stack = GetOrCreateStack(itemId);
         PlayerItemState state = GetOrCreateItemState(itemId);
         bool wasEmptyBeforeAdd = stack.Quantity <= 0;
+        long resolvedAcquiredUnixSeconds = acquiredUnixSeconds ?? DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
         stack.Add(amount);
         state.IsAcquired = true;
+        state.LatestAcquiredUnixSeconds = resolvedAcquiredUnixSeconds;
 
         if (wasEmptyBeforeAdd)
         {
@@ -103,6 +105,7 @@ public class PlayerInventory
             if (ItemStates.TryGetValue(itemId, out PlayerItemState? state))
             {
                 state.AcquiredSequence = null;
+                state.LatestAcquiredUnixSeconds = null;
                 state.PlayerDisplayOrder = null;
             }
 

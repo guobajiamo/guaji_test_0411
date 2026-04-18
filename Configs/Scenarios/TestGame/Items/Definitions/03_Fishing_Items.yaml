@@ -1,6 +1,9 @@
 # Fishing-related items can be isolated into their own file.
 # This is the recommended pattern for later regional content packs.
 items:
+# Legacy scenario-local copy only.
+# The authoritative shared item library lives in res://Configs/Items/Definitions.
+# Keep UTF-8 when editing so existing Chinese text stays intact.
   - id: "tool_fishing_rod"
     parent_id: "tool"
     name_key: "鱼竿"

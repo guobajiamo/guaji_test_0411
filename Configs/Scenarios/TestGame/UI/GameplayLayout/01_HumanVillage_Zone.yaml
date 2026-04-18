@@ -29,14 +29,14 @@ regions:
             event_ids: []
           - id: "sasaki_carpenter_shop"
             title: "佐佐木木匠屋"
-            description: "村里的木匠作坊，适合放置伐木入门、教程提示与木工相关事件。"
+            description: "村里的木匠作坊，适合放置伐木入门、教程提示与制造相关事件。"
             visibility_condition_count: 0
             visibility_conditions: []
             event_ids:
               - "evt_pickup_stone_axe"
               - "evt_read_chopping_notice"
               - "evt_stranger_reward_offer"
-              - "evt_learn_woodworking"
+              - "evt_learn_manufacturing"
           - id: "fishing_tackle_shop"
             title: "渔具屋"
             description: "用于测试鱼竿、鱼饵和钓鱼按钮解锁逻辑。"
@@ -56,29 +56,28 @@ regions:
               - "evt_forge_iron_axe"
               - "evt_forge_iron_pickaxe"
               - "evt_idle_smith_iron_ingot"
-      - id: "village_outskirts"
-        title: "村外平原"
-        accent: "secondary_peace"
-        visibility_condition_count: 0
-        visibility_conditions: []
-        scenes:
-          - id: "small_grove"
-            title: "小树林"
-            description: "分布着多种树木资源点，可进行采集测试。"
+          - id: "seed_shop"
+            title: "种子店"
+            description: "售卖主食相关作物种子的店铺。"
             visibility_condition_count: 0
             visibility_conditions: []
             event_ids:
-              - "evt_idle_oak_tree"
-              - "evt_idle_plum_tree"
-              - "evt_idle_peach_tree"
-          - id: "charcoal_kiln"
-            title: "炭窑"
-            description: "学习烧炭后可在此持续烧制木炭。"
+              - "evt_buy_rice_seed"
+              - "evt_buy_chili_seed"
+              - "evt_buy_buckwheat_seed"
+              - "evt_buy_cucumber_seed"
+              - "evt_buy_soybean_seed"
+              - "evt_buy_tomato_seed"
+          - id: "general_store"
+            title: "杂货铺"
+            description: "提供基础杂货和特殊主食。"
             visibility_condition_count: 0
             visibility_conditions: []
             event_ids:
-              - "evt_learn_firemaking"
-              - "evt_idle_charcoal_kiln"
+              - "evt_buy_water_bundle"
+              - "evt_buy_salt_bundle"
+              - "evt_buy_seafood_cup_noodles"
+              - "evt_buy_spicy_cup_noodles"
       - id: "guard_office"
         title: "自警队办事处"
         accent: "secondary_peace"
@@ -91,6 +90,25 @@ regions:
             visibility_condition_count: 0
             visibility_conditions: []
             event_ids: []
+          - id: "weapon_armory"
+            title: "武器装备库"
+            description: "用于集中领取测试战斗装备与弹药。"
+            visibility_condition_count: 0
+            visibility_conditions: []
+            event_ids:
+              - "evt_claim_bows_and_ammo"
+              - "evt_claim_slash_weapons"
+              - "evt_claim_pierce_weapons"
+              - "evt_claim_strike_weapons"
+              - "evt_claim_shields"
+              - "evt_claim_armor_sets"
+          - id: "well_pavilion"
+            title: "水井亭"
+            description: "用于挂机打水获取清水。"
+            visibility_condition_count: 0
+            visibility_conditions: []
+            event_ids:
+              - "evt_idle_draw_water"
       - id: "hida_mansion"
         title: "稗田邸"
         accent: "secondary_peace"
@@ -109,4 +127,55 @@ regions:
             visibility_condition_count: 0
             visibility_conditions: []
             event_ids:
+              - "evt_claim_farming_contract_and_seeds"
               - "evt_hieda_family_annex_gift"
+              - "evt_gift_staple_seeds"
+              - "evt_gift_staple_ingredients"
+              - "evt_gift_staple_foods"
+      - id: "village_outskirts"
+        title: "村外平原"
+        accent: "secondary_peace"
+        visibility_condition_count: 0
+        visibility_conditions: []
+        scenes:
+          - id: "training_ground"
+            title: "村口练武场"
+            description: "用于测试战斗系统的低阶怪物练习场。"
+            visibility_condition_count: 0
+            visibility_conditions: []
+            event_ids:
+              - "evt_battle_kedama"
+              - "evt_battle_small_fairy"
+              - "evt_battle_rabbit_beast"
+              - "evt_battle_rumia"
+          - id: "small_grove"
+            title: "小树林"
+            description: "分布着多种树木资源点，可进行采集测试。"
+            visibility_condition_count: 0
+            visibility_conditions: []
+            event_ids:
+              - "evt_idle_oak_tree"
+              - "evt_idle_plum_tree"
+              - "evt_idle_peach_tree"
+          - id: "rocky_shore"
+            title: "碎石滩"
+            description: "可进行基础采矿测试。"
+            visibility_condition_count: 0
+            visibility_conditions: []
+            event_ids:
+              - "evt_idle_iron_vein"
+          - id: "my_farmland"
+            title: "我的农田"
+            description: "用于管理与操作全部农田地块。"
+            visibility_condition_count: 0
+            visibility_conditions: []
+            event_ids:
+              - "evt_go_to_my_farmland"
+          - id: "charcoal_kiln"
+            title: "炭窑"
+            description: "学习烧炭后可在此持续烧制木炭。"
+            visibility_condition_count: 0
+            visibility_conditions: []
+            event_ids:
+              - "evt_learn_firemaking"
+              - "evt_idle_charcoal_kiln"

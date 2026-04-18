@@ -25,4 +25,7 @@ public partial class SignalBus : Node
 
     [Signal]
     public delegate void ActiveIdleEventChangedEventHandler(string eventId);
+
+    [Signal]
+    public delegate void GatheringNodeStateChangedEventHandler(string eventId);
 }

@@ -6,6 +6,9 @@
 # 3. entry order inside the file
 # 4. id
 items:
+# Legacy scenario-local copy only.
+# The authoritative shared item library lives in res://Configs/Items/Definitions.
+# Keep UTF-8 when editing so existing Chinese text stays intact.
   - id: "tool_stone_axe"
     parent_id: "tool"
     name_key: "石斧"

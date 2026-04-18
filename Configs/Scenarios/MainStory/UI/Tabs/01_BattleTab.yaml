@@ -2,7 +2,7 @@ tabs:
   - id: "battle"
     title: "战斗"
     visible: true
-    placeholder_title: "战斗页预留"
+    placeholder_title: "战斗页说明"
     content_lines:
-      - "正式主线剧本暂未配置战斗内容。"
-      - "这里预留给后续战斗场景、战斗结果与战斗属性说明。"
+      - "这里用于进入战斗待机、选择对手并查看掉落与实时战斗信息。"
+      - "主线剧本后续新增战斗副本时，同样通过这个独立战斗页承接。"

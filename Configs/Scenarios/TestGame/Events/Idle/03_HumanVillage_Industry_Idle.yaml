@@ -1,4 +1,22 @@
 events:
+  - id: "evt_idle_draw_water"
+    name_key: "打水"
+    description_key: "从水井亭持续打水。"
+    hover_info_key: "基础读条 1.0 秒，每轮获得清水 x1。该事件不依赖技能，但会受全局挂机速度和产出加成影响。"
+    type: "IdleLoop"
+    display_condition_count: 0
+    display_conditions: []
+    interaction_condition_count: 0
+    interaction_conditions: []
+    hide_condition_count: 0
+    hide_conditions: []
+    base_interval_seconds: 1.0
+    base_output_amount: 1.0
+    costs: []
+    rewards:
+      - { item_id: "mat_water", amount: 1, drop_chance: 1.0 }
+    button_list_group: "MainIdle"
+
   - id: "evt_idle_smith_iron_ingot"
     name_key: "锻造铁锭"
     description_key: "持续消耗木炭与铁矿石，自动锻造铁锭。"
@@ -40,8 +58,8 @@ events:
 
   - id: "evt_idle_oak_tree"
     name_key: "橡树"
-    description_key: "稳定产出原木的基础采集点。"
-    hover_info_key: "每次采集固定获得原木 x5。"
+    description_key: "稳定产出原木的基础采集点，并有概率掉落橡树种子。"
+    hover_info_key: "每次采集固定获得原木 x5，并有小概率额外掉落橡树种子。"
     type: "IdleLoop"
     display_condition_count: 0
     display_conditions: []
@@ -54,6 +72,7 @@ events:
     costs: []
     rewards:
       - { item_id: "mat_wood_log", amount: 5, drop_chance: 1.0 }
+      - { item_id: "mat_oak_seed", amount: 1, drop_chance: 0.1 }
     linked_skill_id: "skill_chopping"
     button_list_group: "MainIdle"
 
@@ -97,4 +116,24 @@ events:
       - { item_id: "mat_peach", amount: 1, drop_chance: 0.5 }
       - { item_id: "mat_peach_seed", amount: 1, drop_chance: 0.1 }
     linked_skill_id: "skill_chopping"
+    button_list_group: "MainIdle"
+
+  - id: "evt_idle_iron_vein"
+    name_key: "铁矿脉"
+    description_key: "稳定产出铁矿石的基础采矿点。"
+    hover_info_key: "每次采集固定获得铁矿石 x5。"
+    type: "IdleLoop"
+    display_condition_count: 0
+    display_conditions: []
+    interaction_condition_count: 1
+    interaction_conditions:
+      - { condition_type: "HasItem", target_id: "tool_iron_pickaxe", required_value: 1 }
+    hide_condition_count: 0
+    hide_conditions: []
+    resource_cap: 20
+    resource_recover_seconds_per_point: 10
+    costs: []
+    rewards:
+      - { item_id: "mat_iron_ore", amount: 5, drop_chance: 1.0 }
+    linked_skill_id: "skill_mining"
     button_list_group: "MainIdle"

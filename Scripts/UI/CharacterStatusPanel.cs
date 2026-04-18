@@ -5,6 +5,7 @@ using System.Linq;
 using Test00_0410.Autoload;
 using Test00_0410.Core.Definitions;
 using Test00_0410.Core.Enums;
+using Test00_0410.Core.Helpers;
 using Test00_0410.Core.Runtime;
 using Test00_0410.Systems;
 
@@ -61,7 +62,8 @@ public partial class CharacterStatusPanel : Control
 
         bool idleRunning = _gameManager.PlayerProfile.IdleState.IsRunning;
         bool hasTimedBuff = _gameManager.BuffSystem?.GetActiveBuffs().Any(buff => buff.IsTimed) == true;
-        return idleRunning || hasTimedBuff;
+        bool hasActiveStaple = _gameManager.StapleFoodSystem?.GetActiveStaple() != null;
+        return idleRunning || hasTimedBuff || hasActiveStaple;
     }
 
     public void RefreshStatus()
@@ -148,6 +150,7 @@ public partial class CharacterStatusPanel : Control
             && !string.IsNullOrWhiteSpace(profile.IdleState.ActiveEventId))
         {
             string eventId = profile.IdleState.ActiveEventId;
+            bool isWaitingForRecovery = _gameManager.IdleSystem.IsWaitingForGatheringRecovery(eventId);
             string eventName = _gameManager.GetEventDisplayName(eventId);
             if (eventName.StartsWith("挂机", StringComparison.Ordinal))
             {
@@ -156,12 +159,20 @@ public partial class CharacterStatusPanel : Control
 
             GameplayActionContext? context = _actionContextResolver?.Invoke(eventId);
             targetText = context.HasValue
-                ? $"正在{context.Value.SceneTitle}{eventName}"
-                : $"正在{eventName}";
+                ? isWaitingForRecovery
+                    ? $"正在{context.Value.SceneTitle}等待{eventName}资源恢复"
+                    : $"正在{context.Value.SceneTitle}采集{eventName}"
+                : isWaitingForRecovery
+                    ? $"正在等待{eventName}资源恢复"
+                    : $"正在采集{eventName}";
             tooltip = context.HasValue
-                ? $"当前正在 {context.Value.AreaTitle} / {context.Value.SceneTitle} 执行 {eventName}。"
-                : $"当前正在执行 {eventName}。";
-            progressRatio = _gameManager.IdleSystem.GetProgressRatio(eventId);
+                ? isWaitingForRecovery
+                    ? $"当前正在 {context.Value.AreaTitle} / {context.Value.SceneTitle} 等待 {eventName} 资源恢复。"
+                    : $"当前正在 {context.Value.AreaTitle} / {context.Value.SceneTitle} 采集 {eventName}。"
+                : isWaitingForRecovery
+                    ? $"当前正在等待 {eventName} 资源恢复。"
+                    : $"当前正在采集 {eventName}。";
+            progressRatio = isWaitingForRecovery ? 0.0 : _gameManager.IdleSystem.GetProgressRatio(eventId);
         }
 
         return new StatusSectionData
@@ -229,6 +240,21 @@ public partial class CharacterStatusPanel : Control
     private StatusSectionData BuildStatusSection(PlayerProfile profile)
     {
         List<StatusItemData> items = new();
+        if (_gameManager?.StapleFoodSystem != null)
+        {
+            StapleFoodSystem.ActiveStapleView? staple = _gameManager.StapleFoodSystem.GetActiveStaple();
+            if (staple != null)
+            {
+                items.Add(new StatusItemData
+                {
+                    DynamicKey = $"staple:{staple.StapleId}",
+                    Text = $"主食：{staple.DisplayName}({FormatDuration(staple.RemainingSeconds)})",
+                    TooltipText = BuildStapleTooltip(staple),
+                    IsAccent = true
+                });
+            }
+        }
+
         if (_gameManager?.BuffSystem != null)
         {
             foreach (BuffSystem.ActiveBuffView buff in _gameManager.BuffSystem.GetActiveBuffs())
@@ -719,6 +745,43 @@ public partial class CharacterStatusPanel : Control
         return lines.Count == 0 ? "暂无说明。" : string.Join("\n", lines);
     }
 
+    private static string BuildStapleTooltip(StapleFoodSystem.ActiveStapleView staple)
+    {
+        List<string> lines = new();
+        if (!string.IsNullOrWhiteSpace(staple.Description))
+        {
+            lines.Add(staple.Description);
+        }
+
+        lines.Add($"剩余时间：{FormatDuration(staple.RemainingSeconds)}");
+        lines.Add($"生命上限：+{staple.BattleStats.MaxHpFlat:0.##}");
+
+        if (staple.BattleStats.RegenHps > 0.0)
+        {
+            lines.Add($"生命回复：+{staple.BattleStats.RegenHps:0.##}/秒");
+        }
+
+        if (staple.BattleStats.DamageAddPercent != 0.0)
+        {
+            lines.Add($"伤害加成：{staple.BattleStats.DamageAddPercent:P0}");
+        }
+
+        if (staple.BattleStats.CritChance != 0.0)
+        {
+            lines.Add($"暴击率：{staple.BattleStats.CritChance:P0}");
+        }
+
+        if (staple.BattleStats.AttackIntervalPercent != 0.0)
+        {
+            double speedPercent = -staple.BattleStats.AttackIntervalPercent;
+            lines.Add(speedPercent >= 0.0
+                ? $"攻速加成：{speedPercent:P0}"
+                : $"攻击间隔增加：{Math.Abs(speedPercent):P0}");
+        }
+
+        return string.Join("\n", lines);
+    }
+
     private string DescribeBuffModifier(BuffStatModifierDefinition modifier)
     {
         if (string.IsNullOrWhiteSpace(modifier.StatId))
@@ -751,6 +814,22 @@ public partial class CharacterStatusPanel : Control
         {
             statName = "采集产出";
         }
+        else if (string.Equals(modifier.StatId, SettlementStatIds.BattlePlayerMaxHpMultiplier, StringComparison.Ordinal))
+        {
+            statName = "战斗生命上限";
+        }
+        else if (string.Equals(modifier.StatId, SettlementStatIds.BattlePlayerActionSpeedMultiplier, StringComparison.Ordinal))
+        {
+            statName = "战斗行动速度";
+        }
+        else if (string.Equals(modifier.StatId, SettlementStatIds.DropRareChanceMultiplier, StringComparison.Ordinal))
+        {
+            statName = "稀有物品掉率";
+        }
+        else if (string.Equals(modifier.StatId, SettlementStatIds.DropChanceMultiplier, StringComparison.Ordinal))
+        {
+            statName = "物品掉率";
+        }
 
         if (modifier.Multiplier > 0.0
             && (modifier.StatId.StartsWith(speedPrefix, StringComparison.Ordinal)
@@ -758,6 +837,13 @@ public partial class CharacterStatusPanel : Control
         {
             double timePercent = 100.0 / modifier.Multiplier;
             return $"{statName}倍率 x{modifier.Multiplier:0.###}（读条耗时约为原来的 {timePercent:0.#}%）";
+        }
+
+        if (modifier.Multiplier > 0.0
+            && string.Equals(modifier.StatId, SettlementStatIds.BattlePlayerActionSpeedMultiplier, StringComparison.Ordinal))
+        {
+            double timePercent = 100.0 / modifier.Multiplier;
+            return $"{statName}倍率 x{modifier.Multiplier:0.###}（攻击间隔约为原来的 {timePercent:0.#}%）";
         }
 
         return $"{statName}倍率 x{modifier.Multiplier:0.###}";

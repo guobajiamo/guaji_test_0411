@@ -51,10 +51,10 @@ events:
       - { effect_type: "GrantItem", target_id: "tool_iron_pickaxe", int_value: 1 }
     button_list_group: "MainOneshot"
 
-  - id: "evt_learn_woodworking"
-    name_key: "学习木工"
-    description_key: "向佐佐木木匠学习木工基础。"
-    hover_info_key: "互动后自动习得木工技能。"
+  - id: "evt_learn_manufacturing"
+    name_key: "学习制造"
+    description_key: "向佐佐木木匠学习制造基础。"
+    hover_info_key: "互动后自动习得制造技能。"
     type: "OneshotClick"
     display_condition_count: 0
     display_conditions: []
@@ -64,7 +64,7 @@ events:
     hide_conditions: []
     costs: []
     effects:
-      - { effect_type: "LearnSkill", target_id: "skill_woodworking", int_value: 1 }
+      - { effect_type: "LearnSkill", target_id: "skill_manufacturing", int_value: 1 }
     button_list_group: "MainOneshot"
 
   - id: "evt_learn_cooking"
@@ -125,4 +125,100 @@ events:
       - { effect_type: "GrantItem", target_id: "mat_iron_ingot", int_value: 1000 }
       - { effect_type: "GrantItem", target_id: "mat_wood_log", int_value: 1000 }
       - { effect_type: "GrantItem", target_id: "mat_charcoal", int_value: 1000 }
+    button_list_group: "MainOneshot"
+
+  - id: "evt_claim_farming_contract_and_seeds"
+    name_key: "获得务农合同与种子"
+    description_key: "领取务农劳务合同与基础树种子礼包。"
+    hover_info_key: "一次性获得可签署的务农合同，以及四种树种子各 100 份。"
+    type: "OneshotClick"
+    display_condition_count: 0
+    display_conditions: []
+    interaction_condition_count: 0
+    interaction_conditions: []
+    hide_condition_count: 0
+    hide_conditions: []
+    costs: []
+    effects:
+      - { effect_type: "GrantItem", target_id: "item_farming_contract", int_value: 1 }
+      - { effect_type: "GrantItem", target_id: "mat_oak_seed", int_value: 100 }
+      - { effect_type: "GrantItem", target_id: "mat_plum_seed", int_value: 100 }
+      - { effect_type: "GrantItem", target_id: "mat_peach_seed", int_value: 100 }
+      - { effect_type: "GrantItem", target_id: "mat_apple_seed", int_value: 100 }
+    button_list_group: "MainOneshot"
+
+  - id: "evt_gift_staple_seeds"
+    name_key: "赠送主食种子"
+    description_key: "一次性领取主食系统测试用种子。"
+    hover_info_key: "获得水稻、辣椒、荞麦、黄瓜、大豆、番茄种子各 100 个。"
+    type: "OneshotClick"
+    display_condition_count: 0
+    display_conditions: []
+    interaction_condition_count: 0
+    interaction_conditions: []
+    hide_condition_count: 0
+    hide_conditions: []
+    costs: []
+    effects:
+      - { effect_type: "GrantItem", target_id: "seed_rice", int_value: 100 }
+      - { effect_type: "GrantItem", target_id: "seed_chili", int_value: 100 }
+      - { effect_type: "GrantItem", target_id: "seed_buckwheat", int_value: 100 }
+      - { effect_type: "GrantItem", target_id: "seed_cucumber", int_value: 100 }
+      - { effect_type: "GrantItem", target_id: "seed_soybean", int_value: 100 }
+      - { effect_type: "GrantItem", target_id: "seed_tomato", int_value: 100 }
+    button_list_group: "MainOneshot"
+
+  - id: "evt_gift_staple_ingredients"
+    name_key: "赠送食材"
+    description_key: "一次性领取主食与配套料理测试食材。"
+    hover_info_key: "获得稻米、辣椒、荞麦、清水、黄瓜、虾、盐、大豆、味噌、番茄、鲤鱼各 1000 个。"
+    type: "OneshotClick"
+    display_condition_count: 0
+    display_conditions: []
+    interaction_condition_count: 0
+    interaction_conditions: []
+    hide_condition_count: 0
+    hide_conditions: []
+    costs: []
+    effects:
+      - { effect_type: "GrantItem", target_id: "mat_rice", int_value: 1000 }
+      - { effect_type: "GrantItem", target_id: "mat_chili", int_value: 1000 }
+      - { effect_type: "GrantItem", target_id: "mat_buckwheat", int_value: 1000 }
+      - { effect_type: "GrantItem", target_id: "mat_water", int_value: 1000 }
+      - { effect_type: "GrantItem", target_id: "mat_cucumber", int_value: 1000 }
+      - { effect_type: "GrantItem", target_id: "mat_shrimp", int_value: 1000 }
+      - { effect_type: "GrantItem", target_id: "mat_salt", int_value: 1000 }
+      - { effect_type: "GrantItem", target_id: "mat_soybean", int_value: 1000 }
+      - { effect_type: "GrantItem", target_id: "mat_miso", int_value: 1000 }
+      - { effect_type: "GrantItem", target_id: "mat_tomato", int_value: 1000 }
+      - { effect_type: "GrantItem", target_id: "mat_carp", int_value: 1000 }
+    button_list_group: "MainOneshot"
+
+  - id: "evt_gift_staple_foods"
+    name_key: "赠送主食"
+    description_key: "一次性领取全部主食测试样本。"
+    hover_info_key: "获得本次实例化的 14 种主食各 100 个。"
+    type: "OneshotClick"
+    display_condition_count: 0
+    display_conditions: []
+    interaction_condition_count: 0
+    interaction_conditions: []
+    hide_condition_count: 0
+    hide_conditions: []
+    costs: []
+    effects:
+      - { effect_type: "GrantItem", target_id: "food_rice_porridge", int_value: 100 }
+      - { effect_type: "GrantItem", target_id: "food_plum_ochazuke", int_value: 100 }
+      - { effect_type: "GrantItem", target_id: "food_spicy_rice_ball", int_value: 100 }
+      - { effect_type: "GrantItem", target_id: "food_cold_buckwheat_noodles", int_value: 100 }
+      - { effect_type: "GrantItem", target_id: "food_tempura_buckwheat", int_value: 100 }
+      - { effect_type: "GrantItem", target_id: "food_spicy_buckwheat", int_value: 100 }
+      - { effect_type: "GrantItem", target_id: "food_mixed_grain_porridge", int_value: 100 }
+      - { effect_type: "GrantItem", target_id: "food_miso_stew", int_value: 100 }
+      - { effect_type: "GrantItem", target_id: "food_mapo_tofu", int_value: 100 }
+      - { effect_type: "GrantItem", target_id: "food_tomato_cold_buckwheat", int_value: 100 }
+      - { effect_type: "GrantItem", target_id: "food_tomato_braised_fish", int_value: 100 }
+      - { effect_type: "GrantItem", target_id: "food_spicy_tomato_hotpot", int_value: 100 }
+      - { effect_type: "GrantItem", target_id: "food_seafood_cup_noodles", int_value: 100 }
+      - { effect_type: "GrantItem", target_id: "food_spicy_cup_noodles", int_value: 100 }
     button_list_group: "MainOneshot"

@@ -28,6 +28,23 @@ public class PlayerProfile
     /// </summary>
     public PlayerUiState UiState { get; set; } = new();
 
+    /// <summary>
+    /// 玩家当前装备状态。
+    /// 当前仅维护槽位与物品的绑定关系，后续战斗结算可直接复用。
+    /// </summary>
+    public PlayerEquipmentState EquipmentState { get; set; } = new();
+
+    /// <summary>
+    /// 种田系统运行态。
+    /// </summary>
+    public PlayerFarmingState FarmingState { get; set; } = new();
+
+    /// <summary>
+    /// 主食系统运行态。
+    /// 记录当前真正生效的主食与自动续吃开关。
+    /// </summary>
+    public PlayerStapleFoodState StapleFoodState { get; set; } = new();
+
     public Dictionary<string, PlayerSkillState> SkillStates { get; } = new();
 
     public Dictionary<string, PlayerFactionState> FactionStates { get; } = new();
@@ -55,6 +72,8 @@ public class PlayerProfile
     public Dictionary<string, PlayerShopState> ShopStates { get; } = new();
 
     public Dictionary<string, double> BattleStats { get; } = new();
+
+    public HashSet<string> ClearedBattleEncounterIds { get; } = new();
 
     public HashSet<string> UnlockedAchievementIds { get; } = new();
 

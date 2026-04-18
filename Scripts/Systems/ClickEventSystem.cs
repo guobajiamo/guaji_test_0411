@@ -246,7 +246,7 @@ public partial class ClickEventSystem : Node
                 _profile.CompletedQuestIds.Add(effect.TargetId);
                 break;
             case EventEffectType.StartBattle:
-                // 后续交给 BattleSystem 处理。
+                GameManager.Instance?.BattleSystem?.StartBattle(effect.TargetId);
                 break;
             case EventEffectType.UnlockAchievement:
                 GameManager.Instance?.AchievementSystem?.UnlockAchievement(effect.TargetId);
@@ -254,6 +254,15 @@ public partial class ClickEventSystem : Node
             case EventEffectType.LearnSkill:
                 int learnLevel = effect.IntValue <= 0 ? 1 : effect.IntValue;
                 _skillSystem?.TryLearnSkill(effect.TargetId, learnLevel);
+                break;
+            case EventEffectType.SwitchToSkillMode:
+                _profile.UiState.IsSkillSidebarMode = true;
+                if (!string.IsNullOrWhiteSpace(effect.TargetId))
+                {
+                    _profile.UiState.SelectedSkillId = effect.TargetId;
+                }
+
+                _profile.UiState.SelectedTabId = "current_region";
                 break;
         }
     }

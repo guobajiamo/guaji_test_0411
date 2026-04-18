@@ -1,3 +1,7 @@
+# Legacy scenario-local stub only.
+# The authoritative shared category library lives in res://Configs/Items/Categories.
+# Keep UTF-8 when editing so existing Chinese text stays intact.
+#
 # 本文件是“正式剧本专用分类树”。
 # 当前写成空数组，表示正式剧本暂时还没有独立分类配置。
 #

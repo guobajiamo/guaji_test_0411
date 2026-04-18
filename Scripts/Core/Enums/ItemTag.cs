@@ -1,14 +1,9 @@
-using System;
+﻿using System;
 
 namespace Test00_0410.Core.Enums;
 
-/// <summary>
-/// 物品标签。
-/// 这里使用位标记，表示一个物品可以同时拥有多个标签。
-/// 例如“柴火”可以同时是 Material 和 Fuel。
-/// </summary>
 [Flags]
-public enum ItemTag
+public enum ItemTag : long
 {
     None = 0,
     Material = 1 << 0,
@@ -28,5 +23,20 @@ public enum ItemTag
     Valuable = 1 << 14,
     Junk = 1 << 15,
     Other = 1 << 16,
-    Pickaxe = 1 << 17
+    Pickaxe = 1 << 17,
+    Seed = 1 << 18,
+    Gloves = 1 << 19,
+    Pants = 1 << 20,
+    Boots = 1 << 21,
+    Necklace = 1 << 22,
+    Ring = 1 << 23,
+    Cloak = 1 << 24,
+    Accessory = 1 << 25,
+    Ammo = 1 << 26,
+    Shield = 1 << 27,
+    Melee = 1L << 28,
+    Ranged = 1L << 29,
+    Slash = 1L << 30,
+    Pierce = 1L << 31,
+    Strike = 1L << 32
 }

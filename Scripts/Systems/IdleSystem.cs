@@ -51,9 +51,17 @@ public partial class IdleSystem : Node
         PlayerIdleState idleState = _profile.IdleState;
         idleState.ActiveEventId = eventId;
         idleState.IsRunning = true;
+        idleState.IsWaitingForGatheringRecovery = false;
         idleState.AccumulatedProgressSeconds = 0.0;
         idleState.PendingOutputFraction = 0.0;
         idleState.LastProgressUnixSeconds = GetNowUnixSeconds();
+        if (_eventRegistry?.GetEvent(eventId) is EventDefinition definition
+            && definition.HasResourceCap
+            && GetAvailableGatheringAmount(definition) <= 0)
+        {
+            idleState.IsWaitingForGatheringRecovery = true;
+        }
+
         EmitIdleEventChanged(eventId);
         return true;
     }
@@ -65,6 +73,7 @@ public partial class IdleSystem : Node
             PlayerIdleState idleState = _profile.IdleState;
             idleState.ActiveEventId = string.Empty;
             idleState.IsRunning = false;
+            idleState.IsWaitingForGatheringRecovery = false;
             idleState.AccumulatedProgressSeconds = 0.0;
             idleState.PendingOutputFraction = 0.0;
             idleState.LastProgressUnixSeconds = GetNowUnixSeconds();
@@ -113,6 +122,14 @@ public partial class IdleSystem : Node
             && string.Equals(_profile.IdleState.ActiveEventId, eventId, StringComparison.Ordinal);
     }
 
+    public bool IsWaitingForGatheringRecovery(string eventId)
+    {
+        return _profile != null
+            && _profile.IdleState.IsRunning
+            && _profile.IdleState.IsWaitingForGatheringRecovery
+            && string.Equals(_profile.IdleState.ActiveEventId, eventId, StringComparison.Ordinal);
+    }
+
     public bool ShouldShowEvent(string eventId)
     {
         if (_profile == null || _eventRegistry == null || _skillRegistry == null)
@@ -126,8 +143,11 @@ public partial class IdleSystem : Node
             return false;
         }
 
-        return !string.IsNullOrWhiteSpace(definition.LinkedSkillId)
-            && _skillRegistry.GetSkill(definition.LinkedSkillId) != null
+        bool hasBoundSkill = !string.IsNullOrWhiteSpace(definition.LinkedSkillId)
+            && _skillRegistry.GetSkill(definition.LinkedSkillId) != null;
+        bool hasGenericIdleConfig = string.IsNullOrWhiteSpace(definition.LinkedSkillId)
+            && definition.BaseIntervalSeconds > 0.0;
+        return (hasBoundSkill || hasGenericIdleConfig)
             && EventAvailabilityEvaluator.ShouldShowButton(_profile, definition);
     }
 
@@ -140,10 +160,8 @@ public partial class IdleSystem : Node
         }
 
         bool hasCostsForAtLeastOneCycle = GetAffordableCycleCount(eventDefinition, 1) > 0;
-        bool hasGatheringResource = !eventDefinition.HasResourceCap || GetAvailableGatheringAmount(eventDefinition) > 0;
         return EventAvailabilityEvaluator.CanInteractButton(_profile, eventDefinition)
-            && hasCostsForAtLeastOneCycle
-            && hasGatheringResource;
+            && hasCostsForAtLeastOneCycle;
     }
 
     public double GetProgressRatio(string eventId)
@@ -153,17 +171,18 @@ public partial class IdleSystem : Node
             return 0.0;
         }
 
-        if (!TryResolveIdleContext(eventId, out _, out SkillDefinition? skillDefinition, out SkillLevelEntry? levelEntry, out ItemDefinition? tool))
+        if (IsWaitingForGatheringRecovery(eventId))
         {
             return 0.0;
         }
 
-        if (skillDefinition == null || levelEntry == null)
+        if (!TryResolveIdleContext(eventId, out EventDefinition? definition, out SkillDefinition? skillDefinition, out SkillLevelEntry? levelEntry, out ItemDefinition? tool)
+            || definition == null)
         {
             return 0.0;
         }
 
-        double interval = GetEffectiveIntervalSeconds(skillDefinition.Id, levelEntry, tool);
+        double interval = GetEffectiveIntervalSeconds(definition, skillDefinition, levelEntry, tool);
         if (interval <= 0.0)
         {
             return 0.0;
@@ -225,7 +244,7 @@ public partial class IdleSystem : Node
             return;
         }
 
-        if (eventDefinition == null || skillDefinition == null || levelEntry == null)
+        if (eventDefinition == null)
         {
             StopIdleEvent();
             GameManager.Instance?.AddGameLog("Idle stopped: context was incomplete.");
@@ -233,8 +252,8 @@ public partial class IdleSystem : Node
         }
 
         EventDefinition resolvedEventDefinition = eventDefinition;
-        SkillDefinition resolvedSkillDefinition = skillDefinition;
-        SkillLevelEntry resolvedLevelEntry = levelEntry;
+        SkillDefinition? resolvedSkillDefinition = skillDefinition;
+        SkillLevelEntry? resolvedLevelEntry = levelEntry;
 
         if (!EventAvailabilityEvaluator.CanInteractButton(_profile, resolvedEventDefinition))
         {
@@ -243,10 +262,26 @@ public partial class IdleSystem : Node
             return;
         }
 
-        double interval = GetEffectiveIntervalSeconds(resolvedSkillDefinition.Id, resolvedLevelEntry, tool);
+        double interval = GetEffectiveIntervalSeconds(resolvedEventDefinition, resolvedSkillDefinition, resolvedLevelEntry, tool);
         if (interval <= 0.0)
         {
             return;
+        }
+
+        if (resolvedEventDefinition.HasResourceCap)
+        {
+            int availableGatheringAmountNow = GetAvailableGatheringAmount(resolvedEventDefinition);
+            if (availableGatheringAmountNow <= 0)
+            {
+                EnterGatheringRecoveryWait(resolvedEventDefinition);
+                return;
+            }
+
+            ExitGatheringRecoveryWaitIfNeeded();
+        }
+        else
+        {
+            ExitGatheringRecoveryWaitIfNeeded();
         }
 
         int completedCycles = (int)Math.Floor(idleState.AccumulatedProgressSeconds / interval);
@@ -268,6 +303,12 @@ public partial class IdleSystem : Node
         }
         if (affordableCycles <= 0)
         {
+            if (resolvedEventDefinition.HasResourceCap && GetAvailableGatheringAmount(resolvedEventDefinition) <= 0)
+            {
+                EnterGatheringRecoveryWait(resolvedEventDefinition);
+                return;
+            }
+
             StopIdleEvent();
             string eventName = GameManager.Instance?.TranslateText(resolvedEventDefinition.NameKey) ?? resolvedEventDefinition.NameKey;
             string reason = wasLimitedByResourceCap
@@ -290,22 +331,29 @@ public partial class IdleSystem : Node
             ConsumeGatheringAmount(resolvedEventDefinition, affordableCycles);
         }
 
-        bool hasPrimaryOutputRewardOverride = resolvedEventDefinition.Rewards.Any(reward =>
-            string.Equals(reward.ItemId, resolvedSkillDefinition.PrimaryOutputItemId, StringComparison.Ordinal)
-            && reward.DropChance >= 0.999999);
+        bool hasPrimaryOutputRewardOverride = resolvedSkillDefinition != null
+            && !string.IsNullOrWhiteSpace(resolvedSkillDefinition.PrimaryOutputItemId)
+            && resolvedEventDefinition.Rewards.Any(reward =>
+                string.Equals(reward.ItemId, resolvedSkillDefinition.PrimaryOutputItemId, StringComparison.Ordinal)
+                && reward.DropChance >= 0.999999);
         int wholeOutput = 0;
         if (!hasPrimaryOutputRewardOverride)
         {
             double toolYieldMultiplier = tool?.ToolBonuses.LogYieldMultiplier ?? 1.0;
-            double settledOutput = _settlementService.ResolveIdleOutput(
-                resolvedSkillDefinition.Id,
-                affordableCycles * resolvedLevelEntry.Output,
-                toolYieldMultiplier);
+            double baseOutput = resolvedSkillDefinition != null && resolvedLevelEntry != null
+                ? affordableCycles * resolvedLevelEntry.Output
+                : affordableCycles * Math.Max(1.0, resolvedEventDefinition.BaseOutputAmount);
+            double settledOutput = resolvedSkillDefinition != null
+                ? _settlementService.ResolveIdleOutput(
+                    resolvedSkillDefinition.Id,
+                    baseOutput,
+                    toolYieldMultiplier)
+                : baseOutput * Math.Max(0.0, toolYieldMultiplier);
             double outputWithFraction = settledOutput + idleState.PendingOutputFraction;
             wholeOutput = (int)Math.Floor(outputWithFraction);
             idleState.PendingOutputFraction = outputWithFraction - wholeOutput;
 
-            if (wholeOutput > 0)
+            if (wholeOutput > 0 && resolvedSkillDefinition != null && !string.IsNullOrWhiteSpace(resolvedSkillDefinition.PrimaryOutputItemId))
             {
                 _settlementService.AddItem(resolvedSkillDefinition.PrimaryOutputItemId, wholeOutput);
             }
@@ -317,30 +365,70 @@ public partial class IdleSystem : Node
 
         Dictionary<string, int> rewardGrantSummary = ApplyEventRewardsForCycles(resolvedEventDefinition, resolvedSkillDefinition, affordableCycles);
 
-        int expPerCycle = Math.Max(1, (int)Math.Round(resolvedLevelEntry.Interval, MidpointRounding.AwayFromZero));
-        double baseTotalExp = affordableCycles * expPerCycle;
-        double settledTotalExp = _settlementService.ResolveGrantedSkillExp(resolvedSkillDefinition.Id, baseTotalExp);
-        _settlementService.GrantSkillExp(resolvedSkillDefinition.Id, baseTotalExp);
+        double settledTotalExp = 0.0;
+        if (resolvedSkillDefinition != null && resolvedLevelEntry != null)
+        {
+            int expPerCycle = Math.Max(1, (int)Math.Round(resolvedLevelEntry.Interval, MidpointRounding.AwayFromZero));
+            double baseTotalExp = affordableCycles * expPerCycle;
+            settledTotalExp = _settlementService.ResolveGrantedSkillExp(resolvedSkillDefinition.Id, baseTotalExp);
+            _settlementService.GrantSkillExp(resolvedSkillDefinition.Id, baseTotalExp);
+        }
 
         string resolvedEventName = GameManager.Instance?.TranslateText(resolvedEventDefinition.NameKey) ?? resolvedEventDefinition.NameKey;
-        string outputName = GameManager.Instance?.GetItemDisplayName(resolvedSkillDefinition.PrimaryOutputItemId) ?? resolvedSkillDefinition.PrimaryOutputItemId;
+        string outputName = resolvedSkillDefinition == null || string.IsNullOrWhiteSpace(resolvedSkillDefinition.PrimaryOutputItemId)
+            ? "无"
+            : GameManager.Instance?.GetItemDisplayName(resolvedSkillDefinition.PrimaryOutputItemId) ?? resolvedSkillDefinition.PrimaryOutputItemId;
         string rewardSummary = rewardGrantSummary.Count == 0
             ? string.Empty
             : $", rewards: {string.Join(", ", rewardGrantSummary.Select(pair => $"+{pair.Value} {(GameManager.Instance?.GetItemDisplayName(pair.Key) ?? pair.Key)}"))}";
-        GameManager.Instance?.AddGameLog($"Idle settled: {resolvedEventName} x{affordableCycles}, item +{wholeOutput} {outputName}{rewardSummary}, exp +{settledTotalExp:0}.");
+        string expSummary = settledTotalExp > 0.0 ? $", exp +{settledTotalExp:0}" : string.Empty;
+        GameManager.Instance?.AddGameLog($"Idle settled: {resolvedEventName} x{affordableCycles}, item +{wholeOutput} {outputName}{rewardSummary}{expSummary}.");
 
         if (affordableCycles < completedCycles)
         {
-            StopIdleEvent();
             if (resolvedEventDefinition.HasResourceCap && GetAvailableGatheringAmount(resolvedEventDefinition) <= 0)
             {
-                GameManager.Instance?.AddGameLog($"Idle stopped: gathering resource cap reached for {resolvedEventName}.");
+                EnterGatheringRecoveryWait(resolvedEventDefinition);
             }
             else
             {
+                StopIdleEvent();
                 GameManager.Instance?.AddGameLog($"Idle stopped: costs depleted for {resolvedEventName}.");
             }
         }
+    }
+
+    private void EnterGatheringRecoveryWait(EventDefinition definition)
+    {
+        if (_profile == null)
+        {
+            return;
+        }
+
+        PlayerIdleState idleState = _profile.IdleState;
+        idleState.AccumulatedProgressSeconds = 0.0;
+        idleState.LastProgressUnixSeconds = GetNowUnixSeconds();
+        if (idleState.IsWaitingForGatheringRecovery)
+        {
+            return;
+        }
+
+        idleState.IsWaitingForGatheringRecovery = true;
+        EmitIdleEventChanged(idleState.ActiveEventId);
+
+        string eventName = GameManager.Instance?.TranslateText(definition.NameKey) ?? definition.NameKey;
+        GameManager.Instance?.AddGameLog($"Idle waiting: gathering resource depleted for {eventName}.");
+    }
+
+    private void ExitGatheringRecoveryWaitIfNeeded()
+    {
+        if (_profile == null || !_profile.IdleState.IsWaitingForGatheringRecovery)
+        {
+            return;
+        }
+
+        _profile.IdleState.IsWaitingForGatheringRecovery = false;
+        EmitIdleEventChanged(_profile.IdleState.ActiveEventId);
     }
 
     private bool TryResolveIdleContext(
@@ -364,6 +452,11 @@ public partial class IdleSystem : Node
         if (eventDefinition == null || eventDefinition.Type != EventType.IdleLoop)
         {
             return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(eventDefinition.LinkedSkillId))
+        {
+            return eventDefinition.BaseIntervalSeconds > 0.0;
         }
 
         skillDefinition = _skillRegistry.GetSkill(eventDefinition.LinkedSkillId);
@@ -407,7 +500,7 @@ public partial class IdleSystem : Node
             .FirstOrDefault();
     }
 
-    private double GetEffectiveIntervalSeconds(string skillId, SkillLevelEntry levelEntry, ItemDefinition? tool)
+    private double GetEffectiveIntervalSeconds(EventDefinition definition, SkillDefinition? skillDefinition, SkillLevelEntry? levelEntry, ItemDefinition? tool)
     {
         double speedMultiplier = tool?.ToolBonuses.ChopSpeedMultiplier ?? 1.0;
         if (speedMultiplier <= 0.0)
@@ -415,12 +508,22 @@ public partial class IdleSystem : Node
             speedMultiplier = 1.0;
         }
 
+        if (skillDefinition == null || levelEntry == null)
+        {
+            if (_settlementService == null)
+            {
+                return Math.Max(0.2, definition.BaseIntervalSeconds / speedMultiplier);
+            }
+
+            return _settlementService.ResolveGlobalIdleIntervalSeconds(definition.BaseIntervalSeconds, speedMultiplier);
+        }
+
         if (_settlementService == null)
         {
             return Math.Max(0.2, levelEntry.Interval / speedMultiplier);
         }
 
-        return _settlementService.ResolveEffectiveIdleIntervalSeconds(skillId, levelEntry.Interval, speedMultiplier);
+        return _settlementService.ResolveEffectiveIdleIntervalSeconds(skillDefinition.Id, levelEntry.Interval, speedMultiplier);
     }
 
     private int GetAffordableCycleCount(EventDefinition definition, int requestedCycles)
@@ -455,7 +558,7 @@ public partial class IdleSystem : Node
         return _settlementService.TryPayItemCosts(definition.Costs, cycleCount);
     }
 
-    private Dictionary<string, int> ApplyEventRewardsForCycles(EventDefinition definition, SkillDefinition skillDefinition, int cycleCount)
+    private Dictionary<string, int> ApplyEventRewardsForCycles(EventDefinition definition, SkillDefinition? skillDefinition, int cycleCount)
     {
         Dictionary<string, int> summary = new(StringComparer.Ordinal);
         if (_settlementService == null || cycleCount <= 0 || definition.Rewards.Count == 0)
@@ -463,7 +566,9 @@ public partial class IdleSystem : Node
             return summary;
         }
 
-        double rewardAmountMultiplier = _settlementService.ResolveIdleOutput(skillDefinition.Id, 1.0, 1.0);
+        double rewardAmountMultiplier = skillDefinition == null
+            ? _settlementService.ResolveGlobalIdleOutput(1.0, 1.0)
+            : _settlementService.ResolveIdleOutput(skillDefinition.Id, 1.0, 1.0);
         foreach (EventRewardEntry reward in definition.Rewards)
         {
             if (reward.Amount <= 0)
@@ -471,7 +576,7 @@ public partial class IdleSystem : Node
                 continue;
             }
 
-            double dropChance = Math.Clamp(reward.DropChance, 0.0, 1.0);
+            double dropChance = _settlementService.ResolveRewardDropChance(reward.ItemId, reward.DropChance, _itemRegistry);
             if (dropChance <= 0.0)
             {
                 continue;
@@ -519,12 +624,18 @@ public partial class IdleSystem : Node
         }
 
         GatheringNodeState state = GetOrCreateGatheringNodeState(definition);
-        RefreshGatheringNodeRecovery(definition, state, GetNowUnixSecondsDouble());
+        double nowUnixSeconds = GetNowUnixSecondsDouble();
+        RefreshGatheringNodeRecovery(definition, state, nowUnixSeconds);
+        bool wasBelowCapBeforeConsume = state.AvailableAmount < definition.ResourceCap;
         state.AvailableAmount = Math.Max(0, state.AvailableAmount - amount);
-        if (state.AvailableAmount < definition.ResourceCap)
+        // Recovery should run continuously while below cap.
+        // Only when dropping from full -> below full do we start the recovery timeline at "now".
+        if (!wasBelowCapBeforeConsume && state.AvailableAmount < definition.ResourceCap)
         {
-            state.LastRecoverUnixSeconds = GetNowUnixSecondsDouble();
+            state.LastRecoverUnixSeconds = nowUnixSeconds;
         }
+
+        EmitGatheringNodeStateChanged(definition.Id);
     }
 
     private GatheringNodeState GetOrCreateGatheringNodeState(EventDefinition definition)
@@ -597,6 +708,8 @@ public partial class IdleSystem : Node
         {
             state.LastRecoverUnixSeconds = nowUnixSeconds;
         }
+
+        EmitGatheringNodeStateChanged(definition.Id);
     }
 
     private static long GetNowUnixSeconds()
@@ -606,12 +719,23 @@ public partial class IdleSystem : Node
 
     private static double GetNowUnixSecondsDouble()
     {
-        return DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+        return DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() / 1000.0;
     }
 
     private void EmitIdleEventChanged(string eventId)
     {
         _signalBus ??= GetNodeOrNull<SignalBus>("/root/SignalBus");
         _signalBus?.EmitSignal(SignalBus.SignalName.ActiveIdleEventChanged, eventId);
+    }
+
+    private void EmitGatheringNodeStateChanged(string eventId)
+    {
+        if (string.IsNullOrWhiteSpace(eventId))
+        {
+            return;
+        }
+
+        _signalBus ??= GetNodeOrNull<SignalBus>("/root/SignalBus");
+        _signalBus?.EmitSignal(SignalBus.SignalName.GatheringNodeStateChanged, eventId);
     }
 }

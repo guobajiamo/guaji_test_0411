@@ -1,9 +1,4 @@
-# 本文件是“正式剧本专用分类树”。
-# 当前至少保留货币分类，以支持货币实体化背包显示。
-categories:
-  - id: "currency"
-    parent_id: ""
-    name_key: "货币"
-    description_key: "用于交易结算的货币实体"
-    definition_order: 100
-    is_visible: true
+# Legacy stub only.
+# Shared item categories now live in res://Configs/Items/Categories and are scenario-independent.
+# Keep this file empty so MainStory does not redefine global categories such as currency.
+categories: []

@@ -1,3 +1,7 @@
+# Legacy scenario-local stub only.
+# The authoritative shared item library lives in res://Configs/Items/Definitions.
+# Keep UTF-8 when editing so existing Chinese text stays intact.
+#
 # 本文件是“正式剧本专用物品表”。
 # 当前为空，表示正式剧本暂时还没有独立物品数据。
 #

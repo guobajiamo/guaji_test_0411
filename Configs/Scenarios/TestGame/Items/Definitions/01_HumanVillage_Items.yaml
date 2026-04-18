@@ -1,5 +1,8 @@
 # Human Village related food and ingredient items.
 items:
+# Legacy scenario-local copy only.
+# The authoritative shared item library lives in res://Configs/Items/Definitions.
+# Keep UTF-8 when editing so existing Chinese text stays intact.
   - id: "food_baozi"
     parent_id: "consumable_cooking"
     name_key: "包子"

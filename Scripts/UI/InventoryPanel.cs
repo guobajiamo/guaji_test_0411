@@ -448,12 +448,12 @@ public partial class InventoryPanel : Control
         _consumeButton = new Button
         {
             Name = "ConsumeButton",
-            Text = "食用",
+            Text = "使用",
             Visible = false,
             Disabled = true,
             CustomMinimumSize = new Vector2(86, 32)
         };
-        _consumeButton.Pressed += ConsumeSelectedItem;
+        _consumeButton.Pressed += OnPrimaryActionButtonPressed;
         detailRoot.AddChild(_consumeButton);
 
         _detailScroll = new ScrollContainer
@@ -972,6 +972,7 @@ public partial class InventoryPanel : Control
             _favoriteToggleButton.Disabled = true;
             _favoriteToggleButton.Text = "☆";
             _favoriteToggleButton.AddThemeColorOverride("font_color", new Color("#7f7f7f"));
+            _consumeButton.Text = "使用";
             _consumeButton.Visible = false;
             _consumeButton.Disabled = true;
             _consumeButton.TooltipText = string.Empty;
@@ -989,14 +990,34 @@ public partial class InventoryPanel : Control
         _favoriteToggleButton.Text = state.IsFavorite ? "★" : "☆";
         _favoriteToggleButton.AddThemeColorOverride("font_color", state.IsFavorite ? new Color("#ffd34d") : new Color("#7f7f7f"));
 
-        bool canConsume = item?.CanConsumeFromInventory == true
-            && item.ConsumeBuff != null
-            && inventory.GetItemAmount(_selectedItemId) > 0;
-        _consumeButton.Visible = canConsume;
-        _consumeButton.Disabled = !canConsume;
-        _consumeButton.TooltipText = canConsume
-            ? (string.IsNullOrWhiteSpace(item!.ConsumeBuff!.Description) ? "点击后消耗 1 个并触发对应 Buff。" : item.ConsumeBuff.Description)
-            : string.Empty;
+        int itemAmount = inventory.GetItemAmount(_selectedItemId);
+        if (item?.CanUseCustomActionFromInventory == true && item.InventoryUseAction != null)
+        {
+            InventoryUseActionDefinition action = item.InventoryUseAction;
+            int consumeAmount = Math.Max(0, action.ConsumeAmount);
+            bool canUseCustomAction = itemAmount >= consumeAmount && HasEnoughActionCosts(inventory, action);
+
+            _consumeButton.Text = string.IsNullOrWhiteSpace(action.ButtonText) ? "使用" : action.ButtonText;
+            _consumeButton.Visible = true;
+            _consumeButton.Disabled = !canUseCustomAction;
+            _consumeButton.TooltipText = BuildCustomActionTooltip(action);
+        }
+        else
+        {
+            bool canConsume = itemAmount > 0
+                && (item?.IsStapleFood == true
+                    || (item?.CanConsumeFromInventory == true && item.ConsumeBuff != null))
+                && item != null
+                && itemAmount > 0;
+            _consumeButton.Text = "食用";
+            _consumeButton.Visible = canConsume;
+            _consumeButton.Disabled = !canConsume;
+            _consumeButton.TooltipText = canConsume
+                ? item!.IsStapleFood
+                    ? (string.IsNullOrWhiteSpace(item.StapleFood!.Description) ? "点击后消耗 1 份主食并获得持续战斗增益。" : item.StapleFood.Description)
+                    : (string.IsNullOrWhiteSpace(item.ConsumeBuff!.Description) ? "点击后消耗 1 个并触发对应 Buff。" : item.ConsumeBuff.Description)
+                : string.Empty;
+        }
 
         _detailTitleLabel.Text = state.IsFavorite
             ? $"{displayName} [font_size=16](已收藏)[/font_size]"
@@ -1007,7 +1028,7 @@ public partial class InventoryPanel : Control
         CallDeferred(nameof(UpdateScrollableAreaVisibility));
     }
 
-    private void ConsumeSelectedItem()
+    private void OnPrimaryActionButtonPressed()
     {
         if (_gameManager == null || string.IsNullOrWhiteSpace(_selectedItemId))
         {
@@ -1015,7 +1036,42 @@ public partial class InventoryPanel : Control
         }
 
         ItemDefinition? item = _gameManager.ItemRegistry.GetItem(_selectedItemId);
-        if (item?.CanConsumeFromInventory != true || item.ConsumeBuff == null)
+        if (item == null)
+        {
+            return;
+        }
+
+        if (item.CanUseCustomActionFromInventory && item.InventoryUseAction != null)
+        {
+            TryExecuteCustomAction(item, item.InventoryUseAction);
+            return;
+        }
+
+        if (item.IsStapleFood || (item.CanConsumeFromInventory && item.ConsumeBuff != null))
+        {
+            ConsumeSelectedItem(item);
+        }
+    }
+
+    private void ConsumeSelectedItem(ItemDefinition item)
+    {
+        if (_gameManager == null || string.IsNullOrWhiteSpace(_selectedItemId))
+        {
+            return;
+        }
+
+        if (item.IsStapleFood)
+        {
+            bool consumedStaple = _gameManager.StapleFoodSystem?.TryConsumeStaple(_selectedItemId, addLog: true) == true;
+            if (consumedStaple)
+            {
+                RefreshInventory();
+            }
+
+            return;
+        }
+
+        if (item.CanConsumeFromInventory != true || item.ConsumeBuff == null)
         {
             return;
         }
@@ -1037,6 +1093,109 @@ public partial class InventoryPanel : Control
         _gameManager.BuffSystem?.RefreshActiveBuffs();
         _gameManager.AddGameLog($"已食用：{item.GetDisplayName(_gameManager.TranslateText)}");
         RefreshInventory();
+    }
+
+    private void TryExecuteCustomAction(ItemDefinition item, InventoryUseActionDefinition action)
+    {
+        if (_gameManager == null || string.IsNullOrWhiteSpace(_selectedItemId))
+        {
+            return;
+        }
+
+        string actionLabel = string.IsNullOrWhiteSpace(action.ButtonText) ? "使用" : action.ButtonText;
+        PlayerInventory inventory = _gameManager.PlayerProfile.Inventory;
+        int consumeAmount = Math.Max(0, action.ConsumeAmount);
+        int currentAmount = inventory.GetItemAmount(_selectedItemId);
+        if (currentAmount < consumeAmount)
+        {
+            _gameManager.AddGameLog($"{actionLabel}失败：{_gameManager.GetItemDisplayName(_selectedItemId)} 数量不足。");
+            return;
+        }
+
+        if (!HasEnoughActionCosts(inventory, action))
+        {
+            _gameManager.AddGameLog($"{actionLabel}失败：额外消耗材料不足。");
+            return;
+        }
+
+        if (consumeAmount > 0 && !_gameManager.SettlementService.TryRemoveItem(_selectedItemId, consumeAmount))
+        {
+            _gameManager.AddGameLog($"{actionLabel}失败：{_gameManager.GetItemDisplayName(_selectedItemId)} 数量不足。");
+            return;
+        }
+
+        foreach (ItemCostEntry cost in action.Costs)
+        {
+            if (cost.Amount <= 0)
+            {
+                continue;
+            }
+
+            if (!_gameManager.SettlementService.TryRemoveItem(cost.ItemId, cost.Amount))
+            {
+                _gameManager.AddGameLog($"{actionLabel}失败：{_gameManager.GetItemDisplayName(cost.ItemId)} 数量不足。");
+                RefreshInventory();
+                return;
+            }
+        }
+
+        foreach (EventRewardEntry reward in action.Rewards)
+        {
+            if (reward.Amount <= 0)
+            {
+                continue;
+            }
+
+            double dropChance = _gameManager.SettlementService.ResolveRewardDropChance(reward.ItemId, reward.DropChance, _gameManager.ItemRegistry);
+            if (dropChance <= 0.0)
+            {
+                continue;
+            }
+
+            if (dropChance < 1.0 && Random.Shared.NextDouble() > dropChance)
+            {
+                continue;
+            }
+
+            _gameManager.SettlementService.AddItem(reward.ItemId, reward.Amount);
+        }
+
+        string successLog = string.IsNullOrWhiteSpace(action.SuccessLogText)
+            ? $"已{actionLabel}：{item.GetDisplayName(_gameManager.TranslateText)}"
+            : action.SuccessLogText;
+        _gameManager.AddGameLog(successLog);
+        RefreshInventory();
+    }
+
+    private static bool HasEnoughActionCosts(PlayerInventory inventory, InventoryUseActionDefinition action)
+    {
+        foreach (ItemCostEntry cost in action.Costs)
+        {
+            if (cost.Amount <= 0)
+            {
+                continue;
+            }
+
+            if (inventory.GetItemAmount(cost.ItemId) < cost.Amount)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static string BuildCustomActionTooltip(InventoryUseActionDefinition action)
+    {
+        if (!string.IsNullOrWhiteSpace(action.TooltipText))
+        {
+            return action.TooltipText;
+        }
+
+        int consumeAmount = Math.Max(0, action.ConsumeAmount);
+        return consumeAmount > 0
+            ? $"点击后消耗 {consumeAmount} 个当前道具并执行对应操作。"
+            : "点击后执行该道具的自定义操作。";
     }
 
     private void ToggleFavoriteForSelectedItem()

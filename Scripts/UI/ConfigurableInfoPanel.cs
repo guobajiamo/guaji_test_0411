@@ -25,6 +25,9 @@ public partial class ConfigurableInfoPanel : Control
     private bool _hasTransientContent;
     private string _transientSummaryText = string.Empty;
     private string _transientContentText = string.Empty;
+    private bool _hasPinnedContent;
+    private string _pinnedSummaryText = string.Empty;
+    private string _pinnedContentText = string.Empty;
 
     public bool HasTransientContent => _hasTransientContent;
 
@@ -81,6 +84,29 @@ public partial class ConfigurableInfoPanel : Control
         _hasTransientContent = false;
         _transientSummaryText = string.Empty;
         _transientContentText = string.Empty;
+        ApplyDisplayState();
+    }
+
+    public void SetPinnedContent(string summaryText, string contentText)
+    {
+        EnsureStructure();
+
+        _hasPinnedContent = !string.IsNullOrWhiteSpace(summaryText) || !string.IsNullOrWhiteSpace(contentText);
+        _pinnedSummaryText = string.IsNullOrWhiteSpace(summaryText) ? "战斗信息" : summaryText;
+        _pinnedContentText = string.IsNullOrWhiteSpace(contentText) ? "暂无说明。" : contentText;
+        ApplyDisplayState();
+    }
+
+    public void ClearPinnedContent()
+    {
+        if (!_hasPinnedContent)
+        {
+            return;
+        }
+
+        _hasPinnedContent = false;
+        _pinnedSummaryText = string.Empty;
+        _pinnedContentText = string.Empty;
         ApplyDisplayState();
     }
 
@@ -171,6 +197,13 @@ public partial class ConfigurableInfoPanel : Control
         {
             _summaryLabel.Text = _transientSummaryText;
             _contentLabel.Text = _transientContentText;
+            return;
+        }
+
+        if (_hasPinnedContent)
+        {
+            _summaryLabel.Text = _pinnedSummaryText;
+            _contentLabel.Text = _pinnedContentText;
             return;
         }
 

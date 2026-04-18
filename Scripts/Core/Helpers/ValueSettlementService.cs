@@ -5,6 +5,7 @@ using System.Linq;
 using Test00_0410.Autoload;
 using Test00_0410.Core.Definitions;
 using Test00_0410.Core.Enums;
+using Test00_0410.Core.Registry;
 using Test00_0410.Core.Runtime;
 using Test00_0410.Systems;
 
@@ -259,12 +260,31 @@ public sealed class ValueSettlementService
         return Math.Max(0.2, baseIntervalSeconds / speedMultiplier);
     }
 
+    public double ResolveGlobalIdleIntervalSeconds(double baseIntervalSeconds, double baseToolSpeedMultiplier = 1.0)
+    {
+        double speedMultiplier = baseToolSpeedMultiplier <= 0.0 ? 1.0 : baseToolSpeedMultiplier;
+        speedMultiplier *= GetCombinedMultiplier(SettlementStatIds.IdleSpeedMultiplier);
+        if (speedMultiplier <= 0.0)
+        {
+            speedMultiplier = 1.0;
+        }
+
+        return Math.Max(0.2, baseIntervalSeconds / speedMultiplier);
+    }
+
     public double ResolveIdleOutput(string skillId, double baseOutput, double baseToolYieldMultiplier = 1.0)
     {
         double yieldMultiplier = baseToolYieldMultiplier <= 0.0 ? 1.0 : baseToolYieldMultiplier;
         yieldMultiplier *= GetCombinedMultiplier(
             SettlementStatIds.IdleOutputMultiplier,
             SettlementStatIds.SkillIdleOutputMultiplier(skillId));
+        return Math.Max(0.0, baseOutput * Math.Max(0.0, yieldMultiplier));
+    }
+
+    public double ResolveGlobalIdleOutput(double baseOutput, double baseToolYieldMultiplier = 1.0)
+    {
+        double yieldMultiplier = baseToolYieldMultiplier <= 0.0 ? 1.0 : baseToolYieldMultiplier;
+        yieldMultiplier *= GetCombinedMultiplier(SettlementStatIds.IdleOutputMultiplier);
         return Math.Max(0.0, baseOutput * Math.Max(0.0, yieldMultiplier));
     }
 
@@ -279,6 +299,41 @@ public sealed class ValueSettlementService
             SettlementStatIds.SkillExpGainMultiplier,
             SettlementStatIds.SkillExpGainMultiplierBySkill(skillId));
         return Math.Max(0.0, baseExp * Math.Max(0.0, multiplier));
+    }
+
+    public double GetBattlePlayerMaxHpMultiplier()
+    {
+        return NormalizeMultiplier(GetCombinedMultiplier(SettlementStatIds.BattlePlayerMaxHpMultiplier));
+    }
+
+    public double GetBattlePlayerActionSpeedMultiplier()
+    {
+        return NormalizeMultiplier(GetCombinedMultiplier(SettlementStatIds.BattlePlayerActionSpeedMultiplier));
+    }
+
+    public double ResolveRewardDropChance(string itemId, double baseDropChance, ItemRegistry? itemRegistry = null)
+    {
+        double normalizedBaseChance = Math.Clamp(baseDropChance, 0.0, 1.0);
+        if (normalizedBaseChance <= 0.0)
+        {
+            return 0.0;
+        }
+
+        double multiplier = NormalizeMultiplier(GetCombinedMultiplier(SettlementStatIds.DropChanceMultiplier));
+        if (!string.IsNullOrWhiteSpace(itemId))
+        {
+            multiplier *= NormalizeMultiplier(GetCombinedMultiplier(SettlementStatIds.ItemDropChanceMultiplier(itemId)));
+        }
+
+        ItemDefinition? itemDefinition = string.IsNullOrWhiteSpace(itemId)
+            ? null
+            : itemRegistry?.GetItem(itemId) ?? GameManager.Instance?.ItemRegistry.GetItem(itemId);
+        if (itemDefinition != null && itemDefinition.BaseRarity >= Rarity.Rare)
+        {
+            multiplier *= NormalizeMultiplier(GetCombinedMultiplier(SettlementStatIds.DropRareChanceMultiplier));
+        }
+
+        return Math.Clamp(normalizedBaseChance * multiplier, 0.0, 1.0);
     }
 
     public void GrantSkillExp(string skillId, double baseExp)
@@ -300,7 +355,7 @@ public sealed class ValueSettlementService
 
         foreach (EventRewardEntry reward in rewards)
         {
-            double dropChance = Math.Clamp(reward.DropChance, 0.0, 1.0);
+            double dropChance = ResolveRewardDropChance(reward.ItemId, reward.DropChance);
             if (dropChance <= 0.0)
             {
                 continue;
@@ -420,6 +475,11 @@ public sealed class ValueSettlementService
         }
 
         return result;
+    }
+
+    private static double NormalizeMultiplier(double value)
+    {
+        return !double.IsFinite(value) || value <= 0.0 ? 1.0 : value;
     }
 
     private void SyncCurrencyItemToInventory(string currencyId, int amount)

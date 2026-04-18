@@ -18,5 +18,6 @@ public enum EventEffectType
     CompleteQuest = 9,
     StartBattle = 10,
     UnlockAchievement = 11,
-    LearnSkill = 12
+    LearnSkill = 12,
+    SwitchToSkillMode = 13
 }

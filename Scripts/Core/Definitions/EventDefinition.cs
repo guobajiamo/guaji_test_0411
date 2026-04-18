@@ -69,6 +69,18 @@ public class EventDefinition
 
     public string LinkedSkillId { get; set; } = string.Empty;
 
+    /// <summary>
+    /// 无技能挂机事件的固定基础间隔。
+    /// 仅在 LinkedSkillId 为空时生效。
+    /// </summary>
+    public double BaseIntervalSeconds { get; set; }
+
+    /// <summary>
+    /// 无技能挂机事件的固定基础产出倍率。
+    /// 仅在 LinkedSkillId 为空时生效。
+    /// </summary>
+    public double BaseOutputAmount { get; set; } = 1.0;
+
     public ButtonListGroup ButtonListGroup { get; set; } = ButtonListGroup.MainClick;
 
     public bool RemoveAfterTriggered { get; set; }

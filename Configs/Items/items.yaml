@@ -1,3 +1,7 @@
+# Legacy reference file only.
+# The authoritative shared runtime item library lives in Configs/Items/Definitions.
+# Do not add scenario-specific overrides here. Keep UTF-8 when editing Chinese text.
+#
 # 物品定义
 # 必填字段：id、parent_id、name_key
 # 其余字段都可以按需要逐步补充

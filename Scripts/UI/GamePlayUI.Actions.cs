@@ -6,6 +6,7 @@ using System.Linq;
 using Test00_0410.Core.Definitions;
 using Test00_0410.Core.Enums;
 using Test00_0410.Core.Helpers;
+using Test00_0410.Core.Runtime;
 using Test00_0410.Core.SaveLoad;
 using Test00_0410.Systems;
 
@@ -218,6 +219,7 @@ public partial class GamePlayUI
             TabInventory,
             TabSkills,
             TabBattle,
+            TabEquipment,
             TabQuest,
             TabTutorial,
             TabAchievement,
@@ -251,6 +253,7 @@ public partial class GamePlayUI
             TabInventory => _theme.InventoryTabText,
             TabSkills => _theme.SkillsTabText,
             TabBattle => "战斗",
+            TabEquipment => "装备",
             TabQuest => "任务",
             TabTutorial => "教学",
             TabAchievement => "成就",
@@ -277,6 +280,7 @@ public partial class GamePlayUI
             TabCurrentRegion => true,
             TabInventory => true,
             TabSkills => true,
+            TabBattle => true,
             TabDictionary => true,
             _ => false
         };
@@ -305,6 +309,10 @@ public partial class GamePlayUI
         string hoverInfo = !string.IsNullOrWhiteSpace(definition.HoverInfoKey)
             ? Translate(definition.HoverInfoKey)
             : description;
+        bool isIdleRunning = definition.Type == EventType.IdleLoop
+            && _gameManager?.IdleSystem?.IsRunningEvent(definition.Id) == true;
+        bool isGatheringWaiting = definition.Type == EventType.IdleLoop
+            && _gameManager?.IdleSystem?.IsWaitingForGatheringRecovery(definition.Id) == true;
 
         EventButtonViewData data = new()
         {
@@ -317,7 +325,8 @@ public partial class GamePlayUI
                 ? _gameManager?.IdleSystem?.GetProgressRatio(definition.Id) ?? 0.0
                 : 0.0,
             ShowProgressBar = definition.Type == EventType.IdleLoop
-                && _gameManager?.IdleSystem?.IsRunningEvent(definition.Id) == true,
+                && isIdleRunning
+                && !isGatheringWaiting,
             StyleVariant = definition.Type switch
             {
                 EventType.OneshotClick => "event_oneshot",
@@ -327,10 +336,12 @@ public partial class GamePlayUI
             }
         };
 
-        if (definition.Type == EventType.IdleLoop && _gameManager?.IdleSystem?.IsRunningEvent(definition.Id) == true)
+        if (definition.Type == EventType.IdleLoop && isIdleRunning)
         {
             data.DisplayName = IsCollectionIdleEvent(definition)
-                ? $"{data.DisplayName}(采集中)"
+                ? isGatheringWaiting
+                    ? $"{data.DisplayName}(等待中)"
+                    : $"{data.DisplayName}(采集中)"
                 : $"停止{data.DisplayName}";
             data.IsDisabled = false;
         }
@@ -382,6 +393,11 @@ protected bool IsEventDisabled(EventDefinition definition)
             return;
         }
 
+        if (TryOpenBattlePageFromEvent(definition))
+        {
+            return;
+        }
+
         if (definition.Dialog != null && (definition.Dialog.HasConfirmButton || definition.Dialog.HasChoices))
         {
             ShowDialogForEvent(definition);
@@ -395,6 +411,82 @@ protected bool IsEventDisabled(EventDefinition definition)
         }
 
         ScheduleActionDrivenRefresh();
+    }
+
+    private bool TryOpenBattlePageFromEvent(EventDefinition definition)
+    {
+        if (_gameManager == null || !TryResolveBattleEncounterId(definition, out string encounterId))
+        {
+            return false;
+        }
+
+        GameplayActionContext? actionContext = FindActionContextByEventId(definition.Id);
+        PlayerUiState uiState = _gameManager.PlayerProfile.UiState;
+        uiState.IsSkillSidebarMode = true;
+        uiState.SelectedSkillId = ResolvePreferredBattleSkillId();
+        uiState.SetBattleSelection(
+            actionContext?.AreaId ?? _gameManager.PlayerProfile.UiState.SelectedAreaId,
+            actionContext?.SceneId ?? string.Empty,
+            definition.Id,
+            encounterId,
+            fromSceneEntry: true);
+        uiState.SelectedTabId = TabBattle;
+        PrepareBattleTabLayout();
+        RefreshAllPanels();
+        return true;
+    }
+
+    private string ResolvePreferredBattleSkillId()
+    {
+        if (_gameManager == null)
+        {
+            return string.Empty;
+        }
+
+        if (IsBattleSkillId(_gameManager.PlayerProfile.UiState.SelectedSkillId))
+        {
+            return _gameManager.PlayerProfile.UiState.SelectedSkillId;
+        }
+
+        string? learnedBattleSkillId = _gameManager.SkillRegistry.Skills.Values
+            .Where(static skill => string.Equals(skill.GroupId, "battle", StringComparison.Ordinal))
+            .OrderBy(skill => skill.GroupOrder)
+            .ThenBy(skill => skill.SkillOrder)
+            .ThenBy(skill => skill.SourceFileOrder)
+            .ThenBy(skill => skill.SourceEntryOrder)
+            .Select(skill => new
+            {
+                skill.Id,
+                Level = _gameManager.PlayerProfile.GetOrCreateSkillState(skill.Id).Level
+            })
+            .FirstOrDefault(entry => entry.Level > 0)
+            ?.Id;
+        if (!string.IsNullOrWhiteSpace(learnedBattleSkillId))
+        {
+            return learnedBattleSkillId;
+        }
+
+        return _gameManager.SkillRegistry.GetSkill(BattleEquipmentTypeCatalog.SlashPassiveSkillId) != null
+            ? BattleEquipmentTypeCatalog.SlashPassiveSkillId
+            : _gameManager.SkillRegistry.Skills.Values
+                .Where(static skill => string.Equals(skill.GroupId, "battle", StringComparison.Ordinal))
+                .OrderBy(skill => skill.GroupOrder)
+                .ThenBy(skill => skill.SkillOrder)
+                .ThenBy(skill => skill.SourceFileOrder)
+                .ThenBy(skill => skill.SourceEntryOrder)
+                .Select(skill => skill.Id)
+                .FirstOrDefault()
+                ?? string.Empty;
+    }
+
+    private static bool TryResolveBattleEncounterId(EventDefinition definition, out string encounterId)
+    {
+        encounterId = definition.Effects
+            .FirstOrDefault(effect => effect.EffectType == EventEffectType.StartBattle)?
+            .TargetId?
+            .Trim()
+            ?? string.Empty;
+        return !string.IsNullOrWhiteSpace(encounterId);
     }
 
     protected void HandleIdleEvent(EventDefinition definition)
@@ -608,6 +700,9 @@ protected string BuildCostSummary(EventDefinition definition)
                 case EventEffectType.LearnSkill:
                     parts.Add($"习得技能：{GetSkillDisplayName(effect.TargetId)}");
                     break;
+                case EventEffectType.SwitchToSkillMode:
+                    parts.Add($"切换到技能模式：{GetSkillDisplayName(effect.TargetId)}");
+                    break;
             }
         }
 
@@ -681,9 +776,9 @@ protected string BuildCostSummary(EventDefinition definition)
         }
 
         string fullText = nodeView.SecondsToFull <= 0.0
-            ? "已回满采集上限。"
-            : $"约 {FormatDurationText(nodeView.SecondsToFull)} 后回满采集上限。";
-        return $"可采集资源/采集上限={nodeView.AvailableAmount}/{nodeView.Capacity}，{fullText}";
+            ? "采集次数已回满。"
+            : $"还剩{FormatDurationText(nodeView.SecondsToFull)}回满采集次数。";
+        return $"可采集次数/上限={nodeView.AvailableAmount}/{nodeView.Capacity}，{fullText}";
     }
 
     protected bool IsCollectionIdleEvent(EventDefinition definition)

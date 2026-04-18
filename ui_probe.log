@@ -1,8 +1,63 @@
 Godot Engine v4.6.2.stable.mono.official.71f334935 - https://godotengine.org
 
-ERROR: Cannot open file 'res://Scenes/Debug/UiProbe.tscn'.
-   at: load (scene/resources/resource_format_text.cpp:1430)
-ERROR: Failed loading resource: res://Scenes/Debug/UiProbe.tscn.
-   at: _load (core/io/resource_loader.cpp:343)
-ERROR: Failed loading scene: res://Scenes/Debug/UiProbe.tscn.
-   at: start (main/main.cpp:4640)
+ERROR: Failed to read the root certificate store.
+   at: get_system_ca_certificates (platform/windows/os_windows.cpp:2570)
+[GameLog] [01:52:35] 已发现剧本数量：2
+[GameLog] [01:52:35] 游戏主菜单入口已准备完成。
+[YamlConfigLoader] bundle=categories path=res://Configs/Scenarios/TestGame/Items/Categories 已解析 1 个 yaml 文件。
+[YamlConfigLoader] bundle=items path=res://Configs/Scenarios/TestGame/Items/Definitions 已解析 7 个 yaml 文件。
+[YamlConfigLoader] bundle=skills path=res://Configs/Scenarios/TestGame/Skills/Definitions 已解析 4 个 yaml 文件。
+[YamlConfigLoader] bundle=quests path=res://Configs/Scenarios/TestGame/Quests/Definitions 已解析 1 个 yaml 文件。
+[YamlConfigLoader] bundle=events path=res://Configs/Scenarios/TestGame/Events/Oneshot 已解析 3 个 yaml 文件。
+[YamlConfigLoader] bundle=events path=res://Configs/Scenarios/TestGame/Events/Click 已解析 4 个 yaml 文件。
+[YamlConfigLoader] bundle=events path=res://Configs/Scenarios/TestGame/Events/Idle 已解析 3 个 yaml 文件。
+[YamlConfigLoader] bundle=factions path=res://Configs/Scenarios/TestGame/Factions/Definitions 已解析 3 个 yaml 文件。
+[YamlConfigLoader] bundle=zones path=res://Configs/Scenarios/TestGame/Zones/Definitions 已解析 3 个 yaml 文件。
+[YamlConfigLoader] bundle=localization path=res://Configs/Scenarios/TestGame/Localization/Bundle 已解析 1 个 yaml 文件。
+WARNING: [ItemRegistry] 物品树调试文件写入失败：Access to the path 'C:\Users\AA\AppData\Roaming\Godot\app_userdata\test_00_0410\logs\item_tree_dump.txt' is denied.
+   at: void Test00_0410.Core.Registry.ItemRegistry.DumpTreeToDefaultRuntimeFile() (res://Scripts/Core/Registry/ItemRegistry.cs:172)
+   C# backtrace (most recent call first):
+       [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+       [1] void Test00_0410.Core.Registry.ItemRegistry.DumpTreeToDefaultRuntimeFile() (L:\00_godot_project_0410\test-00-0410\Scripts\Core\Registry\ItemRegistry.cs:172)
+       [2] void Test00_0410.Autoload.GameManager.LoadStaticData(Test00_0410.Core.Scenario.GameScenarioDefinition) (L:\00_godot_project_0410\test-00-0410\Scripts\Autoload\GameManager.cs:419)
+       [3] bool Test00_0410.Autoload.GameManager.StartScenario(string, string, bool) (L:\00_godot_project_0410\test-00-0410\Scripts\Autoload\GameManager.cs:156)
+       [4] bool Test00_0410.Autoload.GameManager.StartTestScenario() (L:\00_godot_project_0410\test-00-0410\Scripts\Autoload\GameManager.cs:129)
+       [5] void Test00_0410.UI.AppRoot.OpenTestGame() (L:\00_godot_project_0410\test-00-0410\Scripts\UI\AppRoot.cs:45)
+       [6] void Test00_0410.Debug.BattleEquipmentSmokeTest+<_Ready>d__1.MoveNext() (L:\00_godot_project_0410\test-00-0410\Scripts\Debug\BattleEquipmentSmokeTest.cs:29)
+       [7] void System.Threading.ExecutionContext.RunInternal(System.Threading.ExecutionContext, System.Threading.ContextCallback, object)
+       [8] void System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1.MoveNext(System.Threading.Thread)
+       [9] void System.Threading.Tasks.AwaitTaskContinuation.RunCallback(System.Threading.ContextCallback, object, System.Threading.Tasks.Task&)
+       [10] void System.Threading.Tasks.Task.RunContinuations(object)
+       [11] bool System.Threading.Tasks.Task`1.TrySetResult(TResult)
+       [12] void System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1.SetExistingTaskResult(System.Threading.Tasks.Task`1[TResult], TResult)
+       [13] void Test00_0410.Debug.BattleEquipmentSmokeTest+<WaitFrames>d__2.MoveNext() (L:\00_godot_project_0410\test-00-0410\Scripts\Debug\BattleEquipmentSmokeTest.cs:197)
+       [14] void System.Threading.ExecutionContext.RunInternal(System.Threading.ExecutionContext, System.Threading.ContextCallback, object)
+       [15] void System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1.MoveNext(System.Threading.Thread)
+       [16] void Godot.SignalAwaiter.SignalCallback(nint, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_bool*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/SignalAwaiter.cs:65)
+[GameLog] [01:52:35] 静态配置加载完成：剧本 游戏测试剧本，分类 11，物品 30，技能 8，事件 29，任务 3。
+[GameLog] [01:52:35] 任务已解锁：初入人间之里
+[GameLog] [01:52:35] 已载入剧本：游戏测试剧本
+[YamlConfigLoader] bundle=gameplay_layout path=res://Configs/Scenarios/TestGame/UI/GameplayLayout 已解析 8 个 yaml 文件。
+[YamlConfigLoader] bundle=gameplay_layout path=res://Configs/Scenarios/TestGame/UI/GameplayLayout 已解析 8 个 yaml 文件。
+[YamlConfigLoader] bundle=ui_tabs path=res://Configs/Scenarios/TestGame/UI/Tabs 已解析 6 个 yaml 文件。
+[YamlConfigLoader] bundle=ui_tabs path=res://Configs/Scenarios/TestGame/UI/Tabs 已解析 6 个 yaml 文件。
+[YamlConfigLoader] bundle=info_panel path=res://Configs/Scenarios/TestGame/UI/InfoPanel 已解析 3 个 yaml 文件。
+[YamlConfigLoader] bundle=info_panel path=res://Configs/Scenarios/TestGame/UI/InfoPanel 已解析 3 个 yaml 文件。
+[BattleEquipmentSmokeTest] MainTabs: type=Control, parent=Control, anchors=(0, 0, 1, 1), offsets=(0, 0, 0, 0), local_pos=(0, 0), size=(1654, 970), global_rect=(453, 185), (1654, 970)
+[BattleEquipmentSmokeTest] BattleEquipmentRoot: type=HBoxContainer, parent=BattleEquipmentPanel, anchors=(0, 0, 1, 1), offsets=(0, 0, 0, 0), local_pos=(0, 0), size=(1654, 970), global_rect=(453, 185), (1654, 970)
+[BattleEquipmentSmokeTest] BattleEquipmentLeftPane: type=PanelContainer, parent=HBoxContainer, anchors=(0, 0, 0, 0), offsets=(0, 0, 1149, 970), local_pos=(0, 0), size=(1149, 970), global_rect=(453, 185), (1149, 970)
+[BattleEquipmentSmokeTest] BattleEquipmentRightPane: type=VBoxContainer, parent=HBoxContainer, anchors=(0, 0, 0, 0), offsets=(1161, 0, 1654, 970), local_pos=(1161, 0), size=(493, 970), global_rect=(1614, 185), (493, 970)
+[BattleEquipmentSmokeTest] EquipmentMatrixPanel: type=Panel, parent=VBoxContainer, anchors=(0, 0, 0, 0), offsets=(0, 172, 1125, 816), local_pos=(0, 172), size=(1125, 644), global_rect=(465, 369), (1125, 644)
+[BattleEquipmentSmokeTest] EquipmentMatrixPanel: content_pos=(10, 10), content_size=(1105, 624), margins=(10, 10, 10, 10)
+[BattleEquipmentSmokeTest] EquipmentCanvasHost: type=Control, parent=Panel, anchors=(0, 0, 1, 1), offsets=(18, 18, -18, -18), local_pos=(18, 18), size=(1089, 608), global_rect=(483, 387), (1089, 608)
+[BattleEquipmentSmokeTest] EquipmentCanvas: type=Control, parent=Control, anchors=(0, 0, 1, 1), offsets=(0, 0, 0, 0), local_pos=(0, 0), size=(1089, 608), global_rect=(483, 387), (1089, 608)
+[BattleEquipmentSmokeTest] CharacterSilhouette: type=TextureRect, parent=Control, anchors=(0, 0, 0, 0), offsets=(359, 19, 729.90985, 473.9281), local_pos=(359, 19), size=(370.90985, 454.9281), global_rect=(842, 406), (370.90985, 454.9281)
+[BattleEquipmentSmokeTest] HelmetSlot: type=Control, parent=Control, anchors=(0, 0, 0, 0), offsets=(257, 9, 343, 95), local_pos=(257, 9), size=(86, 86), global_rect=(740, 396), (86, 86)
+[BattleEquipmentSmokeTest] CloakSlot: type=Control, parent=Control, anchors=(0, 0, 0, 0), offsets=(746, 9, 832, 95), local_pos=(746, 9), size=(86, 86), global_rect=(1229, 396), (86, 86)
+[BattleEquipmentSmokeTest] MainHandSlot: type=Control, parent=Control, anchors=(0, 0, 0, 0), offsets=(442, 504, 537, 599), local_pos=(442, 504), size=(95, 95), global_rect=(925, 891), (95, 95)
+[BattleEquipmentSmokeTest] OffHandSlot: type=Control, parent=Control, anchors=(0, 0, 0, 0), offsets=(552, 504, 647, 599), local_pos=(552, 504), size=(95, 95), global_rect=(1035, 891), (95, 95)
+[GameLog] [01:52:37] 已装备：石斧 -> 主武器
+[YamlConfigLoader] bundle=info_panel path=res://Configs/Scenarios/TestGame/UI/InfoPanel 已解析 3 个 yaml 文件。
+[YamlConfigLoader] bundle=info_panel path=res://Configs/Scenarios/TestGame/UI/InfoPanel 已解析 3 个 yaml 文件。
+[GameLog] [01:52:38] 已切换 UI 主题：旧UI(legacy)。
+[BattleEquipmentSmokeTest] all checks passed

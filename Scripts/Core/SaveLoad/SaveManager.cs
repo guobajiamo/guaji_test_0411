@@ -2,6 +2,7 @@ using Godot;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using System.Linq;
 using System.Text.Json;
 using Test00_0410.Core.Enums;
@@ -18,6 +19,7 @@ namespace Test00_0410.Core.SaveLoad;
 /// </summary>
 public class SaveManager
 {
+    private static readonly UTF8Encoding Utf8NoBom = new(false);
     private readonly MigrationRunner _migrationRunner = new();
     private readonly JsonSerializerOptions _jsonOptions = new()
     {
@@ -42,7 +44,7 @@ public class SaveManager
 
             SaveFileDocument document = CreateDocument(saveData);
             string json = JsonSerializer.Serialize(document, _jsonOptions);
-            File.WriteAllText(path, json);
+            File.WriteAllText(path, json, Utf8NoBom);
 
             SavePath = path;
             GD.Print($"[SaveManager] 存档保存成功：{path}");
@@ -70,7 +72,7 @@ public class SaveManager
                 return _migrationRunner.RunMigrations(new SaveData());
             }
 
-            string json = File.ReadAllText(path);
+            string json = File.ReadAllText(path, Utf8NoBom);
             SaveFileDocument? document = JsonSerializer.Deserialize<SaveFileDocument>(json, _jsonOptions);
             if (document == null)
             {
@@ -110,7 +112,7 @@ public class SaveManager
 
         try
         {
-            string json = File.ReadAllText(path);
+            string json = File.ReadAllText(path, Utf8NoBom);
             SaveFileDocument? document = JsonSerializer.Deserialize<SaveFileDocument>(json, _jsonOptions);
             if (document == null)
             {
@@ -137,7 +139,7 @@ public class SaveManager
 
         try
         {
-            using JsonDocument document = JsonDocument.Parse(File.ReadAllText(path));
+            using JsonDocument document = JsonDocument.Parse(File.ReadAllText(path, Utf8NoBom));
             if (!document.RootElement.TryGetProperty("Metadata", out JsonElement metadataElement))
             {
                 return null;
@@ -171,6 +173,7 @@ public class SaveManager
                 {
                     ActiveEventId = profile.IdleState.ActiveEventId,
                     IsRunning = profile.IdleState.IsRunning,
+                    IsWaitingForGatheringRecovery = profile.IdleState.IsWaitingForGatheringRecovery,
                     AccumulatedProgressSeconds = profile.IdleState.AccumulatedProgressSeconds,
                     PendingOutputFraction = profile.IdleState.PendingOutputFraction,
                     LastProgressUnixSeconds = profile.IdleState.LastProgressUnixSeconds,
@@ -198,8 +201,48 @@ public class SaveManager
                     InventoryFilterTab = profile.UiState.InventoryFilterTab.ToString(),
                     InventoryUseLargeIcons = profile.UiState.InventoryUseLargeIcons,
                     FavoriteSceneIds = profile.UiState.FavoriteSceneIds.ToList(),
-                    ProcessedInteractableEventIds = profile.UiState.GetSortedProcessedInteractableEventIds(),
-                    AreaIdsWithNewMarker = profile.UiState.GetSortedAreaIdsWithNewMarker()
+                    ProcessedInteractableEventIds = profile.UiState.GetSortedProcessedInteractableEventIds().ToList(),
+                    AreaIdsWithNewMarker = profile.UiState.GetSortedAreaIdsWithNewMarker().ToList(),
+                    SelectedBattleAreaId = profile.UiState.SelectedBattleAreaId,
+                    SelectedBattleSceneId = profile.UiState.SelectedBattleSceneId,
+                    SelectedBattleEventId = profile.UiState.SelectedBattleEventId,
+                    SelectedBattleEncounterId = profile.UiState.SelectedBattleEncounterId,
+                    BattleSelectionFromSceneEntry = profile.UiState.BattleSelectionFromSceneEntry,
+                    SelectedStapleItemId = profile.UiState.SelectedStapleItemId,
+                    SelectedSnackItemIds = profile.UiState.SelectedSnackItemIds.ToList()
+                },
+                EquipmentState = profile.EquipmentState.EquippedItemIds
+                    .OrderBy(entry => entry.Key.ToPersistedId(), StringComparer.Ordinal)
+                    .Select(entry => new EquipmentSlotSnapshot
+                    {
+                        SlotId = entry.Key.ToPersistedId(),
+                        ItemId = entry.Value
+                    })
+                    .ToList(),
+                FarmingState = new FarmingStateSnapshot
+                {
+                    AutoPlantAndHarvestEnabled = profile.FarmingState.AutoPlantAndHarvestEnabled,
+                    AutoFertilizeEnabled = profile.FarmingState.AutoFertilizeEnabled,
+                    PlotStates = profile.FarmingState.PlotStates.Values
+                        .OrderBy(state => state.PlotIndex)
+                        .Select(state => new FarmPlotSnapshot
+                        {
+                            PlotIndex = state.PlotIndex,
+                            IsUnlocked = state.IsUnlocked,
+                            SelectedSeedItemId = state.SelectedSeedItemId,
+                            GrowingSeedItemId = state.GrowingSeedItemId,
+                            PlantStartUnixSeconds = state.PlantStartUnixSeconds,
+                            GrowthDurationSeconds = state.GrowthDurationSeconds,
+                            IsFertilized = state.IsFertilized
+                        })
+                        .ToList()
+                },
+                StapleFoodState = new StapleFoodStateSnapshot
+                {
+                    ActiveItemId = profile.StapleFoodState.ActiveItemId,
+                    ActiveStapleId = profile.StapleFoodState.ActiveStapleId,
+                    ExpireAtUnixSeconds = profile.StapleFoodState.ExpireAtUnixSeconds,
+                    AutoConsumeSelectedStaple = profile.StapleFoodState.AutoConsumeSelectedStaple
                 },
                 SkillStates = profile.SkillStates.Values
                     .OrderBy(state => state.SkillId)
@@ -250,6 +293,7 @@ public class SaveManager
                     })
                     .ToList(),
                 BattleStats = profile.BattleStats.ToDictionary(entry => entry.Key, entry => entry.Value),
+                ClearedBattleEncounterIds = profile.ClearedBattleEncounterIds.OrderBy(id => id).ToList(),
                 UnlockedAchievementIds = profile.UnlockedAchievementIds.OrderBy(id => id).ToList(),
                 CompletedEventIds = profile.CompletedEventIds.OrderBy(id => id).ToList(),
                 CompletedQuestIds = profile.CompletedQuestIds.OrderBy(id => id).ToList()
@@ -276,6 +320,7 @@ public class SaveManager
             state.IsFavorite = item.IsFavorite;
             state.IsJunkMarked = item.IsJunkMarked;
             state.AcquiredSequence = item.AcquiredSequence;
+            state.LatestAcquiredUnixSeconds = item.LatestAcquiredUnixSeconds;
             state.PlayerDisplayOrder = item.PlayerDisplayOrder;
         }
 
@@ -287,6 +332,7 @@ public class SaveManager
 
         profile.IdleState.ActiveEventId = document.Profile.IdleState.ActiveEventId;
         profile.IdleState.IsRunning = document.Profile.IdleState.IsRunning;
+        profile.IdleState.IsWaitingForGatheringRecovery = document.Profile.IdleState.IsWaitingForGatheringRecovery;
         profile.IdleState.AccumulatedProgressSeconds = document.Profile.IdleState.AccumulatedProgressSeconds;
         profile.IdleState.PendingOutputFraction = document.Profile.IdleState.PendingOutputFraction;
         profile.IdleState.LastProgressUnixSeconds = document.Profile.IdleState.LastProgressUnixSeconds;
@@ -334,6 +380,12 @@ public class SaveManager
             ? parsedFilterTab
             : InventoryFilterTab.All;
         profile.UiState.InventoryUseLargeIcons = document.Profile.UiState.InventoryUseLargeIcons;
+        profile.UiState.SelectedBattleAreaId = document.Profile.UiState.SelectedBattleAreaId ?? string.Empty;
+        profile.UiState.SelectedBattleSceneId = document.Profile.UiState.SelectedBattleSceneId ?? string.Empty;
+        profile.UiState.SelectedBattleEventId = document.Profile.UiState.SelectedBattleEventId ?? string.Empty;
+        profile.UiState.SelectedBattleEncounterId = document.Profile.UiState.SelectedBattleEncounterId ?? string.Empty;
+        profile.UiState.BattleSelectionFromSceneEntry = document.Profile.UiState.BattleSelectionFromSceneEntry;
+        profile.UiState.SelectedStapleItemId = document.Profile.UiState.SelectedStapleItemId ?? string.Empty;
         foreach (string sceneId in document.Profile.UiState.FavoriteSceneIds)
         {
             if (!string.IsNullOrWhiteSpace(sceneId))
@@ -357,6 +409,44 @@ public class SaveManager
                 profile.UiState.AreaIdsWithNewMarker.Add(areaId);
             }
         }
+
+        profile.UiState.SetSelectedSnackItems(document.Profile.UiState.SelectedSnackItemIds);
+
+        foreach (EquipmentSlotSnapshot equippedSlot in document.Profile.EquipmentState)
+        {
+            if (string.IsNullOrWhiteSpace(equippedSlot.ItemId)
+                || !EquipmentSlotCatalog.TryParse(equippedSlot.SlotId, out EquipmentSlotId slotId))
+            {
+                continue;
+            }
+
+            profile.EquipmentState.SetEquippedItem(slotId, equippedSlot.ItemId);
+        }
+
+        profile.FarmingState.AutoPlantAndHarvestEnabled = document.Profile.FarmingState.AutoPlantAndHarvestEnabled;
+        profile.FarmingState.AutoFertilizeEnabled = document.Profile.FarmingState.AutoFertilizeEnabled;
+        foreach (FarmPlotSnapshot plot in document.Profile.FarmingState.PlotStates)
+        {
+            PlayerFarmPlotState plotState = profile.FarmingState.GetOrCreatePlotState(plot.PlotIndex);
+            plotState.IsUnlocked = plot.IsUnlocked;
+            plotState.SelectedSeedItemId = plot.SelectedSeedItemId ?? string.Empty;
+            plotState.GrowingSeedItemId = plot.GrowingSeedItemId ?? string.Empty;
+            plotState.PlantStartUnixSeconds = plot.PlantStartUnixSeconds;
+            plotState.GrowthDurationSeconds = plot.GrowthDurationSeconds;
+            plotState.IsFertilized = plot.IsFertilized;
+            if (!plotState.IsUnlocked
+                && (!string.IsNullOrWhiteSpace(plotState.SelectedSeedItemId)
+                    || !string.IsNullOrWhiteSpace(plotState.GrowingSeedItemId)
+                    || plotState.IsFertilized))
+            {
+                plotState.IsUnlocked = true;
+            }
+        }
+
+        profile.StapleFoodState.ActiveItemId = document.Profile.StapleFoodState.ActiveItemId ?? string.Empty;
+        profile.StapleFoodState.ActiveStapleId = document.Profile.StapleFoodState.ActiveStapleId ?? string.Empty;
+        profile.StapleFoodState.ExpireAtUnixSeconds = Math.Max(0, document.Profile.StapleFoodState.ExpireAtUnixSeconds);
+        profile.StapleFoodState.AutoConsumeSelectedStaple = document.Profile.StapleFoodState.AutoConsumeSelectedStaple;
 
         foreach (SkillStateSnapshot skill in document.Profile.SkillStates)
         {
@@ -402,6 +492,14 @@ public class SaveManager
         foreach ((string statId, double value) in document.Profile.BattleStats)
         {
             profile.BattleStats[statId] = value;
+        }
+
+        foreach (string encounterId in document.Profile.ClearedBattleEncounterIds)
+        {
+            if (!string.IsNullOrWhiteSpace(encounterId))
+            {
+                profile.ClearedBattleEncounterIds.Add(encounterId);
+            }
         }
 
         foreach (string achievementId in document.Profile.UnlockedAchievementIds)
@@ -452,6 +550,7 @@ public class SaveManager
                     IsFavorite = state?.IsFavorite ?? false,
                     IsJunkMarked = state?.IsJunkMarked ?? false,
                     AcquiredSequence = state?.AcquiredSequence,
+                    LatestAcquiredUnixSeconds = state?.LatestAcquiredUnixSeconds,
                     PlayerDisplayOrder = state?.PlayerDisplayOrder
                 };
             })
@@ -475,6 +574,12 @@ public class SaveManager
 
         public UiStateSnapshot UiState { get; set; } = new();
 
+        public List<EquipmentSlotSnapshot> EquipmentState { get; set; } = new();
+
+        public FarmingStateSnapshot FarmingState { get; set; } = new();
+
+        public StapleFoodStateSnapshot StapleFoodState { get; set; } = new();
+
         public List<SkillStateSnapshot> SkillStates { get; set; } = new();
 
         public List<FactionStateSnapshot> FactionStates { get; set; } = new();
@@ -486,6 +591,8 @@ public class SaveManager
         public List<QuestStateSnapshot> QuestStates { get; set; } = new();
 
         public Dictionary<string, double> BattleStats { get; set; } = new();
+
+        public List<string> ClearedBattleEncounterIds { get; set; } = new();
 
         public List<string> UnlockedAchievementIds { get; set; } = new();
 
@@ -512,6 +619,8 @@ public class SaveManager
 
         public int? AcquiredSequence { get; set; }
 
+        public long? LatestAcquiredUnixSeconds { get; set; }
+
         public int? PlayerDisplayOrder { get; set; }
     }
 
@@ -527,6 +636,8 @@ public class SaveManager
         public string ActiveEventId { get; set; } = string.Empty;
 
         public bool IsRunning { get; set; }
+
+        public bool IsWaitingForGatheringRecovery { get; set; }
 
         public double AccumulatedProgressSeconds { get; set; }
 
@@ -573,6 +684,64 @@ public class SaveManager
         public List<string> ProcessedInteractableEventIds { get; set; } = new();
 
         public List<string> AreaIdsWithNewMarker { get; set; } = new();
+
+        public string SelectedBattleAreaId { get; set; } = string.Empty;
+
+        public string SelectedBattleSceneId { get; set; } = string.Empty;
+
+        public string SelectedBattleEventId { get; set; } = string.Empty;
+
+        public string SelectedBattleEncounterId { get; set; } = string.Empty;
+
+        public bool BattleSelectionFromSceneEntry { get; set; }
+
+        public string SelectedStapleItemId { get; set; } = string.Empty;
+
+        public List<string> SelectedSnackItemIds { get; set; } = new();
+    }
+
+    private sealed class EquipmentSlotSnapshot
+    {
+        public string SlotId { get; set; } = string.Empty;
+
+        public string ItemId { get; set; } = string.Empty;
+    }
+
+    private sealed class FarmingStateSnapshot
+    {
+        public bool AutoPlantAndHarvestEnabled { get; set; }
+
+        public bool AutoFertilizeEnabled { get; set; }
+
+        public List<FarmPlotSnapshot> PlotStates { get; set; } = new();
+    }
+
+    private sealed class FarmPlotSnapshot
+    {
+        public int PlotIndex { get; set; }
+
+        public bool IsUnlocked { get; set; }
+
+        public string SelectedSeedItemId { get; set; } = string.Empty;
+
+        public string GrowingSeedItemId { get; set; } = string.Empty;
+
+        public long PlantStartUnixSeconds { get; set; }
+
+        public double GrowthDurationSeconds { get; set; }
+
+        public bool IsFertilized { get; set; }
+    }
+
+    private sealed class StapleFoodStateSnapshot
+    {
+        public string ActiveItemId { get; set; } = string.Empty;
+
+        public string ActiveStapleId { get; set; } = string.Empty;
+
+        public long ExpireAtUnixSeconds { get; set; }
+
+        public bool AutoConsumeSelectedStaple { get; set; }
     }
 
     private sealed class SkillStateSnapshot

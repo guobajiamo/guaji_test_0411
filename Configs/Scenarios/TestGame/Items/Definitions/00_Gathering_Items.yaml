@@ -3,6 +3,9 @@
 # - Prefix with 00_, 01_, 02_ to control file merge order.
 # - Keep related instances together so later searches are easier.
 items:
+# Legacy scenario-local copy only.
+# The authoritative shared item library lives in res://Configs/Items/Definitions.
+# Keep UTF-8 when editing so existing Chinese text stays intact.
   - id: "mat_wood_log"
     parent_id: "mat_wood"
     name_key: "原木"

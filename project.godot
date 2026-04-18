@@ -26,13 +26,13 @@ window/size/viewport_width=2560
 window/size/viewport_height=1440
 window/stretch/mode="canvas_items"
 
-[gui]
-
-timers/tooltip_delay_sec=0.0
-
 [dotnet]
 
 project/assembly_name="test_00_0410"
+
+[gui]
+
+timers/tooltip_delay_sec=0.0
 
 [physics]
 

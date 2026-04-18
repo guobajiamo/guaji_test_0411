@@ -341,6 +341,15 @@ public partial class QuestSystem : Node
             case EventEffectType.LearnSkill:
                 _gameManager?.EnsureSkillLearned(effect.TargetId, effect.IntValue <= 0 ? 1 : effect.IntValue, true);
                 break;
+            case EventEffectType.SwitchToSkillMode:
+                _profile.UiState.IsSkillSidebarMode = true;
+                if (!string.IsNullOrWhiteSpace(effect.TargetId))
+                {
+                    _profile.UiState.SelectedSkillId = effect.TargetId;
+                }
+
+                _profile.UiState.SelectedTabId = "current_region";
+                break;
         }
     }
 
@@ -386,6 +395,9 @@ public partial class QuestSystem : Node
                     break;
                 case EventEffectType.LearnSkill:
                     parts.Add($"习得技能：{GetSkillName(effect.TargetId)}");
+                    break;
+                case EventEffectType.SwitchToSkillMode:
+                    parts.Add($"切换到技能模式：{GetSkillName(effect.TargetId)}");
                     break;
             }
         }

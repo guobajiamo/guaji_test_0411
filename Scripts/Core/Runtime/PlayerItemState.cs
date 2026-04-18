@@ -21,6 +21,12 @@ public class PlayerItemState
     public int? AcquiredSequence { get; set; }
 
     /// <summary>
+    /// 最近一次获得该物品时的 UTC Unix 时间戳（秒）。
+    /// 当前用于装备页“按获取时间排序”以及后续战利品来源追踪接口。
+    /// </summary>
+    public long? LatestAcquiredUnixSeconds { get; set; }
+
+    /// <summary>
     /// 玩家手动指定的 UI 显示顺序。
     /// 如果为空，说明仍然沿用静态定义顺序。
     /// </summary>

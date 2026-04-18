@@ -12,25 +12,14 @@ namespace Test00_0410.UI;
 public partial class GamePlayUI
 {
     private const string HoverInfoFallbackText = "暂无说明。";
-    private static readonly Color[] StitchSkillGroupPrimaryPalette =
-    {
-        new("#2f5d7d"),
-        new("#4f5f8a"),
-        new("#6a4c60"),
-        new("#3f6651"),
-        new("#6a5a3f"),
-        new("#4c586b")
-    };
-
-    private static readonly Color[] StitchSkillGroupSecondaryPalette =
-    {
-        new("#4c6f86"),
-        new("#626f8f"),
-        new("#7a6574"),
-        new("#5a7867"),
-        new("#83725c"),
-        new("#66727f")
-    };
+    private static readonly Color FarmingGroupPrimaryColor = new("#9b7a30");
+    private static readonly Color FarmingSkillSecondaryColor = new("#6f5317");
+    private static readonly Color CollectionGroupPrimaryColor = new("#985252");
+    private static readonly Color CollectionSkillSecondaryColor = new("#6f2a2a");
+    private static readonly Color CraftGroupPrimaryColor = new("#4f6f95");
+    private static readonly Color CraftSkillSecondaryColor = new("#2c4d74");
+    private static readonly Color DefaultGroupPrimaryColor = new("#4f5f8a");
+    private static readonly Color DefaultSkillSecondaryColor = new("#626f8f");
 
     private sealed record SkillGroupView(
         string GroupId,
@@ -407,26 +396,14 @@ public partial class GamePlayUI
 
     private (Color Primary, Color Secondary) GetSkillGroupColors(string? groupId)
     {
-        int paletteIndex = ResolveSkillGroupPaletteIndex(groupId);
-        return (StitchSkillGroupPrimaryPalette[paletteIndex], StitchSkillGroupSecondaryPalette[paletteIndex]);
-    }
-
-    private int ResolveSkillGroupPaletteIndex(string? groupId)
-    {
-        if (StitchSkillGroupPrimaryPalette.Length == 0 || StitchSkillGroupSecondaryPalette.Length == 0)
+        string normalizedGroupId = string.IsNullOrWhiteSpace(groupId) ? "__ungrouped" : groupId.Trim().ToLowerInvariant();
+        return normalizedGroupId switch
         {
-            return 0;
-        }
-
-        string normalizedGroupId = string.IsNullOrWhiteSpace(groupId) ? "__ungrouped" : groupId;
-        uint hash = 2166136261;
-        foreach (char ch in normalizedGroupId)
-        {
-            hash ^= ch;
-            hash *= 16777619;
-        }
-
-        return (int)(hash % (uint)Math.Min(StitchSkillGroupPrimaryPalette.Length, StitchSkillGroupSecondaryPalette.Length));
+            "farming" => (FarmingGroupPrimaryColor, FarmingSkillSecondaryColor),
+            "collection" => (CollectionGroupPrimaryColor, CollectionSkillSecondaryColor),
+            "craft" => (CraftGroupPrimaryColor, CraftSkillSecondaryColor),
+            _ => (DefaultGroupPrimaryColor, DefaultSkillSecondaryColor)
+        };
     }
 
     private StyleBoxFlat CreateSidebarButtonStyle(Color backgroundColor, Color borderColor, int borderWidth)
@@ -612,7 +589,16 @@ public partial class GamePlayUI
         }
 
         _gameManager.PlayerProfile.UiState.SelectedSkillId = skillId;
-        _gameManager.PlayerProfile.UiState.SelectedTabId = TabCurrentRegion;
+        if (IsBattleSkillId(skillId))
+        {
+            _gameManager.PlayerProfile.UiState.ClearBattleSelection();
+            _gameManager.PlayerProfile.UiState.SelectedTabId = TabBattle;
+            PrepareBattleTabLayout();
+        }
+        else
+        {
+            _gameManager.PlayerProfile.UiState.SelectedTabId = TabCurrentRegion;
+        }
         RefreshAllPanels();
     }
 
@@ -734,8 +720,12 @@ public partial class GamePlayUI
         }
 
         _gameManager.PlayerProfile.UiState.SelectedTabId = tabId;
-        UpdatePageVisibility();
-        RefreshTabBar();
+        if (string.Equals(tabId, TabBattle, StringComparison.Ordinal))
+        {
+            PrepareBattleTabLayout();
+        }
+
+        RefreshAllPanels();
     }
 
     protected void UpdatePageVisibility()
@@ -760,6 +750,8 @@ public partial class GamePlayUI
         {
             return;
         }
+
+        ConfigureCurrentRegionOuterScrollForFarming(false);
 
         if (_gameManager?.PlayerProfile.UiState.IsSkillSidebarMode == true)
         {
@@ -816,6 +808,12 @@ public partial class GamePlayUI
 
         string skillName = Translate(selectedSkill.NameKey);
         _currentRegionTitleLabel.Text = $"{skillName}相关";
+        if (IsFarmingSkill(selectedSkill))
+        {
+            RefreshFarmingSkillModeCurrentRegionPage(selectedSkill);
+            return;
+        }
+
         _currentRegionHintLabel.Text = "已聚合所有可见场景中的相关项目。";
         _currentRegionHintLabel.Visible = true;
 
@@ -1128,12 +1126,12 @@ public partial class GamePlayUI
 
         if (item.ActionButton != null)
         {
-            BindHoverInfo(item.ActionButton, data.DisplayName, data.TooltipText);
+            BindHoverInfo(item.ActionButton, data.DisplayName, data.TooltipText, definition.Id);
         }
 
         if (item.ProgressSlot != null)
         {
-            BindHoverInfo(item.ProgressSlot, data.DisplayName, data.TooltipText);
+            BindHoverInfo(item.ProgressSlot, data.DisplayName, data.TooltipText, definition.Id);
         }
 
         _eventButtonWidgets[definition.Id] = item;
@@ -1170,13 +1168,29 @@ public partial class GamePlayUI
     {
         _inventoryPanel?.RefreshInventory();
         _skillPanel?.RefreshSkills();
+        _battlePanel?.RefreshPanel();
+        _equipmentPanel?.RefreshPanel();
         _questPanel?.RefreshQuests();
         _dictionaryPanel?.RefreshDictionary();
     }
 
     protected void RefreshInfoPanel()
     {
-        _infoPanel?.RefreshPanel(_gameManager!);
+        if (_infoPanel == null || _gameManager == null)
+        {
+            return;
+        }
+
+        _infoPanel.RefreshPanel(_gameManager);
+        if (string.Equals(_gameManager.PlayerProfile.UiState.SelectedTabId, TabBattle, StringComparison.Ordinal))
+        {
+            _infoPanel.SetPinnedContent(
+                _battlePanel?.GetPinnedSummary() ?? string.Empty,
+                _battlePanel?.GetPinnedContent() ?? string.Empty);
+            return;
+        }
+
+        _infoPanel.ClearPinnedContent();
     }
 
     protected void RefreshStatusAndLogs()
@@ -1187,22 +1201,63 @@ public partial class GamePlayUI
         _expandedLogPanel?.SetMessages(logs);
     }
 
-    private void BindHoverInfo(Control control, string summaryText, string contentText)
+    private void BindHoverInfo(Control control, string summaryText, string contentText, string eventId = "")
     {
+        string finalSummary = string.IsNullOrWhiteSpace(summaryText) ? "悬浮信息" : summaryText;
         string finalContent = string.IsNullOrWhiteSpace(contentText) ? HoverInfoFallbackText : contentText;
-        control.SetMeta(NonBlockingTooltipBoundMetaKey, true);
+        control.SetMeta(NonBlockingTooltipEventIdMetaKey, eventId ?? string.Empty);
+        control.SetMeta(NonBlockingTooltipSummaryMetaKey, finalSummary);
         control.SetMeta(NonBlockingTooltipTextMetaKey, finalContent);
         control.TooltipText = string.Empty;
+
+        if (control.HasMeta(NonBlockingTooltipBoundMetaKey))
+        {
+            if (_activeHoverControl != null
+                && ReferenceEquals(_activeHoverControl, control))
+            {
+                _infoPanel?.SetTransientContent(finalSummary, finalContent);
+                ShowFloatingHoverTooltip(finalSummary, finalContent);
+            }
+
+            return;
+        }
+
+        control.SetMeta(NonBlockingTooltipBoundMetaKey, true);
         control.MouseEntered += () =>
         {
-            control.SetMeta(NonBlockingTooltipTextMetaKey, finalContent);
+            string liveSummary = control.HasMeta(NonBlockingTooltipSummaryMetaKey)
+                ? control.GetMeta(NonBlockingTooltipSummaryMetaKey).AsString()
+                : finalSummary;
+            string liveContent = control.HasMeta(NonBlockingTooltipTextMetaKey)
+                ? control.GetMeta(NonBlockingTooltipTextMetaKey).AsString()
+                : finalContent;
+
+            if (string.IsNullOrWhiteSpace(liveSummary))
+            {
+                liveSummary = finalSummary;
+            }
+
+            if (string.IsNullOrWhiteSpace(liveContent))
+            {
+                liveContent = HoverInfoFallbackText;
+            }
+
+            control.SetMeta(NonBlockingTooltipSummaryMetaKey, liveSummary);
+            control.SetMeta(NonBlockingTooltipTextMetaKey, liveContent);
             control.TooltipText = string.Empty;
 
-            _infoPanel?.SetTransientContent(summaryText, finalContent);
-            ShowFloatingHoverTooltip(summaryText, finalContent);
+            _activeHoverControl = control;
+            _infoPanel?.SetTransientContent(liveSummary, liveContent);
+            ShowFloatingHoverTooltip(liveSummary, liveContent);
         };
         control.MouseExited += () =>
         {
+            if (_activeHoverControl != null
+                && ReferenceEquals(_activeHoverControl, control))
+            {
+                _activeHoverControl = null;
+            }
+
             _infoPanel?.ClearTransientContent();
             HideFloatingHoverTooltip();
             CallDeferred(nameof(FlushDeferredRefreshIfNeeded));
@@ -1299,7 +1354,7 @@ public partial class GamePlayUI
 
     private void ApplyScenarioTabDefinitions()
     {
-        if (_battlePanel == null || _questPanel == null || _tutorialPanel == null || _achievementPanel == null)
+        if (_battlePanel == null || _equipmentPanel == null || _questPanel == null || _tutorialPanel == null || _achievementPanel == null)
         {
             return;
         }
@@ -1308,18 +1363,12 @@ public partial class GamePlayUI
         SyncTabPageTitle(TabInventory, _inventoryPanel);
         SyncTabPageTitle(TabSkills, _skillPanel);
         SyncTabPageTitle(TabBattle, _battlePanel);
+        SyncTabPageTitle(TabEquipment, _equipmentPanel);
         SyncTabPageTitle(TabQuest, _questPanel);
         SyncTabPageTitle(TabTutorial, _tutorialPanel);
         SyncTabPageTitle(TabAchievement, _achievementPanel);
         SyncTabPageTitle(TabDictionary, _dictionaryPanel);
         SyncTabPageTitle(TabSystem, _systemPanel);
-
-        _battlePanel.Configure(
-            GetPlaceholderTitle(TabBattle, "战斗"),
-            GetPlaceholderLines(TabBattle,
-                "战斗系统尚未正式实装。",
-                "这里已经预留了任务解锁所需的战斗属性接口，后续可以继续补战斗流程和数值规则。"),
-            new Color("#ff8f9e"));
 
         _tutorialPanel.Configure(
             GetPlaceholderTitle(TabTutorial, "教程"),
@@ -1365,6 +1414,23 @@ public partial class GamePlayUI
         return definition?.ContentLines?.Count > 0
             ? definition.ContentLines
             : fallback;
+    }
+
+    private bool IsBattleSkillId(string skillId)
+    {
+        if (_gameManager == null || string.IsNullOrWhiteSpace(skillId))
+        {
+            return false;
+        }
+
+        SkillDefinition? definition = _gameManager.SkillRegistry.GetSkill(skillId);
+        return string.Equals(definition?.GroupId, "battle", StringComparison.Ordinal);
+    }
+
+    private void PrepareBattleTabLayout()
+    {
+        SetLogExpanded(false);
+        SetLogMinimized(true);
     }
 }
 
