@@ -28,7 +28,7 @@ Loading resource: res://Scripts/UI/MainUiLayoutSettings.cs
 Loading resource: res://Resources/Scenarios/main_story_scenario.tres
 Loading resource: res://Scripts/Core/Scenario/GameScenarioDefinition.cs
 Loading resource: res://Resources/Scenarios/test_game_scenario.tres
-[GameLog] [12:55:41] 已发现剧本数量：2
+[GameLog] [00:24:33] 已发现剧本数量：2
 Loading resource: res://Scripts/Systems/IdleSystem.cs
 Loading resource: res://Scripts/Systems/ClickEventSystem.cs
 Loading resource: res://Scripts/Systems/SkillSystem.cs
@@ -43,7 +43,7 @@ Loading resource: res://Scripts/Systems/AchievementSystem.cs
 Loading resource: res://Scripts/Systems/EquipmentSystem.cs
 Loading resource: res://Scripts/Systems/BuffSystem.cs
 Loading resource: res://Scripts/Systems/StapleFoodSystem.cs
-[GameLog] [12:55:41] 游戏主菜单入口已准备完成。
+[GameLog] [00:24:34] 游戏主菜单入口已准备完成。
 Loading resource: res://Resources/UI/main_ui_layout.tres
 Loading resource: res://Scenes/UI/MainMenuUI.tscn
 Loading resource: res://Scripts/UI/MainMenuUI.cs

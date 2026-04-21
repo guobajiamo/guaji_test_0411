@@ -996,8 +996,7 @@ public partial class InventoryPanel : Control
         if (item?.CanUseCustomActionFromInventory == true && item.InventoryUseAction != null)
         {
             InventoryUseActionDefinition action = item.InventoryUseAction;
-            int consumeAmount = Math.Max(0, action.ConsumeAmount);
-            bool canUseCustomAction = itemAmount >= consumeAmount && HasEnoughActionCosts(inventory, action);
+            bool canUseCustomAction = HasEnoughCustomActionItems(inventory, _selectedItemId, action);
 
             _consumeButton.Text = string.IsNullOrWhiteSpace(action.ButtonText) ? "使用" : action.ButtonText;
             _consumeButton.Visible = true;
@@ -1206,39 +1205,27 @@ public partial class InventoryPanel : Control
 
         string actionLabel = string.IsNullOrWhiteSpace(action.ButtonText) ? "使用" : action.ButtonText;
         PlayerInventory inventory = _gameManager.PlayerProfile.Inventory;
-        int consumeAmount = Math.Max(0, action.ConsumeAmount);
-        int currentAmount = inventory.GetItemAmount(_selectedItemId);
-        if (currentAmount < consumeAmount)
+        Dictionary<string, int> requiredItems = BuildCustomActionRequiredItems(_selectedItemId, action);
+        if (!HasEnoughRequiredItems(inventory, requiredItems))
         {
-            _gameManager.AddGameLog($"{actionLabel}失败：{_gameManager.GetItemDisplayName(_selectedItemId)} 数量不足。");
+            string missingItemId = FindFirstMissingRequiredItem(inventory, requiredItems);
+            _gameManager.AddGameLog(string.IsNullOrWhiteSpace(missingItemId)
+                ? $"{actionLabel}失败：消耗材料不足。"
+                : $"{actionLabel}失败：{_gameManager.GetItemDisplayName(missingItemId)} 数量不足。");
             return;
         }
 
-        if (!HasEnoughActionCosts(inventory, action))
+        TransactionHelper transaction = new();
+        foreach ((string itemId, int amount) in requiredItems)
         {
-            _gameManager.AddGameLog($"{actionLabel}失败：额外消耗材料不足。");
-            return;
+            transaction.QueueRemoveItem(itemId, amount);
         }
 
-        if (consumeAmount > 0 && !_gameManager.SettlementService.TryRemoveItem(_selectedItemId, consumeAmount))
+        if (!transaction.TryCommit(inventory))
         {
-            _gameManager.AddGameLog($"{actionLabel}失败：{_gameManager.GetItemDisplayName(_selectedItemId)} 数量不足。");
+            _gameManager.AddGameLog($"{actionLabel}失败：消耗材料不足。");
+            RefreshInventory();
             return;
-        }
-
-        foreach (ItemCostEntry cost in action.Costs)
-        {
-            if (cost.Amount <= 0)
-            {
-                continue;
-            }
-
-            if (!_gameManager.SettlementService.TryRemoveItem(cost.ItemId, cost.Amount))
-            {
-                _gameManager.AddGameLog($"{actionLabel}失败：{_gameManager.GetItemDisplayName(cost.ItemId)} 数量不足。");
-                RefreshInventory();
-                return;
-            }
         }
 
         foreach (EventRewardEntry reward in action.Rewards)
@@ -1275,22 +1262,59 @@ public partial class InventoryPanel : Control
         RuntimeStateChanged?.Invoke();
     }
 
-    private static bool HasEnoughActionCosts(PlayerInventory inventory, InventoryUseActionDefinition action)
+    private static bool HasEnoughCustomActionItems(PlayerInventory inventory, string itemId, InventoryUseActionDefinition action)
     {
+        return HasEnoughRequiredItems(inventory, BuildCustomActionRequiredItems(itemId, action));
+    }
+
+    private static Dictionary<string, int> BuildCustomActionRequiredItems(string itemId, InventoryUseActionDefinition action)
+    {
+        Dictionary<string, int> requiredItems = new(StringComparer.Ordinal);
+        AddRequiredItem(requiredItems, itemId, Math.Max(0, action.ConsumeAmount));
+
         foreach (ItemCostEntry cost in action.Costs)
         {
-            if (cost.Amount <= 0)
-            {
-                continue;
-            }
+            AddRequiredItem(requiredItems, cost.ItemId, cost.Amount);
+        }
 
-            if (inventory.GetItemAmount(cost.ItemId) < cost.Amount)
+        return requiredItems;
+    }
+
+    private static void AddRequiredItem(Dictionary<string, int> requiredItems, string itemId, int amount)
+    {
+        if (string.IsNullOrWhiteSpace(itemId) || amount <= 0)
+        {
+            return;
+        }
+
+        requiredItems.TryGetValue(itemId, out int currentAmount);
+        requiredItems[itemId] = currentAmount + amount;
+    }
+
+    private static bool HasEnoughRequiredItems(PlayerInventory inventory, IReadOnlyDictionary<string, int> requiredItems)
+    {
+        foreach ((string itemId, int amount) in requiredItems)
+        {
+            if (amount > 0 && inventory.GetItemAmount(itemId) < amount)
             {
                 return false;
             }
         }
 
         return true;
+    }
+
+    private static string FindFirstMissingRequiredItem(PlayerInventory inventory, IReadOnlyDictionary<string, int> requiredItems)
+    {
+        foreach ((string itemId, int amount) in requiredItems)
+        {
+            if (amount > 0 && inventory.GetItemAmount(itemId) < amount)
+            {
+                return itemId;
+            }
+        }
+
+        return string.Empty;
     }
 
     private static string BuildCustomActionTooltip(InventoryUseActionDefinition action)

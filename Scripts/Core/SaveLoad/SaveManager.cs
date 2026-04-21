@@ -120,7 +120,6 @@ public class SaveManager
             }
 
             saveData = _migrationRunner.RunMigrations(RestoreSaveData(document));
-            SavePath = path;
             return true;
         }
         catch (Exception exception)

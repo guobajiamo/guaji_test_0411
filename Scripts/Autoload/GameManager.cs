@@ -145,23 +145,8 @@ public partial class GameManager : Node
             return false;
         }
 
-        ActiveScenario = scenario;
-        _runtimeLogs.Clear();
-
-        if (resetProfile)
-        {
-            CreateDefaultProfile();
-        }
-
-        SaveManager.SavePath = string.IsNullOrWhiteSpace(savePath)
-            ? (scenario.IsTestScenario ? RuntimePathHelper.GetTestSavePath() : string.Empty)
-            : savePath;
-
-        LoadStaticData(scenario);
-        InitializeProfileFromDefinitions();
-        ConfigureSystems();
-        AddGameLog($"已载入剧本：{scenario.DisplayName}");
-        return true;
+        PlayerProfile nextProfile = resetProfile ? new PlayerProfile() : PlayerProfile;
+        return TryActivateScenario(scenario, nextProfile, savePath);
     }
 
     public IReadOnlyList<SaveSlotSummary> GetStorySaveSlotSummaries()
@@ -234,20 +219,22 @@ public partial class GameManager : Node
             return false;
         }
 
-        if (!StartScenario(scenarioId, path, true))
-        {
-            return false;
-        }
-
         if (!SaveManager.TryLoad(path, out SaveData? saveData) || saveData == null)
         {
             AddGameLog($"读取存档失败：{path}");
             return false;
         }
 
-        PlayerProfile = saveData.Profile;
-        InitializeProfileFromDefinitions();
-        ConfigureSystems();
+        if (!_scenarioDefinitions.TryGetValue(scenarioId, out GameScenarioDefinition? scenario))
+        {
+            return false;
+        }
+
+        if (!TryActivateScenario(scenario, saveData.Profile, path))
+        {
+            return false;
+        }
+
         IdleSystem?.ApplyOfflineProgress(DateTimeOffset.UtcNow.ToUnixTimeSeconds());
         QuestSystem?.RefreshQuestState();
         AddGameLog($"已执行读档。路径：{path}");
@@ -377,10 +364,100 @@ public partial class GameManager : Node
         return node;
     }
 
-    private void LoadStaticData(GameScenarioDefinition scenario)
+    private bool TryActivateScenario(GameScenarioDefinition scenario, PlayerProfile nextProfile, string savePath)
     {
+        ScenarioActivationSnapshot snapshot = CaptureScenarioActivationSnapshot();
+        string resolvedSavePath = ResolveScenarioSavePath(scenario, savePath);
+
+        _runtimeLogs.Clear();
+
         try
         {
+            if (!LoadStaticData(scenario, out string errorMessage))
+            {
+                RestoreScenarioActivationSnapshot(snapshot);
+                AddGameLog($"载入剧本失败：{scenario.DisplayName}，静态配置加载失败：{errorMessage}");
+                return false;
+            }
+
+            ActiveScenario = scenario;
+            PlayerProfile = nextProfile;
+            SaveManager.SavePath = resolvedSavePath;
+
+            InitializeProfileFromDefinitions();
+            ConfigureSystems();
+            AddGameLog($"已载入剧本：{scenario.DisplayName}");
+            return true;
+        }
+        catch (Exception exception)
+        {
+            RestoreScenarioActivationSnapshot(snapshot);
+            GD.PushError($"[GameManager] 剧本激活失败：{exception}");
+            AddGameLog($"载入剧本失败：{scenario.DisplayName}，{exception.Message}");
+            return false;
+        }
+    }
+
+    private ScenarioActivationSnapshot CaptureScenarioActivationSnapshot()
+    {
+        return new ScenarioActivationSnapshot
+        {
+            ActiveScenario = ActiveScenario,
+            ItemRegistry = ItemRegistry,
+            SkillRegistry = SkillRegistry,
+            EventRegistry = EventRegistry,
+            FactionRegistry = FactionRegistry,
+            ZoneRegistry = ZoneRegistry,
+            BattleEncounterRegistry = BattleEncounterRegistry,
+            LocalizationManager = LocalizationManager,
+            PlayerProfile = PlayerProfile,
+            SavePath = SaveManager.SavePath,
+            RuntimeLogs = _runtimeLogs.ToList(),
+            QuestDefinitions = _questDefinitions.ToList()
+        };
+    }
+
+    private void RestoreScenarioActivationSnapshot(ScenarioActivationSnapshot snapshot)
+    {
+        ActiveScenario = snapshot.ActiveScenario;
+        ItemRegistry = snapshot.ItemRegistry;
+        SkillRegistry = snapshot.SkillRegistry;
+        EventRegistry = snapshot.EventRegistry;
+        FactionRegistry = snapshot.FactionRegistry;
+        ZoneRegistry = snapshot.ZoneRegistry;
+        BattleEncounterRegistry = snapshot.BattleEncounterRegistry;
+        LocalizationManager = snapshot.LocalizationManager;
+        PlayerProfile = snapshot.PlayerProfile;
+        SaveManager.SavePath = snapshot.SavePath;
+
+        _runtimeLogs.Clear();
+        _runtimeLogs.AddRange(snapshot.RuntimeLogs);
+
+        _questDefinitions.Clear();
+        _questDefinitions.AddRange(snapshot.QuestDefinitions);
+
+        ConfigureSystems();
+    }
+
+    private static string ResolveScenarioSavePath(GameScenarioDefinition scenario, string savePath)
+    {
+        return string.IsNullOrWhiteSpace(savePath)
+            ? (scenario.IsTestScenario ? RuntimePathHelper.GetTestSavePath() : string.Empty)
+            : savePath;
+    }
+
+    private bool LoadStaticData(GameScenarioDefinition scenario, out string errorMessage)
+    {
+        errorMessage = string.Empty;
+
+        try
+        {
+            if (!ValidateScenarioConfigSources(scenario, out errorMessage))
+            {
+                GD.PushError($"[GameManager] {errorMessage}");
+                return false;
+            }
+
             ItemRegistry = new ItemRegistry();
             SkillRegistry = new SkillRegistry();
             EventRegistry = new EventRegistry();
@@ -406,8 +483,17 @@ public partial class GameManager : Node
 
             YamlConfigLoader.FactionConfigSet factionConfig = _configLoader.LoadFactions(scenario.FactionsConfigPath);
             List<ZoneDefinition> zones = _configLoader.LoadZones(scenario.ZonesConfigPath);
-            List<BattleEncounterDefinition> encounters = _configLoader.LoadBattleEncounters(scenario.BattleEncountersConfigPath);
+            List<BattleEncounterDefinition> encounters = string.IsNullOrWhiteSpace(scenario.BattleEncountersConfigPath)
+                ? new List<BattleEncounterDefinition>()
+                : _configLoader.LoadBattleEncounters(scenario.BattleEncountersConfigPath);
             YamlConfigLoader.LocalizationConfig localization = _configLoader.LoadLocalization(scenario.LocalizationPath);
+
+            if (categories.Count == 0 || items.Count == 0)
+            {
+                errorMessage = $"基础配置为空：分类 {categories.Count}，物品 {items.Count}";
+                GD.PushError($"[GameManager] {errorMessage}");
+                return false;
+            }
 
             ItemRegistry.LoadDefinitions(categories, items);
             SkillRegistry.LoadDefinitions(skills);
@@ -419,11 +505,6 @@ public partial class GameManager : Node
             LocalizationManager.SetLocale(localization.Locale);
             LocalizationManager.LoadTranslations(localization.Translations);
 
-            if (categories.Count == 0 || items.Count == 0 || skills.Count == 0 || events.Count == 0)
-            {
-                AddGameLog("警告：有核心配置未成功加载，请优先检查 YAML 格式和路径。");
-            }
-
             foreach (string message in ItemRegistry.Validate())
             {
                 AddGameLog(message, false);
@@ -431,12 +512,56 @@ public partial class GameManager : Node
 
             ItemRegistry.DumpTreeToDefaultRuntimeFile();
             AddGameLog($"静态配置加载完成：剧本 {scenario.DisplayName}，分类 {categories.Count}，物品 {items.Count}，技能 {skills.Count}，事件 {events.Count}，遭遇 {encounters.Count}，任务 {_questDefinitions.Count}。");
+            return true;
         }
         catch (Exception exception)
         {
             GD.PushError($"[GameManager] 配置加载失败：{exception}");
-            AddGameLog($"配置加载失败：{exception.Message}");
+            errorMessage = string.IsNullOrWhiteSpace(exception.Message) ? "未知异常" : exception.Message;
+            return false;
         }
+    }
+
+    private bool ValidateScenarioConfigSources(GameScenarioDefinition scenario, out string errorMessage)
+    {
+        errorMessage = string.Empty;
+
+        (string Label, string Path, bool Required)[] configSources =
+        {
+            ("分类", scenario.CategoriesConfigPath, true),
+            ("物品", scenario.ItemsConfigPath, true),
+            ("技能", scenario.SkillsConfigPath, false),
+            ("一次性事件", scenario.OneshotEventsConfigPath, false),
+            ("点击事件", scenario.ClickEventsConfigPath, false),
+            ("挂机事件", scenario.IdleEventsConfigPath, false),
+            ("阵营", scenario.FactionsConfigPath, false),
+            ("区域", scenario.ZonesConfigPath, false),
+            ("战斗遭遇", scenario.BattleEncountersConfigPath, false),
+            ("本地化", scenario.LocalizationPath, false),
+            ("任务", scenario.QuestsConfigPath, false)
+        };
+
+        foreach ((string label, string path, bool required) in configSources)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                if (required)
+                {
+                    errorMessage = $"{label}配置路径为空。";
+                    return false;
+                }
+
+                continue;
+            }
+
+            if (_configLoader.ResolveYamlFileBundle(path, label).Count == 0)
+            {
+                errorMessage = $"{label}配置路径未找到可用 YAML：{path}";
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /// <summary>
@@ -457,8 +582,6 @@ public partial class GameManager : Node
                 state.Level = Math.Max(state.Level, skill.InitialLevel);
             }
         }
-
-        ApplyOwnedItemSkillUnlocks(false);
 
         foreach (FactionDefinition faction in FactionRegistry.Factions.Values)
         {
@@ -641,5 +764,32 @@ public partial class GameManager : Node
         metadata.Locale = LocalizationManager.CurrentLocale;
         metadata.ScenarioId = ActiveScenario?.ScenarioId ?? string.Empty;
         metadata.ScenarioDisplayName = ActiveScenario?.DisplayName ?? string.Empty;
+    }
+
+    private sealed class ScenarioActivationSnapshot
+    {
+        public GameScenarioDefinition? ActiveScenario { get; init; }
+
+        public ItemRegistry ItemRegistry { get; init; } = new();
+
+        public SkillRegistry SkillRegistry { get; init; } = new();
+
+        public EventRegistry EventRegistry { get; init; } = new();
+
+        public FactionRegistry FactionRegistry { get; init; } = new();
+
+        public ZoneRegistry ZoneRegistry { get; init; } = new();
+
+        public BattleEncounterRegistry BattleEncounterRegistry { get; init; } = new();
+
+        public LocalizationManager LocalizationManager { get; init; } = new();
+
+        public PlayerProfile PlayerProfile { get; init; } = new();
+
+        public string SavePath { get; init; } = string.Empty;
+
+        public List<string> RuntimeLogs { get; init; } = new();
+
+        public List<QuestDefinition> QuestDefinitions { get; init; } = new();
     }
 }
